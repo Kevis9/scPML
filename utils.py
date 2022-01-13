@@ -10,21 +10,28 @@ import csv
 def Normalization(data):
     '''
     归一化处理
-    :param data:
-    :return:
+    :param data: 矩阵 (cells * genes)
+    :return: 返回归一化的矩阵
     '''
     row_sum = np.sum(data, axis=1)
     mean_transcript = np.mean(row_sum)
-    row_sum[np.where(row_sum==0)] = 1   #对0的部分做一个处理，防止除数为0的异常
     data_norm = (data / row_sum.reshape(-1, 1)) * mean_transcript
     return data_norm
 
 
-def Mask(data, masked_prob):
+def Mask_Data(data, masked_prob):
     '''
-        主动mask处理
+    :param data: 表达矩阵 (cells * genes)
+    :param masked_prob: mask概率
+    :return:
+        1. X: mask的表达矩阵，
+        2. index_pair: 矩阵中不为0的索引，[(行),(列)],
+        3. masking_idx: 随机选择index_pair中行列的下标
+        X[index_pair[0][masking_idx], index_pair[1][masking_idx]] 就是指被masked的数据
     '''
     index_pair = np.where(data != 0)
+    print(index_pair)
+    print(index_pair[0].shape[0])
     seed = 1
     np.random.seed(seed)
     masking_idx = np.random.choice(index_pair[0].shape[0], int(index_pair[0].shape[0] * masked_prob), replace=False)
@@ -35,14 +42,29 @@ def Mask(data, masked_prob):
     return X, index_pair, masking_idx
 
 
-def Cell_graph(data):
+def Graph(data, mat_similarity):
     '''
-    :param data: 表达矩阵
+    :param data: 表达矩阵 (被mask的矩阵)
+    :param mat_similarity: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
     k = 2
-    A = kneighbors_graph(data, k, mode='connectivity', include_self=False)
-    G = nx.from_numpy_matrix(A.todense())
+
+    # A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
+    # print(A.todense())
+    # G = nx.from_numpy_matrix(A.todense())
+    # 要对mat_similarity取前K个最大的weight作为neighbors
+    k_idxs = []
+    for i in range(mat_similarity.shape[0]):
+        top_k_idx = mat_similarity[i].argsort()[::-1][0:k]
+        k_idxs.append(top_k_idx)
+
+    mat_similarity = np.zeros(shape=mat_similarity.shape)
+    for i in range(mat_similarity.shape[0]):
+        mat_similarity[i, k_idxs[i]] = 1
+
+    G = nx.from_numpy_matrix(np.matrix(mat_similarity))
+
     edges = []
     # 这里认为是无向图，强行变成对称矩阵，多出来的边不用管
     for (u, v) in G.edges():
@@ -56,49 +78,28 @@ def Cell_graph(data):
     return G_data
 
 
-def readData(dataPath, labelPath):
+def readSCData(dataPath, labelPath):
     '''
     读取数据
     :param Single cell的表达矩阵Path
     :param 标签Path
-    :return: 返回Numpy类型数组（表达矩阵，标签，基因名）
+    :return: 返回Numpy类型数组（表达矩阵，标签）
     '''
     print('Reading data...')
     with open(dataPath) as fp:
         data = list(csv.reader(fp))
-        # 一行行读取
-        gene_names = data[0]
-        del(gene_names[0]) # 第一个元素是空字符串
-        # 为了方便处理，全部转成小写
-        for i in range(len(gene_names)):
-            gene_names[i] = gene_names[i].lower()
-        print('Gene names:', gene_names)
-
         data = np.array(data[1:])[:, 1:].astype(np.float64)
+        data = np.transpose(data)   # 源数据是 ( genes * cells ) , 转置一下
         fp.close()
 
     with open(labelPath) as fp:
-        labels = list(csv.reader(fp))[1:]
-        classes = dict()
-        cnt = 1
-        for i in range(len(labels)):
-            if labels[i][0] not in classes.keys():
-                classes[labels[i][0]] = cnt
-                cnt += 1
-
-        # 对label进行一个标志
-        for i in range(len(labels)):
-            labels[i][0] = classes[labels[i][0]]
-
-        labels = np.array(labels).astype(np.int64).reshape(-1)
-        print("Cell type: ")
-        for i in classes.keys():
-            print("{} : {}".format(i, classes[i]), end=' ')
-        print('')
+        labels = list(csv.reader(fp))[1:]   # 源数据第一列是序号
+        labels = (np.array(labels)[:,1:]).astype(np.int64).reshape(-1)
         fp.close()
 
-    print('Data shape is :{}'.format(data.shape))  # (samples,genes)
-    return data.astype(np.float64), labels.astype(np.int64), gene_names
+    print('Single Cell Data\'s shape is :{}'.format(data.shape))  # (samples,genes)
+    return data.astype(np.float64), labels.astype(np.int64)
+
 
 def setByPathway(data, labels, gene_names, path):
     '''
@@ -135,6 +136,15 @@ def setByPathway(data, labels, gene_names, path):
     return gene_set
 
 
+
+
+def readSimilarityMatrix(path):
+    with open(path) as fp:
+        mat_similarity = np.array(list(csv.reader(fp))[1:])[:,1:]
+        fp.close()
+    return mat_similarity
+
+
 import matplotlib.pyplot as plt
 
 def lossPolt(r_loss, c_loss, n_epoch):
@@ -147,6 +157,7 @@ def lossPolt(r_loss, c_loss, n_epoch):
     ax.set_title('Loss')
     ax.legend()
     plt.show()
+
 
 
 

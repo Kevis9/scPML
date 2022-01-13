@@ -1,33 +1,36 @@
+import numpy as np
 import torch.nn as nn
 import torch
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
 from utils import lossPolt
+
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
 
+
 class CPMNets():
-    def __init__(self, view_num, train_len, test_len, view_feat, lsd_dim=128):
+    def __init__(self, view_num, train_len, test_len, view_len_arr, lsd_dim=128):
         '''
-        :param view_num:
-        :param train_Len: training data length
-        :param test_Len:
-        :param view_feat: 一个数组，每一个view的特征长度
-        :param lsd_dim:
+        :param view_num: view的数目
+        :param train_len: training data length
+        :param test_len: test data length
+        :param view_feat_arr: 一个数组，代表每一个view的特征长度
+        :param lsd_dim: latent space H dimension
 
         这里也不考虑用源码中的sn矩阵，因为我们不缺view，也没必要随机取产生缺失的view
         '''
         super(CPMNets, self).__init__()
         self.view_num = view_num
-        self.view_feat = view_feat
-        self.view_idx = [[] for v in self.view_feat] # 记录每一个view在data中的index
+        # 记录每一个view在data中的index 比如第一个view的长度是10，那么0,1,...,9都放在view_idx[0]中
+        self.view_idx = [[] for v in view_len_arr]
         cnt = 0
-        for i in range(len(view_feat)):
-            for j in range(view_feat[i]):
+        for i in range(len(view_len_arr)):
+            for j in range(view_len_arr[i]):
                 self.view_idx[i].append(cnt)
-                cnt+=1
+                cnt += 1
 
         self.lsd_dim = lsd_dim
         self.train_len = train_len
@@ -40,17 +43,14 @@ class CPMNets():
         nn.init.xavier_uniform_(self.h_train)
         nn.init.xavier_uniform_(self.h_test)
 
-
         # 模型的搭建
         # net的输入是representation h ---> 重构成 X
-
         self.net = dict()
-        for v_num in range(view_num):
-            self.net[str(v_num)] = nn.Sequential(
-                nn.Linear(self.lsd_dim, self.view_feat[v_num]), #我对源码的理解就是只有一层全连接
+        for i in range(view_num):
+            self.net[str(i)] = nn.Sequential(
+                nn.Linear(self.lsd_dim, view_len_arr[i]),  # 我对源码的理解就是只有一层全连接
                 # nn.Dropout(0.2)
             )
-
 
     def reconstrution_loss(self, r_x, x):
         '''
@@ -58,7 +58,7 @@ class CPMNets():
         :param x:  原x
         :return: 返回 (r_x-x)^2
         '''
-        return ((r_x - x)**2).sum()
+        return ((r_x - x) ** 2).sum()
 
     def classification_loss(self, gt):
         '''
@@ -67,30 +67,29 @@ class CPMNets():
         '''
         F_h_h = torch.mm(self.h_train, self.h_train.t())
         F_hn_hn = torch.diag(F_h_h)
-        F_h_h = F_h_h - torch.diag_embed(F_hn_hn) # 将F_h_h对角线部分置0
+        F_h_h = F_h_h - torch.diag_embed(F_hn_hn)  # 将F_h_h对角线部分置0
         classes = torch.max(gt).item() - torch.min(gt).item() + 1
         label_onehot = torch.zeros((self.train_len, classes))
-        gt = gt - 1 # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
-        label_onehot.scatter_(dim=1, index=gt.view(-1,1), value=1) #得到各个样本分类的one-hot表示
-        label_num = torch.sum(label_onehot, dim=0) #得到每个label的样本数
+        gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
+        label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
+        label_num = torch.sum(label_onehot, dim=0)  # 得到每个label的样本数
         F_h_h_sum = torch.mm(F_h_h, label_onehot)
-        F_h_h_mean = F_h_h_sum / label_num #自动广播
-        gt_ = torch.argmax(F_h_h_mean, dim=1) + 1 # 获得每个样本预测的类别
-        F_h_h_mean_max = torch.max(F_h_h_mean, dim=1)[0] # 取到每个样本的最大值 1*n
-        theta = torch.not_equal(gt, gt_).view(1,-1)
+        F_h_h_mean = F_h_h_sum / label_num  # 自动广播
+        gt_ = torch.argmax(F_h_h_mean, dim=1) + 1  # 获得每个样本预测的类别
+        F_h_h_mean_max = torch.max(F_h_h_mean, dim=1)[0]  # 取到每个样本的最大值 1*n
+        theta = torch.not_equal(gt, gt_).view(1, -1)
         F_h_hn_mean_ = torch.mul(F_h_h_mean, label_onehot)
-        F_h_hn_mean = torch.sum(F_h_hn_mean_, dim=1) # 1*n
+        F_h_hn_mean = torch.sum(F_h_hn_mean_, dim=1)  # 1*n
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-
-    def train_model(self, data, labels, n_epoch, lr=[0.001, 0.001]):
+    def train_model(self, data, labels, n_epochs, lr=[0.001, 0.001]):
         '''
         这个函数直接对模型进行训练
-        随着迭代，更新两个部分: net和h
-        :param data: training data , type: Tensor , 行代表cell，列代表的是view
+        随着迭代，更新两个部分: net参数和h_train
+        :param data: training data , type: Tensor , (cell * views)
         :param labels: training labels
-        :param n_epoch:
+        :param n_epochs: epochs
         :param lr: 学习率，是一个数组，0 for net， 1 for h
         :return:
         '''
@@ -104,7 +103,7 @@ class CPMNets():
         optimizer_for_h = optim.Adam(params=[self.h_train], lr=lr[1])
         r_loss_list = []
         c_loss_list = []
-        for epoch in range(n_epoch):
+        for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[str(v)](self.h_train), data[:, self.view_idx[v]])
@@ -114,18 +113,24 @@ class CPMNets():
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
 
-            all_loss.backward() #这里的想法是这样：对net求导，另外reconstruction的loss就没了，对h求导，两边都要考虑
+            # 这里的写all_loss想法是这样：对net参数求导，r_loss为0，对h求导，r_loss和c_loss都要考虑
+            all_loss.backward()
             # 更新net部分
             optimizer_for_net.step()
             # 更新h部分
             optimizer_for_h.step()
 
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch%1000 == 0:
-                print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f'%(epoch, r_loss.detach().item()/self.train_len, c_loss.detach().item()/self.train_len))
-            r_loss_list.append(r_loss.detach().item()/self.train_len)
-            c_loss_list.append(c_loss.detach().item()/self.train_len)
-        lossPolt(r_loss_list, c_loss_list, n_epoch)
+            if epoch % 1000 == 0:
+                print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
+                    epoch, r_loss.detach().item() / self.train_len, c_loss.detach().item() / self.train_len))
+            r_loss_list.append(r_loss.detach().item() / self.train_len)
+            c_loss_list.append(c_loss.detach().item() / self.train_len)
+
+        # 绘制loss训练图像
+        # lossPolt(r_loss_list, c_loss_list, n_epochs)
+        np.save('r_loss.npy',np.array(r_loss_list))
+        np.save('c_loss.npy', np.array(c_loss_list))
 
     def get_h_train(self):
         return self.h_train
@@ -137,7 +142,7 @@ class CPMNets():
 class scGNN(torch.nn.Module):
     def __init__(self, G_data):
         super(scGNN, self).__init__()
-        #Bottle-necked
+        # Bottle-necked
         # middle_out = int(max(5, G_data.num_features/64))
         middle_out = int(max(8, G_data.num_features / 2))
         self.conv1 = GCNConv(G_data.num_features, middle_out)
@@ -150,9 +155,7 @@ class scGNN(torch.nn.Module):
         x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
         return x
+
     def get_embedding(self, G_data):
         x, edge_index = G_data.x, G_data.edge_index
         return self.conv1(x, edge_index)
-
-
-

@@ -20,106 +20,122 @@
 
 import torch
 from torch import nn
-from utils import Normalization, Mask, Cell_graph, readData, setByPathway
+from utils import Normalization, Mask_Data, Graph, readSCData, setByPathway, readSimilarityMatrix
 from Model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
 
-# 数据读取
-# data: 表达矩阵
-# labels: 细胞类别标签
-data, labels, gene_names = readData('./Data1.csv', './label1.csv')
+# data = np.array([
+#     [1,2,3],
+#     [3,2,1]
+# ])
 
-# 对基因集进行划分
-gene_set = setByPathway(data, labels, gene_names,'./pathway/biase_150_mouse.csv')
-
-print("Gene set's length(view_num) is %d"%(len(gene_set)))
-
-# 对每个set做一个标准化
-for i in range(len(gene_set)):
-    gene_set[i] = Normalization(gene_set[i])
-
-#开始训练：训练每个set
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-models = []     #每一个set的模型
-embeddings = [] #每一个set的embedding (view)
-i = 0
-for i in range(len(gene_set)):
-    data = gene_set[i] # n*feat 细胞数*基因数
-    print("View {}:".format(i))
-    n_epoch = 40
-    masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.3)
-    masked_data, index_pair, masking_idx = Mask(data, masked_prob)
-    G_data = Cell_graph(masked_data)
-    model = scGNN(G_data=G_data).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.003, weight_decay=5e-4)
-    for epoch in range(n_epoch):
-        '''
-        把所有非零的元素比例找算出来，0.3作为上界
-        '''
+device = torch.device('cpu')
+# 数据读取, 得到单细胞表达矩阵和标签
+scData, scLabels = readSCData('./Single_Cell_Sequence/mat_gene.csv', './Single_Cell_Sequence/label.csv')
+
+# 对单细胞表达矩阵做归一化
+scDataNorm = Normalization(scData)
+
+'''
+    对数据进行随机mask (仅仅模拟Dropout event)
+'''
+# 概率
+masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNorm.shape[1]), 0.3)
+
+# 得到被masked之后的数据
+masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
+
+'''
+    根据Cell Similarity矩阵，构造出Graph来，每个节点的feature是被masked之后的矩阵        
+'''
+similarity_matrix_arr = [readSimilarityMatrix('./Similarity_Matrix/KEGG_yan_human.csv'),
+                         readSimilarityMatrix('./Similarity_Matrix/Reactome_yan_human.csv'),
+                         readSimilarityMatrix('./Similarity_Matrix/Wikipathways_yan_human.csv'),
+                         readSimilarityMatrix('./Similarity_Matrix/yan_yan_human.csv')]
+
+graphs = [Graph(masked_data, similarity_matrix_arr[0]),
+          Graph(masked_data, similarity_matrix_arr[1]),
+          Graph(masked_data, similarity_matrix_arr[2]),
+          Graph(masked_data, similarity_matrix_arr[3])]
+
+'''
+    训练scGNN，得到每个Pathway的embedding
+'''
+
+
+def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
+
+    model = model.to(device)
+
+    for epoch in range(n_epochs):
         model.train()
-        optimizer.zero_grad() # 清除梯度
-        # 先拿到train_data, 然后找到train_data里面的mask位置
-        pred = model(G_data)
-        # 这里的语法我们可以这样来看: pred是一个二维数组, 先 pred[:]获得所有行(省去了列，默认是获取所有列)
-        # 然后得到的结果再进行索引 [index,index] 对应 [行，列]
-        # dropout_pred = pred[:][
-        #     index_pair[0][masking_idx], index_pair[1][masking_idx]]
-        dropout_pred = pred[
-            index_pair[0][masking_idx], index_pair[1][masking_idx]]
-        dropout_true = data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
+
+        optimizer.zero_grad()
+        pred = model(G_data.to(device))
+
+        # 得到预测的droout
+        dropout_pred = pred[index_pair[0][masking_idx], index_pair[1][masking_idx]]
+        dropout_true = scDataNorm[index_pair[0][masking_idx], index_pair[1][masking_idx]]
+
         loss_fct = nn.MSELoss()
-        loss = loss_fct(dropout_pred.view(1,-1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1,-1))
+        loss = loss_fct(dropout_pred.view(1, -1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1, -1))
 
         loss.backward()
         optimizer.step()  # 更新参数
         if epoch % 10 == 0:
             print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
 
-    G_data = Cell_graph(data)
-    models.append(model)
-    embedding = model.get_embedding(G_data).detach().numpy()
-    embeddings.append(embedding)
-    print('embedding\'s shape is : {} (样本数, 特征数)'.format(embedding.shape))
+    return model
+
+
+views = []
+n_epochs = 60
+# 训练
+for i in range(len(graphs)):
+    model = scGNN(graphs[i])
+    optimizer = torch.optim.Adam(model.parameters())
+    model = train_scGNN_wrapper(model, n_epochs, graphs[i], optimizer)
+
+    # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
+    embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
+    views.append(embedding.detach().numpy())
 
 
 '''
     利用CPM-Net里面介绍的类似子空间的方式去融合Embedding（实际就是对一个Cell的不同的set（view）的融合）        
 '''
 # view的个数
-view_num = len(embeddings)
+view_num = len(views)
 
-#每个view的特征长度可能不一样
+# 每个view的特征长度可能不一样 (在这里是一样的)
 view_feat = []
 for i in range(view_num):
-    view_feat.append(embeddings[i].shape[1])
-
-sample_num = embeddings[0].shape[0]
+    view_feat.append(views[i].shape[1])
+sample_num = views[0].shape[0]
 
 # 接下来对现有的数据做一个train和test的划分
 spilit = [0.8, 0.2]
 train_len = int(sample_num * 0.8)
 test_len = sample_num - train_len
 
-# 数据准备
-for i in range(len(embeddings)):
-    embeddings[i] = np.array(embeddings[i])
-data_embeddings = np.concatenate(embeddings, axis=1).astype(np.float64) # 把所有的view连接在一起
-data_embeddings = torch.from_numpy(data_embeddings).float() #转为Tensor
-labels_tensor = torch.from_numpy(labels).view(1, labels.shape[0]).long()
+# 把所有的view连接在一起
+data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
+data_embeddings = torch.from_numpy(data_embeddings).float()
+labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
 
-train_data = data_embeddings[:train_len,:]
+train_data = data_embeddings[:train_len, :]
 test_data = data_embeddings[train_len:, :]
 
-train_labels = labels_tensor[:,:train_len]
-test_labels = labels_tensor[train_len:,:]
-
+train_labels = labels_tensor[:, :train_len]
+test_labels = labels_tensor[train_len:, :]
 
 # lsd_dim 作为超参数可调
-model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=2)
+model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
-# train H 部分
-n_epoch = 25000
+
+n_epochs = 20000
 
 # 开始训练
-model.train_model(train_data, train_labels, n_epoch, lr=[0.001, 0.001])
+model.train_model(train_data, train_labels, n_epochs, lr=[0.001, 0.001])
