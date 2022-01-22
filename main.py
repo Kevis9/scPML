@@ -4,7 +4,7 @@
         1. Improving Single-Cell RNA-seq Clustering by Integrating Pathways:
             1.1 利用Pathway数据将表达矩阵分成很4个不同的Similarity矩阵
                 原论文提供了R源码，利用AUCell计算Pathway的score，然后将AUCell score和Single cell data用
-                SNF方法融合，得到Similarity matrix(samples * samples)
+                SNF方法融合，得到Similarity matrix(cells * cells)
 
         2. SCGNN: scRNA-seq Dropout Imputation via Induced Hierarchical Cell Similarity Graph
             2.1 对表达矩阵进行masked
@@ -20,15 +20,12 @@
 
 import torch
 from torch import nn
-from utils import Normalization, Mask_Data, Graph, readSCData, setByPathway, readSimilarityMatrix
+from utils import Normalization, Mask_Data, Graph, readSCData, setByPathway, readSimilarityMatrix, Classify
 from Model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
 
-# data = np.array([
-#     [1,2,3],
-#     [3,2,1]
-# ])
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
@@ -63,7 +60,6 @@ graphs = [Graph(masked_data, similarity_matrix_arr[0]),
 '''
     训练scGNN，得到每个Pathway的embedding
 '''
-
 
 def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
@@ -116,8 +112,7 @@ for i in range(view_num):
 sample_num = views[0].shape[0]
 
 # 接下来对现有的数据做一个train和test的划分
-spilit = [0.8, 0.2]
-train_len = int(sample_num * 0.8)
+train_len = int(sample_num * 0.7)
 test_len = sample_num - train_len
 
 # 把所有的view连接在一起
@@ -135,7 +130,17 @@ test_labels = labels_tensor[train_len:, :]
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
 
-n_epochs = 20000
+n_epochs = 15000
 
 # 开始训练
-model.train_model(train_data, train_labels, n_epochs, lr=[0.001, 0.001])
+model.train_model(train_data, train_labels, n_epochs, lr=[0.0003, 0.0003])
+
+# 对test_h进行adjust
+model.test(test_data, n_epochs)
+
+train_H = model.get_h_train()
+test_H = model.get_h_test()
+# 最后进行一个分类
+label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
+
+print("Prediction Accuracy: %.3f" % ((label_pre == test_labels).sum().flaot()/(test_len)))

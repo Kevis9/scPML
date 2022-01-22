@@ -5,6 +5,7 @@ import torch
 from torch_geometric.data import Data as geoData
 import networkx as nx
 import csv
+from sklearn.preprocessing import OneHotEncoder
 
 
 def Normalization(data):
@@ -159,5 +160,21 @@ def lossPolt(r_loss, c_loss, n_epoch):
     plt.show()
 
 
-
+def Classify(lsd1, lsd2, label):
+    """In most cases, this method is used to predict the highest accuracy.
+    :param lsd1: train set's latent space data
+    :param lsd2: test set's latent space data
+    :param label: label of train set
+    :return: Predicted label
+    """
+    F_h_h = np.dot(lsd2, np.transpose(lsd1))
+    label = label.reshape(len(label), 1) - 1
+    enc = OneHotEncoder()
+    a = enc.fit_transform(label)
+    label_onehot = a.toarray()
+    label_num = np.sum(label_onehot, axis=0)
+    F_h_h_sum = np.dot(F_h_h, label_onehot)
+    F_h_h_mean = F_h_h_sum / label_num
+    label_pre = np.argmax(F_h_h_mean, axis=1) + 1
+    return label_pre
 

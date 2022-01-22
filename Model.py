@@ -4,7 +4,6 @@ import torch
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
-from utils import lossPolt
 
 '''
     CPM-Nets, 改写为Pytroch形式
@@ -63,6 +62,9 @@ class CPMNets():
     def classification_loss(self, gt):
         '''
         :param gt: ground truth labels (把train部分的label传进来),
+
+        :param h: latent representation
+        :param len:
         :return: 返回classfication的loss
         '''
         F_h_h = torch.mm(self.h_train, self.h_train.t())
@@ -107,8 +109,14 @@ class CPMNets():
             r_loss = 0
             for v in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[str(v)](self.h_train), data[:, self.view_idx[v]])
+
+            # 每个view的平均loss
+            r_loss = r_loss / self.view_num
+
             c_loss = self.classification_loss(labels)
-            all_loss = r_loss + c_loss
+
+            # 每个样本的平均loss
+            all_loss = (r_loss + c_loss) / self.train_len
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
@@ -129,8 +137,38 @@ class CPMNets():
 
         # 绘制loss训练图像
         # lossPolt(r_loss_list, c_loss_list, n_epochs)
-        np.save('r_loss.npy',np.array(r_loss_list))
+        np.save('r_loss.npy', np.array(r_loss_list))
         np.save('c_loss.npy', np.array(c_loss_list))
+
+    def test(self, data, n_epochs):
+        '''
+        对h_test做一个训练调整
+        :param data: 测试数据
+        :param n_epochs:
+        :return:
+        '''
+        optimizer_for_test_h = optim.Adam(params=[self.h_test])
+        r_loss_list = []
+        for epoch in range(n_epochs):
+            r_loss = 0
+            for v in range(self.view_num):
+                r_loss += self.reconstrution_loss(self.net[str(v)](self.h_train), data[:, self.view_idx[v]])
+
+            # 每个view的平均loss
+            r_loss = r_loss / self.view_num
+            # 每个测试样本的平均r_loss
+            r_loss = r_loss / self.train_len
+
+            optimizer_for_test_h.zero_grad()
+            r_loss.backward()
+            optimizer_for_test_h.step()
+            # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
+            if epoch % 1000 == 0:
+                print('TEST: epoch %d: Reconstruction loss = %.3f '%(
+                    epoch, r_loss.detach().item() / self.train_len))
+            r_loss_list.append(r_loss.detach().item() / self.train_len)
+        np.save('test_r_loss.npy', np.array(r_loss_list))
+
 
     def get_h_train(self):
         return self.h_train
