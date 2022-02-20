@@ -99,7 +99,7 @@ for i in range(len(graphs)):
     model = model.to(device)
     # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
     embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
-    views.append(embedding.detach().numpy())
+    views.append(embedding.detach().cpu().numpy())
 
 
 '''
