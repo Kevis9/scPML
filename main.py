@@ -99,7 +99,7 @@ for i in range(len(graphs)):
     model = model.to(device)
     # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
     embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
-    views.append(embedding.detach().cpu().numpy())
+    views.append(embedding.detach().cpu(). yinumpy())
 
 
 '''
@@ -133,8 +133,8 @@ test_labels = labels_tensor[train_len:, :]
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
 
-# n_epochs = 15000
-n_epochs = 100
+n_epochs = 15000
+# n_epochs = 100
 
 # 开始训练
 model.train_model(train_data, train_labels, n_epochs, lr=[0.0003, 0.0003])

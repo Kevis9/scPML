@@ -152,12 +152,12 @@ class CPMNets():
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
-                r_loss += self.reconstrution_loss(self.net[str(v)](self.h_train), data[:, self.view_idx[v]])
+                r_loss += self.reconstrution_loss(self.net[str(v)](self.h_test), data[:, self.view_idx[v]])
 
             # 每个view的平均loss
             r_loss = r_loss / self.view_num
             # 每个测试样本的平均r_loss
-            r_loss = r_loss / self.train_len
+            r_loss = r_loss / self.test_len
 
             optimizer_for_test_h.zero_grad()
             r_loss.backward()
