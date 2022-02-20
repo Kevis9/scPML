@@ -17,6 +17,7 @@
         3. CPM-Nets: Cross Partial Multi-View Networks
             利用这篇提出的CPM-Nets方法对4个view进行融合，得到每个cell的representation
 '''
+import os.path
 
 import torch
 from torch import nn
@@ -30,7 +31,8 @@ import numpy as np
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
 # 数据读取, 得到单细胞表达矩阵和标签
-scData, scLabels = readSCData('./Single_Cell_Sequence/mat_gene.csv', './Single_Cell_Sequence/label.csv')
+
+scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", "mat_gene.csv"), os.path.join(os.getcwd(), "Single_Cell_Sequence", "label.csv"))
 
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
@@ -47,10 +49,11 @@ masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
 '''
     根据Cell Similarity矩阵，构造出Graph来，每个节点的feature是被masked之后的矩阵        
 '''
-similarity_matrix_arr = [readSimilarityMatrix('./Similarity_Matrix/KEGG_yan_human.csv'),
-                         readSimilarityMatrix('./Similarity_Matrix/Reactome_yan_human.csv'),
-                         readSimilarityMatrix('./Similarity_Matrix/Wikipathways_yan_human.csv'),
-                         readSimilarityMatrix('./Similarity_Matrix/yan_yan_human.csv')]
+base_path = os.path.join(os.getcwd(), "Similarity_Matrix")
+similarity_matrix_arr = [readSimilarityMatrix(os.path.join(base_path, 'KEGG_yan_human.csv')),
+                         readSimilarityMatrix(os.path.join(base_path, 'Reactome_yan_human.csv')),
+                         readSimilarityMatrix(os.path.join(base_path, 'Wikipathways_yan_human.csv')),
+                         readSimilarityMatrix(os.path.join(base_path, 'yan_yan_human.csv'))]
 
 graphs = [Graph(masked_data, similarity_matrix_arr[0]),
           Graph(masked_data, similarity_matrix_arr[1]),
@@ -130,16 +133,25 @@ test_labels = labels_tensor[train_len:, :]
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
 
-n_epochs = 15000
+# n_epochs = 15000
+n_epochs = 100
 
 # 开始训练
 model.train_model(train_data, train_labels, n_epochs, lr=[0.0003, 0.0003])
 
-# 对test_h进行adjust
+# 对test_h进行adjust（按照论文的想法，保证consistency）
 model.test(test_data, n_epochs)
 
 train_H = model.get_h_train()
 test_H = model.get_h_test()
+
+print("test h is \n",test_H)
+test_H = test_H.detach().numpy()
+test_h_path = os.path.join(os.getcwd(), "test_h.npy")
+np.save(test_h_path, test_H)
+# 后面拿到test_h之后做一个k-means聚类：待解决
+
+
 # 最后进行一个分类
 label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
 
