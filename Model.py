@@ -8,7 +8,7 @@ import torch.optim as optim
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class CPMNets():
     def __init__(self, view_num, train_len, test_len, view_len_arr, lsd_dim=128):
@@ -129,7 +129,7 @@ class CPMNets():
             optimizer_for_h.step()
 
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 1000 == 0:
+            if epoch % 100 == 0:
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item() / self.train_len, c_loss.detach().item() / self.train_len))
             r_loss_list.append(r_loss.detach().item() / self.train_len)
@@ -196,4 +196,4 @@ class scGNN(torch.nn.Module):
 
     def get_embedding(self, G_data):
         x, edge_index = G_data.x, G_data.edge_index
-        return self.conv1(x, edge_index)
+        return self.conv1(x.to(device), edge_index.to(device))
