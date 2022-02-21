@@ -30,21 +30,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import cluster
 import seaborn as sns
-'''test_h做一个 k-means聚类'''
-test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
-model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
-model.fit(test_h)
-# 数据可视化
-# 利用t-sne降维
-from sklearn.manifold import TSNE
-tsne = TSNE()
-test_h_2d = tsne.fit_transform(test_h)
-palette = sns.color_palette("bright", 6)
-print(type(model.labels_))
-print(model.labels_)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
-plt.show()
-exit()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
@@ -140,7 +125,7 @@ test_len = sample_num - train_len
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
 # 做一个z-score归一化
-data_embeddings = z_score_Normalization(data_embeddings)
+# data_embeddings = z_score_Normalization(data_embeddings)
 data_embeddings = torch.from_numpy(data_embeddings).float()
 
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
@@ -159,7 +144,7 @@ test_labels = labels_tensor[:, idx[train_len:]]
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
 
-n_epochs = 20000
+n_epochs = 10000
 # n_epochs = 100
 
 # 开始训练
@@ -177,8 +162,24 @@ test_h_path = os.path.join(os.getcwd(), "test_h.npy")
 np.save(test_h_path, test_H)
 # 后面拿到test_h之后做一个k-means聚类：待解决
 
+'''
+    test_h做一个 k-means聚类
+'''
+test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
+model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+model.fit(test_h)
+# 数据可视化
+# 利用t-sne降维
+from sklearn.manifold import TSNE
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(test_h)
+palette = sns.color_palette("bright", 6)
+print(type(model.labels_))
+print(model.labels_)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+plt.show()
 
 # 最后进行一个分类
-label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
-
-print("Prediction Accuracy: %.3f" % ((label_pre == test_labels).sum().flaot()/(test_len)))
+# label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
+#
+# print("Prediction Accuracy: %.3f" % ((label_pre == test_labels).sum().flaot()/(test_len)))
