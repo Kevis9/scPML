@@ -93,7 +93,7 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
 
 views = []
-n_epochs = 60
+n_epochs = 100
 # 训练
 for i in range(len(graphs)):
     model = scGNN(graphs[i])
@@ -118,8 +118,11 @@ for i in range(view_num):
     view_feat.append(views[i].shape[1])
 sample_num = views[0].shape[0]
 
+print("Embedding的shape为")
+print(view_feat[0].shape)
+
 # 接下来对现有的数据做一个train和test的划分
-train_len = int(sample_num * 0.7)
+train_len = int(sample_num * 0.6)
 test_len = sample_num - train_len
 
 # 把所有的view连接在一起

@@ -42,8 +42,6 @@ def Mask_Data(data, masked_prob):
         X[index_pair[0][masking_idx], index_pair[1][masking_idx]] 就是指被masked的数据
     '''
     index_pair = np.where(data != 0)
-    print(index_pair)
-    print(index_pair[0].shape[0])
     seed = 1
     np.random.seed(seed)
     masking_idx = np.random.choice(index_pair[0].shape[0], int(index_pair[0].shape[0] * masked_prob), replace=False)
@@ -109,7 +107,7 @@ def readSCData(dataPath, labelPath):
         labels = (np.array(labels)[:,1:]).astype(np.int64).reshape(-1)
         fp.close()
 
-    print('Single Cell Data\'s shape is :{}'.format(data.shape))  # (samples,genes)
+    print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     return data.astype(np.float64), labels.astype(np.int64)
 
 
@@ -144,7 +142,7 @@ def setByPathway(data, labels, gene_names, path):
         if len(gene_idx[group_id+1]) < 3:
             continue
         gene_set.append(data[:,gene_idx[group_id+1]]) #拿第1、2、3...组基因放到gene_set里面
-    # print(len(gene_set))
+
     return gene_set
 
 
