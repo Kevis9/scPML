@@ -27,6 +27,21 @@ from utils import Normalization, Mask_Data, Graph, readSCData, \
 from Model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
+from sklearn import cluster
+import seaborn as sns
+'''test_h做一个 k-means聚类'''
+# test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
+# model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+# model.fit(test_h)
+# print(test_h)
+# 数据可视化
+# 利用t-sne降维
+from sklearn.manifold import TSNE
+x = np.array([[0, 0, 0, 1, 2], [0, 1, 1, 3, 5], [1, 0, 1, 7, 2], [1, 1, 1, 10, 22]])
+tsne = TSNE()
+x = tsne.fit_transform(x)
+print("x")
+exit()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
