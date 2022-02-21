@@ -121,9 +121,10 @@ test_len = sample_num - train_len
 
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
-data_embeddings = torch.from_numpy(data_embeddings).float()
 # 做一个z-score归一化
 data_embeddings = z_score_Normalization(data_embeddings)
+data_embeddings = torch.from_numpy(data_embeddings).float()
+
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
 
 # 在这里做一个随机打乱的操作
