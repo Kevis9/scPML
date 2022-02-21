@@ -134,7 +134,7 @@ np.random.shuffle(idx)
 train_data = data_embeddings[idx[:train_len], :]
 test_data = data_embeddings[idx[train_len:], :]
 
-train_labels = labels_tensor[:, :idx[:train_len]]
+train_labels = labels_tensor[:, idx[:train_len]]
 test_labels = labels_tensor[:, idx[train_len:]]
 
 # lsd_dim 作为超参数可调
