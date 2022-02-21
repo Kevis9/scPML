@@ -27,6 +27,7 @@ from utils import Normalization, Mask_Data, Graph, readSCData, \
 from Model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn import cluster
 import seaborn as sns
 '''test_h做一个 k-means聚类'''
@@ -41,7 +42,8 @@ test_h_2d = tsne.fit_transform(test_h)
 palette = sns.color_palette("bright", 6)
 print(type(model.labels_))
 print(model.labels_)
-sns.scatterplot(test_h_2d[:,0], test_h_2d[:, 1], hue=model.labels_, legend='full', palette=palette)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+plt.show()
 exit()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
