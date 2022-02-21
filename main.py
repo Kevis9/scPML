@@ -38,7 +38,7 @@ model.fit(test_h)
 from sklearn.manifold import TSNE
 tsne = TSNE()
 test_h_2d = tsne.fit_transform(test_h)
-palette = sns.color_palette("bright", 10)
+palette = sns.color_palette("bright", 6)
 print(type(model.labels_))
 print(model.labels_)
 sns.scatterplot(test_h_2d[:,0], test_h_2d[:, 1], hue=model.labels_, legend='full', palette=palette)
