@@ -1,0 +1,3 @@
+这部分的label和mat_gene来自Pathway论文里面的yan matrix和yan_label
+利用R的程序直接将这部分保存了出来
+总共有6个类

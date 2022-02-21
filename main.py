@@ -21,12 +21,12 @@ import os.path
 
 import torch
 from torch import nn
-from utils import Normalization, Mask_Data, Graph, readSCData, setByPathway, readSimilarityMatrix, Classify
+from utils import Normalization, Mask_Data, Graph, readSCData, \
+    setByPathway, readSimilarityMatrix, \
+    Classify, z_score_Normalization
 from Model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
-
-
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
@@ -99,6 +99,7 @@ for i in range(len(graphs)):
     model = model.to(device)
     # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
     embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
+
     views.append(embedding.detach().cpu().numpy())
 
 
@@ -121,19 +122,25 @@ test_len = sample_num - train_len
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
 data_embeddings = torch.from_numpy(data_embeddings).float()
+# 做一个z-score归一化
+data_embeddings = z_score_Normalization(data_embeddings)
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
 
-train_data = data_embeddings[:train_len, :]
-test_data = data_embeddings[train_len:, :]
+# 在这里做一个随机打乱的操作
+idx = np.array([i for i in range(len(data_embeddings))])
+np.random.shuffle(idx)
 
-train_labels = labels_tensor[:, :train_len]
-test_labels = labels_tensor[train_len:, :]
+train_data = data_embeddings[idx[:train_len], :]
+test_data = data_embeddings[idx[train_len:], :]
+
+train_labels = labels_tensor[:, :idx[:train_len]]
+test_labels = labels_tensor[:, idx[train_len:]]
 
 # lsd_dim 作为超参数可调
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
 
-n_epochs = 15000
+n_epochs = 20000
 # n_epochs = 100
 
 # 开始训练

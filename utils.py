@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 def Normalization(data):
     '''
-    归一化处理
+    scGCN中的归一化处理，对表达矩阵的每一个表达量做一个平均化
     :param data: 矩阵 (cells * genes)
     :return: 返回归一化的矩阵
     '''
@@ -18,6 +18,17 @@ def Normalization(data):
     mean_transcript = np.mean(row_sum)
     data_norm = (data / row_sum.reshape(-1, 1)) * mean_transcript
     return data_norm
+
+
+def z_score_Normalization(data):
+    '''
+    利用z-score方法做一个batch normalization
+    :param data: 矩阵，（样本*特征）, 二维数组
+    :return:
+    '''
+    means = np.mean(data, axis=0)
+    standard = np.std(data, axis=0)
+    return (data - means)/standard
 
 
 def Mask_Data(data, masked_prob):
@@ -135,8 +146,6 @@ def setByPathway(data, labels, gene_names, path):
         gene_set.append(data[:,gene_idx[group_id+1]]) #拿第1、2、3...组基因放到gene_set里面
     # print(len(gene_set))
     return gene_set
-
-
 
 
 def readSimilarityMatrix(path):
