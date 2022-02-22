@@ -60,9 +60,7 @@ def Graph(data, mat_similarity):
     '''
     k = 2
 
-    # A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
-    # print(A.todense())
-    # G = nx.from_numpy_matrix(A.todense())
+
     # 要对mat_similarity取前K个最大的weight作为neighbors
     k_idxs = []
     for i in range(mat_similarity.shape[0]):
@@ -74,6 +72,11 @@ def Graph(data, mat_similarity):
         mat_similarity[i, k_idxs[i]] = 1
 
     G = nx.from_numpy_matrix(np.matrix(mat_similarity))
+
+    # 这里稍微修改下，尝试用原来Huang的Similarity matrix来做
+    A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
+    # print(A.todense())
+    G = nx.from_numpy_matrix(A.todense())
 
     edges = []
     # 这里认为是无向图，强行变成对称矩阵，多出来的边不用管

@@ -50,8 +50,6 @@ masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNo
 # 得到被masked之后的数据
 masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
 
-
-
 '''
     根据Cell Similarity矩阵，构造出Graph来，每个节点的feature是被masked之后的矩阵        
 '''
@@ -61,10 +59,12 @@ similarity_matrix_arr = [readSimilarityMatrix(os.path.join(matrix_path, 'KEGG_ya
                          readSimilarityMatrix(os.path.join(matrix_path, 'Wikipathways_yan_human.csv')),
                          readSimilarityMatrix(os.path.join(matrix_path, 'yan_yan_human.csv'))]
 
-graphs = [Graph(masked_data, similarity_matrix_arr[0]),
-          Graph(masked_data, similarity_matrix_arr[1]),
-          Graph(masked_data, similarity_matrix_arr[2]),
-          Graph(masked_data, similarity_matrix_arr[3])]
+# graphs = [Graph(masked_data, similarity_matrix_arr[0]),
+#           Graph(masked_data, similarity_matrix_arr[1]),
+#           Graph(masked_data, similarity_matrix_arr[2]),
+#           Graph(masked_data, similarity_matrix_arr[3])]
+
+graphs = [Graph(masked_data, similarity_matrix_arr[0])]
 
 '''
     训练scGNN，得到每个Pathway的embedding
@@ -143,7 +143,7 @@ data_embeddings = z_score_Normalization(data_embeddings)
 data_embeddings = torch.from_numpy(data_embeddings).float()
 
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
-
+# 这里查看下 Data Embedding的情况
 tsne = TSNE()
 test_h_2d = tsne.fit_transform(data_embeddings)
 plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
