@@ -39,7 +39,7 @@ scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", 
 
 
 # 对单细胞表达矩阵做归一化
-# scDataNorm = Normalization(scData)
+scDataNorm = scData
 
 '''
     对数据进行随机mask (仅仅模拟Dropout event)
