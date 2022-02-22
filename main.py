@@ -129,11 +129,12 @@ test_len = sample_num - train_len
 '''
     查看所有view的类别分布情况    
 '''
-for i in range(view_num):
-    tsne = TSNE()
-    test_h_2d = tsne.fit_transform(views[i])
-    plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
-    plt.show()
+# for i in range(view_num):
+#     tsne = TSNE()
+#     test_h_2d = tsne.fit_transform(views[i])
+#     plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
+#     plt.show()
+
 
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
@@ -142,6 +143,11 @@ data_embeddings = z_score_Normalization(data_embeddings)
 data_embeddings = torch.from_numpy(data_embeddings).float()
 
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
+
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(data_embeddings)
+plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
+plt.show()
 
 # 在这里做一个随机打乱的操作
 idx = np.array([i for i in range(len(data_embeddings))])
