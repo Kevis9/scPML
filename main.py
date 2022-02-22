@@ -39,7 +39,13 @@ scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", 
 
 
 # 对单细胞表达矩阵做归一化
-scDataNorm = scData
+scDataNorm = Normalization(scData)
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(scDataNorm)
+palette = sns.color_palette("bright", 6)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
+plt.show()
+exit()
 
 '''
     对数据进行随机mask (仅仅模拟Dropout event)
@@ -50,12 +56,7 @@ masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNo
 # 得到被masked之后的数据
 masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
 
-tsne = TSNE()
-test_h_2d = tsne.fit_transform(masked_data)
-palette = sns.color_palette("bright", 6)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
-plt.show()
-exit()
+
 
 '''
     根据Cell Similarity矩阵，构造出Graph来，每个节点的feature是被masked之后的矩阵        
