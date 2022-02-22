@@ -123,7 +123,20 @@ sample_num = views[0].shape[0]
 train_len = int(sample_num * 0.6)
 test_len = sample_num - train_len
 
-data = views[1]
+data = views[2]
+model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+model.fit(data)
+# 数据可视化
+# 利用t-sne降维
+
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(data)
+print(type(model.labels_))
+print(model.labels_)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+plt.show()
+
+data = views[3]
 model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
 model.fit(data)
 # 数据可视化
