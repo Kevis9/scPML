@@ -30,13 +30,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import cluster
 import seaborn as sns
-
+from sklearn.manifold import TSNE
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
 # 数据读取, 得到单细胞表达矩阵和标签
 
 scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", "mat_gene.csv"), os.path.join(os.getcwd(), "Single_Cell_Sequence", "label.csv"))
+model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+model.fit(scData)
+# 数据可视化
+# 利用t-sne降维
 
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(scData)
+palette = sns.color_palette("bright", 6)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+plt.show()
+exit()
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
 
@@ -52,11 +62,11 @@ masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
 '''
     根据Cell Similarity矩阵，构造出Graph来，每个节点的feature是被masked之后的矩阵        
 '''
-base_path = os.path.join(os.getcwd(), "Similarity_Matrix")
-similarity_matrix_arr = [readSimilarityMatrix(os.path.join(base_path, 'KEGG_yan_human.csv')),
-                         readSimilarityMatrix(os.path.join(base_path, 'Reactome_yan_human.csv')),
-                         readSimilarityMatrix(os.path.join(base_path, 'Wikipathways_yan_human.csv')),
-                         readSimilarityMatrix(os.path.join(base_path, 'yan_yan_human.csv'))]
+matrix_path = os.path.join(os.getcwd(), "Similarity_Matrix")
+similarity_matrix_arr = [readSimilarityMatrix(os.path.join(matrix_path, 'KEGG_yan_human.csv')),
+                         readSimilarityMatrix(os.path.join(matrix_path, 'Reactome_yan_human.csv')),
+                         readSimilarityMatrix(os.path.join(matrix_path, 'Wikipathways_yan_human.csv')),
+                         readSimilarityMatrix(os.path.join(matrix_path, 'yan_yan_human.csv'))]
 
 graphs = [Graph(masked_data, similarity_matrix_arr[0]),
           Graph(masked_data, similarity_matrix_arr[1]),
@@ -125,7 +135,7 @@ test_len = sample_num - train_len
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
 # 做一个z-score归一化
-# data_embeddings = z_score_Normalization(data_embeddings)
+data_embeddings = z_score_Normalization(data_embeddings)
 data_embeddings = torch.from_numpy(data_embeddings).float()
 
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
@@ -170,7 +180,7 @@ model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
 model.fit(test_h)
 # 数据可视化
 # 利用t-sne降维
-from sklearn.manifold import TSNE
+
 tsne = TSNE()
 test_h_2d = tsne.fit_transform(test_h)
 palette = sns.color_palette("bright", 6)
