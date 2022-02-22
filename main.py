@@ -40,12 +40,6 @@ scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", 
 
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
-tsne = TSNE()
-test_h_2d = tsne.fit_transform(scDataNorm)
-palette = sns.color_palette("bright", 6)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
-plt.show()
-exit()
 
 '''
     对数据进行随机mask (仅仅模拟Dropout event)
@@ -102,7 +96,7 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
 
 views = []
-n_epochs = 100
+n_epochs = 300
 # 训练
 for i in range(len(graphs)):
     model = scGNN(graphs[i])
@@ -131,6 +125,15 @@ sample_num = views[0].shape[0]
 # 接下来对现有的数据做一个train和test的划分
 train_len = int(sample_num * 0.6)
 test_len = sample_num - train_len
+
+'''
+    查看所有view的类别分布情况    
+'''
+for i in range(view_num):
+    tsne = TSNE()
+    test_h_2d = tsne.fit_transform(views[i])
+    plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=model.labels_)
+    plt.show()
 
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
