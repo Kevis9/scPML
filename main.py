@@ -96,7 +96,7 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
 
 views = []
-n_epochs = 300
+n_epochs = 100
 # 训练
 for i in range(len(graphs)):
     model = scGNN(graphs[i])
@@ -152,6 +152,12 @@ test_data = data_embeddings[idx[train_len:], :]
 
 train_labels = labels_tensor[:, idx[:train_len]]
 test_labels = labels_tensor[:, idx[train_len:]]
+
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(test_data)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=test_labels)
+plt.show()
+exit()
 
 # lsd_dim 作为超参数可调
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
