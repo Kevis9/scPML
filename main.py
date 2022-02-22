@@ -96,7 +96,7 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
 
 views = []
-n_epochs = 100
+n_epochs = 500
 # 训练
 for i in range(len(graphs)):
     model = scGNN(graphs[i])
