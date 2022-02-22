@@ -36,17 +36,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # 数据读取, 得到单细胞表达矩阵和标签
 
 scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", "mat_gene.csv"), os.path.join(os.getcwd(), "Single_Cell_Sequence", "label.csv"))
-model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
-model.fit(scData)
-# 数据可视化
-# 利用t-sne降维
 
-tsne = TSNE()
-test_h_2d = tsne.fit_transform(scData)
-palette = sns.color_palette("bright", 6)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
-plt.show()
-exit()
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
 
@@ -119,6 +109,7 @@ for i in range(len(graphs)):
 '''
     利用CPM-Net里面介绍的类似子空间的方式去融合Embedding（实际就是对一个Cell的不同的set（view）的融合）        
 '''
+
 # view的个数
 view_num = len(views)
 
@@ -131,6 +122,21 @@ sample_num = views[0].shape[0]
 # 接下来对现有的数据做一个train和test的划分
 train_len = int(sample_num * 0.6)
 test_len = sample_num - train_len
+
+model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+model.fit(views[0])
+# 数据可视化
+# 利用t-sne降维
+
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(views[0])
+palette = sns.color_palette("bright", 6)
+print(type(model.labels_))
+print(model.labels_)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+plt.show()
+exit()
+
 
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
