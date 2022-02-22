@@ -96,7 +96,7 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
 
 views = []
-n_epochs = 1000
+n_epochs = 300
 # 训练
 for i in range(len(graphs)):
     model = scGNN(graphs[i])
@@ -132,7 +132,7 @@ test_len = sample_num - train_len
 for i in range(view_num):
     tsne = TSNE()
     test_h_2d = tsne.fit_transform(views[i])
-    plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=model.labels_)
+    plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
     plt.show()
 
 # 把所有的view连接在一起
