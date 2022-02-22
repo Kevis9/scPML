@@ -157,13 +157,13 @@ tsne = TSNE()
 test_h_2d = tsne.fit_transform(test_data)
 plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=test_labels)
 plt.show()
-exit()
+
 
 # lsd_dim 作为超参数可调
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 
 
-n_epochs = 10000
+n_epochs = 5000
 # n_epochs = 100
 
 # 开始训练
