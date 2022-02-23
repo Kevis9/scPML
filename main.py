@@ -78,7 +78,7 @@ graphs = [Graph(masked_data, similarity_matrix_arr[0]),
           Graph(masked_data, similarity_matrix_arr[2]),
           Graph(masked_data, similarity_matrix_arr[3])]
 
-graphs = [Graph(masked_data, similarity_matrix_arr[0])]
+# graphs = [Graph(masked_data, similarity_matrix_arr[0])]
 '''
     训练scGNN，得到每个Pathway的embedding
 '''
