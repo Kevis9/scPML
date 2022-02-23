@@ -66,7 +66,7 @@ model.fit(similarity_matrix_arr[0])
 # 利用t-sne降维
 
 tsne = TSNE()
-test_h_2d = tsne.fit_transform(similarity_matrix_arr)
+test_h_2d = tsne.fit_transform(similarity_matrix_arr[0])
 palette = sns.color_palette("bright", 6)
 print(type(model.labels_))
 print(model.labels_)
