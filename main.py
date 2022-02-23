@@ -70,7 +70,7 @@ test_h_2d = tsne.fit_transform(similarity_matrix_arr[0])
 palette = sns.color_palette("bright", 6)
 print(type(model.labels_))
 print(model.labels_)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
 plt.show()
 exit()
 
