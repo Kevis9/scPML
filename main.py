@@ -31,12 +31,11 @@ import matplotlib.pyplot as plt
 from sklearn import cluster
 import seaborn as sns
 from sklearn.manifold import TSNE
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # device = torch.device('cpu')
 # 数据读取, 得到单细胞表达矩阵和标签
-
 scData, scLabels = readSCData(os.path.join(os.getcwd(), "Single_Cell_Sequence", "mat_gene.csv"), os.path.join(os.getcwd(), "Single_Cell_Sequence", "label.csv"))
-
 
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
@@ -60,24 +59,24 @@ similarity_matrix_arr = [readSimilarityMatrix(os.path.join(matrix_path, 'KEGG_ya
                          readSimilarityMatrix(os.path.join(matrix_path, 'yan_yan_human.csv'))]
 
 # 直接对Similarity matrix做一个聚类
-model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
-model.fit(similarity_matrix_arr[0])
-# 数据可视化
-# 利用t-sne降维
+# model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+# model.fit(similarity_matrix_arr[0])
+# # 数据可视化
+# # 利用t-sne降维
+#
+# tsne = TSNE()
+# test_h_2d = tsne.fit_transform(similarity_matrix_arr[0])
+# palette = sns.color_palette("bright", 6)
+# print(type(model.labels_))
+# print(model.labels_)
+# plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
+# plt.show()
+# exit()
 
-tsne = TSNE()
-test_h_2d = tsne.fit_transform(similarity_matrix_arr[0])
-palette = sns.color_palette("bright", 6)
-print(type(model.labels_))
-print(model.labels_)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
-plt.show()
-exit()
-
-# graphs = [Graph(masked_data, similarity_matrix_arr[0]),
-#           Graph(masked_data, similarity_matrix_arr[1]),
-#           Graph(masked_data, similarity_matrix_arr[2]),
-#           Graph(masked_data, similarity_matrix_arr[3])]
+graphs = [Graph(masked_data, similarity_matrix_arr[0]),
+          Graph(masked_data, similarity_matrix_arr[1]),
+          Graph(masked_data, similarity_matrix_arr[2]),
+          Graph(masked_data, similarity_matrix_arr[3])]
 
 graphs = [Graph(masked_data, similarity_matrix_arr[0])]
 '''
@@ -110,7 +109,7 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer):
 
 
 views = []
-n_epochs = 500
+n_epochs = 300
 # 训练
 for i in range(len(graphs)):
     model = scGNN(graphs[i])
@@ -119,7 +118,6 @@ for i in range(len(graphs)):
     model = model.to(device)
     # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
     embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
-
     views.append(embedding.detach().cpu().numpy())
 
 
@@ -143,20 +141,19 @@ test_len = sample_num - train_len
 '''
     查看所有view的类别分布情况    
 '''
-# for i in range(view_num):
-#     tsne = TSNE()
-#     test_h_2d = tsne.fit_transform(views[i])
-#     plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
-#     plt.show()
-
+for i in range(view_num):
+    tsne = TSNE()
+    test_h_2d = tsne.fit_transform(views[i])
+    plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
+    plt.show()
 
 # 把所有的view连接在一起
 data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
 # 做一个z-score归一化
 data_embeddings = z_score_Normalization(data_embeddings)
 data_embeddings = torch.from_numpy(data_embeddings).float()
-
 labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
+
 # 这里查看下 Data Embedding的情况
 tsne = TSNE()
 test_h_2d = tsne.fit_transform(data_embeddings)
@@ -173,6 +170,7 @@ test_data = data_embeddings[idx[train_len:], :]
 train_labels = labels_tensor[:, idx[:train_len]]
 test_labels = labels_tensor[:, idx[train_len:]]
 
+# 对test数据做一个可视化
 tsne = TSNE()
 test_h_2d = tsne.fit_transform(test_data)
 plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=test_labels)

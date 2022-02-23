@@ -60,9 +60,10 @@ def Graph(data, mat_similarity):
     '''
     k = 2
 
-
     # 要对mat_similarity取前K个最大的weight作为neighbors
     k_idxs = []
+    # 现将对角线部分全部设为0, 避免自己做自己的邻居
+    mat_similarity[np.diag_indices_from(mat_similarity)] = 0
     for i in range(mat_similarity.shape[0]):
         top_k_idx = mat_similarity[i].argsort()[::-1][0:k]
         k_idxs.append(top_k_idx)
