@@ -58,7 +58,7 @@ def Graph(data, mat_similarity):
     :param mat_similarity: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
-    k = 3
+    k = 2
 
     # 要对mat_similarity取前K个最大的weight作为neighbors
     k_idxs = []

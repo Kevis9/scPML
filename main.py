@@ -207,7 +207,7 @@ train_h = model.get_h_train()
 '''
 # test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
 train_h = train_h.detach().cpu().numpy()
-model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
+model = cluster.KMeans(n_clusters=6, max_iter=500, init="k-means++")
 model.fit(train_h)
 # 数据可视化
 # 利用t-sne降维
