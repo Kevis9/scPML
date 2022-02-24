@@ -174,8 +174,9 @@ test_labels = labels_tensor[:, idx[train_len:]]
 
 # 对train data做一个可视化
 tsne = TSNE()
-test_h_2d = tsne.fit_transform(train_data)
+train_h_2d = tsne.fit_transform(train_data)
 plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=train_labels)
+plt.title('Train_data 分布')
 plt.show()
 
 
@@ -211,6 +212,7 @@ model.fit(train_h)
 # 利用t-sne降维
 
 tsne = TSNE()
+train_h = train_h.detach().cpu().numpy()
 train_h_2d = tsne.fit_transform(train_h)
 plt.scatter(train_h_2d[:,0], train_h_2d[:, 1],c=model.labels_)
 plt.title('Train_h_kmeans')
