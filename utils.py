@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import copy
 from sklearn.neighbors import kneighbors_graph
@@ -58,12 +60,13 @@ def Graph(data, mat_similarity):
     :param mat_similarity: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
-    k = 6
+    k = 2
 
     # 要对mat_similarity取前K个最大的weight作为neighbors
     k_idxs = []
     # 现将对角线部分全部设为0, 避免自己做自己的邻居
     mat_similarity[np.diag_indices_from(mat_similarity)] = 0
+
     for i in range(mat_similarity.shape[0]):
         top_k_idx = mat_similarity[i].argsort()[::-1][0:k]
         k_idxs.append(top_k_idx)
@@ -71,6 +74,8 @@ def Graph(data, mat_similarity):
     mat_similarity = np.zeros(shape=mat_similarity.shape)
     for i in range(mat_similarity.shape[0]):
         mat_similarity[i, k_idxs[i]] = 1
+
+    mat_similarity = mat_similarity.astype(np.int64)
 
     G = nx.from_numpy_matrix(np.matrix(mat_similarity))
 
@@ -153,6 +158,7 @@ def setByPathway(data, labels, gene_names, path):
 def readSimilarityMatrix(path):
     with open(path) as fp:
         mat_similarity = np.array(list(csv.reader(fp))[1:])[:,1:]
+        mat_similarity = mat_similarity.astype(np.float64) # 记得做个类型转换
         fp.close()
     return mat_similarity
 
