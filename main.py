@@ -68,8 +68,9 @@ tsne = TSNE()
 test_h_2d = tsne.fit_transform(masked_data)
 palette = sns.color_palette("bright", 6)
 plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
+plt.title("masked data")
 plt.show()
-exit()
+
 
 graphs = [Graph(masked_data, similarity_matrix_arr[0]),
           Graph(masked_data, similarity_matrix_arr[1]),
