@@ -74,18 +74,19 @@ def Graph(data, mat_similarity):
     mat_similarity = np.zeros(shape=mat_similarity.shape)
     for i in range(mat_similarity.shape[0]):
         mat_similarity[i, k_idxs[i]] = 1
-
     mat_similarity = mat_similarity.astype(np.int64)
-
     G = nx.from_numpy_matrix(np.matrix(mat_similarity))
 
+
+    # np.savetxt('./Pathway_similarity.csv', mat_similarity,delimiter=',', fmt='%i')
     # 这里稍微修改下，尝试用原来Huang的Similarity matrix来做
-    A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
+    # A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
+    # np.savetxt('./Huang_Similarity.csv', A.todense(), delimiter=',', fmt='%i')
     # print(A.todense())
-    G = nx.from_numpy_matrix(A.todense())
+    # G = nx.from_numpy_matrix(A.todense())
 
     edges = []
-    # 这里认为是无向图，强行变成对称矩阵，多出来的边不用管
+    # 把有向图转为无向图
     for (u, v) in G.edges():
         edges.append([u, v])
         edges.append([v, u])

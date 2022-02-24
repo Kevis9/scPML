@@ -49,6 +49,12 @@ masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNo
 # 得到被masked之后的数据
 masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
 
+tsne = TSNE()
+masked_data_2d = tsne.fit_transform(masked_data)
+plt.scatter(masked_data_2d[:, 0], masked_data_2d[:, 1], c=scLabels)
+plt.title('masked data')
+plt.show()
+
 '''
     根据Cell Similarity矩阵，构造出Graph来，每个节点的feature是被masked之后的矩阵        
 '''
@@ -58,26 +64,15 @@ similarity_matrix_arr = [readSimilarityMatrix(os.path.join(matrix_path, 'KEGG_ya
                          readSimilarityMatrix(os.path.join(matrix_path, 'Wikipathways_yan_human.csv')),
                          readSimilarityMatrix(os.path.join(matrix_path, 'yan_yan_human.csv'))]
 
-# 直接对Similarity matrix做一个聚类
-# model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
-# model.fit(similarity_matrix_arr[0])
-# # 数据可视化
-# # 利用t-sne降维
-#
-# tsne = TSNE()
-# test_h_2d = tsne.fit_transform(masked_data)
-# palette = sns.color_palette("bright", 6)
-# plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
-# plt.title("masked data")
-# plt.show()
-
 
 graphs = [Graph(masked_data, similarity_matrix_arr[0]),
           Graph(masked_data, similarity_matrix_arr[1]),
           Graph(masked_data, similarity_matrix_arr[2]),
           Graph(masked_data, similarity_matrix_arr[3])]
 
+
 # graphs = [Graph(masked_data, similarity_matrix_arr[0])]
+
 '''
     训练scGNN，得到每个Pathway的embedding
 '''
