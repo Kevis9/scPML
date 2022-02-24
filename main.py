@@ -206,13 +206,13 @@ train_h = model.get_h_train()
     test_h做一个 k-means聚类
 '''
 # test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
+train_h = train_h.detach().cpu().numpy()
 model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
 model.fit(train_h)
 # 数据可视化
 # 利用t-sne降维
 
 tsne = TSNE()
-train_h = train_h.detach().cpu().numpy()
 train_h_2d = tsne.fit_transform(train_h)
 plt.scatter(train_h_2d[:,0], train_h_2d[:, 1],c=model.labels_)
 plt.title('Train_h_kmeans')
