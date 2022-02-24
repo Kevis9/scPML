@@ -64,14 +64,12 @@ similarity_matrix_arr = [readSimilarityMatrix(os.path.join(matrix_path, 'KEGG_ya
 # # 数据可视化
 # # 利用t-sne降维
 #
-# tsne = TSNE()
-# test_h_2d = tsne.fit_transform(similarity_matrix_arr[0])
-# palette = sns.color_palette("bright", 6)
-# print(type(model.labels_))
-# print(model.labels_)
-# plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
-# plt.show()
-# exit()
+tsne = TSNE()
+test_h_2d = tsne.fit_transform(masked_data)
+palette = sns.color_palette("bright", 6)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=scLabels)
+plt.show()
+exit()
 
 graphs = [Graph(masked_data, similarity_matrix_arr[0]),
           Graph(masked_data, similarity_matrix_arr[1]),
