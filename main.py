@@ -135,7 +135,7 @@ for i in range(view_num):
 sample_num = views[0].shape[0]
 
 # 接下来对现有的数据做一个train和test的划分
-train_len = int(sample_num * 0.6)
+train_len = int(sample_num * 1)
 test_len = sample_num - train_len
 
 '''
@@ -145,6 +145,7 @@ for i in range(view_num):
     tsne = TSNE()
     test_h_2d = tsne.fit_transform(views[i])
     plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
+    plt.title('view'+str(i))
     plt.show()
 
 # 把所有的view连接在一起
@@ -158,6 +159,7 @@ labels_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
 tsne = TSNE()
 test_h_2d = tsne.fit_transform(data_embeddings)
 plt.scatter(test_h_2d[:, 0], test_h_2d[:, 1], c=scLabels)
+plt.title('Data embeddings')
 plt.show()
 
 # 在这里做一个随机打乱的操作
@@ -170,10 +172,10 @@ test_data = data_embeddings[idx[train_len:], :]
 train_labels = labels_tensor[:, idx[:train_len]]
 test_labels = labels_tensor[:, idx[train_len:]]
 
-# 对test数据做一个可视化
+# 对train data做一个可视化
 tsne = TSNE()
-test_h_2d = tsne.fit_transform(test_data)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=test_labels)
+test_h_2d = tsne.fit_transform(train_data)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=train_labels)
 plt.show()
 
 
@@ -188,32 +190,30 @@ n_epochs = 5000
 model.train_model(train_data, train_labels, n_epochs, lr=[0.0003, 0.0003])
 
 # 对test_h进行adjust（按照论文的想法，保证consistency）
-model.test(test_data, n_epochs)
+# model.test(test_data, n_epochs)
 
-train_H = model.get_h_train()
-test_H = model.get_h_test()
+train_h = model.get_h_train()
+# test_h = model.get_h_test()
 
-print("test h is \n",test_H)
-test_H = test_H.detach().numpy()
-test_h_path = os.path.join(os.getcwd(), "test_h.npy")
-np.save(test_h_path, test_H)
+
+# test_h = test_H.detach().numpy()
+# test_h_path = os.path.join(os.getcwd(), "test_h.npy")
+# np.save(test_h_path, test_H)
 # 后面拿到test_h之后做一个k-means聚类：待解决
 
 '''
     test_h做一个 k-means聚类
 '''
-test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
+# test_h = np.load(os.path.join(os.getcwd(),'test_h.npy'))
 model = cluster.KMeans(n_clusters=6, max_iter=100, init="k-means++")
-model.fit(test_h)
+model.fit(train_h)
 # 数据可视化
 # 利用t-sne降维
 
 tsne = TSNE()
-test_h_2d = tsne.fit_transform(test_h)
-palette = sns.color_palette("bright", 6)
-print(type(model.labels_))
-print(model.labels_)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=model.labels_)
+train_h_2d = tsne.fit_transform(train_h)
+plt.scatter(train_h_2d[:,0], train_h_2d[:, 1],c=model.labels_)
+plt.title('Train_h_kmeans')
 plt.show()
 
 # 最后进行一个分类
