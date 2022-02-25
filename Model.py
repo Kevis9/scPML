@@ -183,6 +183,7 @@ class scGNN(torch.nn.Module):
         # Bottle-necked
         # middle_out = int(max(5, G_data.num_features/64))
         middle_out = int(max(8, G_data.num_features / 2))
+        middle_out = 256
         self.conv1 = GCNConv(G_data.num_features, middle_out)
         self.conv2 = GCNConv(middle_out, G_data.num_features)
 
