@@ -61,7 +61,7 @@ def Graph(data, mat_similarity):
     :return: 返回Cell similarity的图结构
     '''
     k = 6
-
+    
     # 要对mat_similarity取前K个最大的weight作为neighbors
     k_idxs = []
     # 现将对角线部分全部设为0, 避免自己做自己的邻居
