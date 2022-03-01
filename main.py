@@ -208,7 +208,7 @@ test_labels = labels_tensor[:, idx[train_len:]]
 # 对train data做一个可视化
 tsne = TSNE()
 train_h_2d = tsne.fit_transform(train_data)
-plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=train_labels)
+plt.scatter(test_h_2d[:,0], test_h_2d[:, 1],c=train_labels.view(-1,1).numpy())
 plt.title('Train_data 分布')
 plt.show()
 
