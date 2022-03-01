@@ -111,12 +111,12 @@ def readSCData(dataPath, labelPath):
     with open(dataPath) as fp:
         data = list(csv.reader(fp))
         data = np.array(data[1:])[:, 1:].astype(np.float64)
-        data = np.transpose(data)   # 源数据是 ( genes * cells ) , 转置一下
         fp.close()
 
     with open(labelPath) as fp:
-        labels = list(csv.reader(fp))[1:]   # 源数据第一列是序号
-        labels = (np.array(labels)[:,1:]).astype(np.int64).reshape(-1)
+        labels = list(csv.reader(fp))[1:]
+        # 源数据第一列是序号
+        labels = (np.array(labels)[:,:]).astype(np.int64).reshape(-1)
         fp.close()
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
