@@ -209,10 +209,10 @@ query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float
 # 做一个z-score归一化
 query_data_embeddings = z_score_Normalization(query_data_embeddings)
 query_data_embeddings = torch.from_numpy(query_data_embeddings).float()
-query_label_tensor = torch.from_numpy(query_Label).view(1, scLabels.shape[0]).long()
+query_label_tensor = torch.from_numpy(query_Label).view(1, query_Label.shape[0]).long()
 
 # 可视化query data embedding
-showClusters(query_data_embeddings, scLabels, 'query data embeddings')
+showClusters(query_data_embeddings, query_Label, 'query data embeddings')
 
 
 '''
