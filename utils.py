@@ -235,6 +235,7 @@ def showClusters(data, label, title):
     :param title: 可视化窗口的titleplt.scatter
     '''
     # 这里尝试用UAMP进行降维处理
+    # To ensure that results can be reproduced exactly UMAP allows the user to set a random seed state
     umap_model = umap.UMAP(random_state=42)
     data_2d = umap_model.fit_transform(data)
     # tsne = TSNE()
