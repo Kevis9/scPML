@@ -73,7 +73,7 @@ from sklearn.manifold import TSNE
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# 数据读取, 得到表达矩阵和标签（Reference）
+# Reference数据读取, 得到表达矩阵和标签（Reference）
 dataPath = os.path.join(os.getcwd(), "..", "transfer_across_tissue_data")
 scData, scLabels = readSCData(os.path.join(dataPath, "scData", "mouse1_pancreas.csv"), os.path.join(dataPath, "label","mouse1_pancreas_label.csv"))
 
