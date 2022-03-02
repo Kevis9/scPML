@@ -172,14 +172,14 @@ for i in range(view_num):
 
 
 # 把所有的view连接在一起
-ref_embeddings = np.concatenate(views, axis=1).astype(np.float64)
+ref_data_embeddings = np.concatenate(views, axis=1).astype(np.float64)
 # 做一个z-score归一化
-ref_embeddings = z_score_Normalization(ref_embeddings)
-ref_embeddings = torch.from_numpy(ref_embeddings).float()
+ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
+ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
 ref_label_tensor = torch.from_numpy(scLabels).view(1, scLabels.shape[0]).long()
 
 # 可视化reference data embedding
-showClusters(ref_embeddings, scLabels, 'reference data embeddings')
+showClusters(ref_data_embeddings, scLabels, 'reference data embeddings')
 
 
 '''
@@ -203,6 +203,7 @@ query_graphs = [Graph(query_norm_scData, similarity_matrix_arr[0]),
 query_embeddings = []
 for i in range(len(models)):
     query_embeddings.append(models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
+    showClusters(query_embeddings[i], query_Label, 'query: view'+str(i+1))
 
 
 query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
@@ -219,8 +220,8 @@ showClusters(query_data_embeddings, query_Label, 'query data embeddings')
     CPM-Net
 '''
 
-train_len = ref_embeddings.shape[0]
-test_len = query_embeddings.shape[0]
+train_len = ref_data_embeddings.shape[0]
+test_len = query_data_embeddings.shape[0]
 
 # lsd_dim 作为超参数可调
 model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
@@ -229,10 +230,10 @@ model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
 n_epochs = 5000
 
 # 开始训练
-model.train_model(ref_embeddings, ref_label_tensor, n_epochs, lr=[0.003, 0.003])
+model.train_model(ref_data_embeddings, ref_label_tensor, n_epochs, lr=[0.003, 0.003])
 
 # 对test_h进行adjust（按照论文的想法，保证consistency）
-model.test(query_embeddings, n_epochs)
+model.test(query_data_embeddings, n_epochs)
 
 ref_h = model.get_h_train()
 query_h = model.get_h_test()
