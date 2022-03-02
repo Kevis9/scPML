@@ -1,6 +1,4 @@
 import os.path
-
-import numpy
 import numpy as np
 import copy
 from sklearn.neighbors import kneighbors_graph
@@ -11,6 +9,7 @@ import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.manifold import TSNE
 
 def Normalization(data):
     '''
@@ -226,6 +225,20 @@ def sharedGeneMatrix(path1, path2):
     matrix2.to_csv('mouse_VISP.csv')
 
 
+
+def showClusters(data, label, title):
+    '''
+    可视化聚类的函数
+    :param data: 表达矩阵
+    :param label: 样本的标签
+    :param title: 可视化窗口的title
+    '''
+    tsne = TSNE()
+    data_2d = tsne.fit_transform(data)
+
+    plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label)
+    plt.title(title)
+    plt.show()
 
 
 
