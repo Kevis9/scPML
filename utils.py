@@ -242,10 +242,10 @@ def showClusters(data, label, title):
     # data_2d = tsne.fit_transform(data)
 
     plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
-    plt.gca().set_aspect('equal', 'datalim')
+    # plt.gca().set_aspect('equal', 'datalim')
 
     classes_num = len(set(label))
-    plt.colorbar(boundaries=np.arange(classes_num+1)-0.5).set_ticks(np.arange(1,classes_num+1))
+    plt.colorbar().set_ticks(np.arange(1,classes_num+1))
 
     plt.title(title)
     plt.show()
