@@ -202,7 +202,7 @@ query_graphs = [Graph(query_norm_scData, similarity_matrix_arr[0]),
 # 获得Embedding
 query_embeddings = []
 for i in range(len(models)):
-    query_embeddings.append(models[i].get_embedding(query_graphs[i]))
+    query_embeddings.append(models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
 
 query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
