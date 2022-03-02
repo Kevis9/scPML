@@ -236,7 +236,7 @@ def showClusters(data, label, title):
     '''
     # 这里尝试用UAMP进行降维处理
     # To ensure that results can be reproduced exactly UMAP allows the user to set a random seed state
-    umap_model = umap.UMAP(random_state=42)
+    umap_model = umap.UMAP(random_state=29)
     data_2d = umap_model.fit_transform(data)
     # tsne = TSNE()
     # data_2d = tsne.fit_transform(data)
@@ -244,9 +244,9 @@ def showClusters(data, label, title):
     plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
     plt.gca().set_aspect('equal', 'datalim')
 
-    classes = set(label)
-    # plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(1,len(classes)+1))
-    plt.colorbar().set_ticks(np.arange(1, len(classes) + 1))
+    classes_num = len(set(label))
+    plt.colorbar(boundaries=np.arange(classes_num+1)-0.5).set_ticks(np.arange(1,classes_num+1))
+
     plt.title(title)
     plt.show()
 
