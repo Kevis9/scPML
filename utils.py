@@ -245,7 +245,7 @@ def showClusters(data, label, title):
     plt.gca().set_aspect('equal', 'datalim')
 
     classes = set(label)
-    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(len(classes))
+    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(1,len(classes)+1))
     plt.title(title)
     plt.show()
 
