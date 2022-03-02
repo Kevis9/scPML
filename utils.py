@@ -10,6 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.manifold import TSNE
+import umap
 
 def Normalization(data):
     '''
@@ -231,12 +232,19 @@ def showClusters(data, label, title):
     可视化聚类的函数
     :param data: 表达矩阵
     :param label: 样本的标签
-    :param title: 可视化窗口的title
+    :param title: 可视化窗口的titleplt.scatter
     '''
-    tsne = TSNE()
-    data_2d = tsne.fit_transform(data)
+    # 这里尝试用UAMP进行降维处理
+    umap_model = umap.UMAP(random_state=42)
+    data_2d = umap_model.fit_transform(data)
+    # tsne = TSNE()
+    # data_2d = tsne.fit_transform(data)
 
-    plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label)
+    plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
+    plt.gca().set_aspect('equal', 'datalim')
+
+    classes = set(label)
+    plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(len(classes))
     plt.title(title)
     plt.show()
 
