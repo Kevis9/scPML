@@ -91,7 +91,7 @@ masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNo
 masked_data, index_pair, masking_idx = Mask_Data(scDataNorm, masked_prob)
 
 # 对mask数据进行一个可视化
-showClusters(masked_data, scLabels, "masked data")
+showClusters(masked_data, scLabels, "Ref: masked data")
 
 '''
     由Similarity matrix，构造出Graph，每个节点的值是表达矩阵的feature        
@@ -168,7 +168,7 @@ for i in range(view_num):
 
 # 查看所有view的类别分布情况
 for i in range(view_num):
-    showClusters(views[i], scLabels, 'view'+str(i+1))
+    showClusters(views[i], scLabels, 'Ref: view'+str(i+1))
 
 
 # 把所有的view连接在一起
