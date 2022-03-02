@@ -224,7 +224,7 @@ train_len = ref_data_embeddings.shape[0]
 test_len = query_data_embeddings.shape[0]
 
 # lsd_dim 作为超参数可调
-model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=256)
+model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=64)
 
 
 n_epochs = 5000
@@ -253,15 +253,15 @@ np.save(query_h_path, query_h)
     ref_h做一个 k-means聚类
 '''
 kmeans_model = cluster.KMeans(n_clusters=13, max_iter=600, init="k-means++")
-kmeans_model.fit(ref_h)
-showClusters(ref_h, kmeans_model.labels_, 'reference h')
+ref_h_labels = kmeans_model.fit_predict(ref_h)
+showClusters(ref_h, ref_h_labels, 'reference h')
 
 '''
     query_h做一个 k-means聚类
 '''
 kmeans_model = cluster.KMeans(n_clusters=3, max_iter=600, init="k-means++")
-kmeans_model.fit(query_h)
-showClusters(query_h, kmeans_model.labels_, 'query h')
+q_h_labels = kmeans_model.fit_predict(query_h)
+showClusters(query_h, q_h_labels, 'query h')
 
 # 数据可视化
 # 利用t-sne降维
