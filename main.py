@@ -84,6 +84,7 @@ showClusters(scData, scLabels, 'Raw Reference Data')
 '''
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
+scDataNorm = z_score_Normalization(scDataNorm)
 
 #对数据进行随机mask
 masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNorm.shape[1]), 0.3)
@@ -230,7 +231,7 @@ model = CPMNets(view_num, train_len, test_len, view_feat, lsd_dim=64)
 n_epochs = 5000
 
 # 开始训练
-model.train_model(ref_data_embeddings, ref_label_tensor, n_epochs, lr=[0.003, 0.003])
+model.train_model(ref_data_embeddings, ref_label_tensor, n_epochs, lr=[0.0005, 0.0005])
 
 # 对test_h进行adjust（按照论文的想法，保证consistency）
 model.test(query_data_embeddings, n_epochs)
