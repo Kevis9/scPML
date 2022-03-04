@@ -258,8 +258,8 @@ def showClusters(data, label, title):
     arr = [(i+1) for i in range(11)] # 1...11
     df['label'].replace(arr, label_name, inplace=True)
 
-    fig = sns.scatterplot(data=df, x='x', y='y', hue='label', palette='Spectral', size=5)
-    fig.legend(loc=3, bbox_to_anchor=(1.05, 0)) # 设置图例位置
+    fig = sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', size=5)
+    fig.legend(loc=3, bbox_to_anchor=(1.0, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
