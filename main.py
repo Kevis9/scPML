@@ -109,7 +109,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 把所有的view连接在一起
     ref_data_embeddings = np.concatenate(ref_views, axis=1).astype(np.float64)
     # 做一个z-score归一化
-    # ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
+    ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
     ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
     ref_label_tensor = torch.from_numpy(ref_labels).view(1, ref_labels.shape[0]).long()
 
@@ -243,7 +243,7 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':15, # Huang model 训练的epoch
+    'epoch_GCN':1500, # Huang model 训练的epoch
     'epoch_CPM':5000,
     'lsd_dim':64, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
