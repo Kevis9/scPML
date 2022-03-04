@@ -255,11 +255,8 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# arr = np.array([1,2,4,10,100000])
-# print(z_score_Normalization(arr))
-# exit()
 
-# transfer_labels(dataPath, labelPath, SMPath, config)
+transfer_labels(dataPath, labelPath, SMPath, config)
 
 
 # data = {
