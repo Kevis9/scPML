@@ -31,12 +31,14 @@ def Normalization(data):
 def z_score_Normalization(data):
     '''
     利用z-score方法做一个batch normalization
-    :param data: 矩阵，（样本*特征）, 二维数组
+    :param data: 矩阵，（样本 * 特征）, 二维数组
     :return:
     '''
     means = np.mean(data, axis=0)
     standard = np.std(data, axis=0)
-    print(standard)
+
+    print(np.where(standard==0))
+        
     return (data - means)/standard
 
 
