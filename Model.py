@@ -178,12 +178,12 @@ class CPMNets():
 
 
 class scGNN(torch.nn.Module):
-    def __init__(self, G_data):
+    def __init__(self, G_data, middle_out):
         super(scGNN, self).__init__()
         # Bottle-necked
         # middle_out = int(max(5, G_data.num_features/64))
         # middle_out = int(max(8, G_data.num_features / 2))
-        middle_out = 128
+        # middle_out = 128
         self.conv1 = GCNConv(G_data.num_features, middle_out)
         self.conv2 = GCNConv(middle_out, G_data.num_features)
 

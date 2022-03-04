@@ -11,6 +11,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.manifold import TSNE
 import umap
+import seaborn as sns
+
+# 这里给出human-mouse(transfer across species)里面的类别
+label_name = ['acinar', 'activated_stellate', 'alpha', 'beta', 'delta', 'ductal', 'endothelial', 'gamma', 'macrophage', 'mast', 'quiescent_stellate']
 
 def Normalization(data):
     '''
@@ -56,13 +60,13 @@ def Mask_Data(data, masked_prob):
     return X, index_pair, masking_idx
 
 
-def Graph(data, mat_similarity):
+def Graph(data, mat_similarity, k):
     '''
     :param data: 表达矩阵 (被mask的矩阵)
     :param mat_similarity: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
-    k = 4
+    # k = 4
 
     # 要对mat_similarity取前K个最大的weight作为neighbors
     k_idxs = []
@@ -102,7 +106,10 @@ def Graph(data, mat_similarity):
 
 def readSCData(dataPath, labelPath):
     '''
-    读取数据
+    读取数据, 数据格式需要满足一定格式
+    表达矩阵第一列是cell id, 第一行是名称
+    label矩阵只有一列
+
     :param Single cell的表达矩阵Path
     :param 标签Path
     :return: 返回Numpy类型数组（表达矩阵，标签）
@@ -115,7 +122,7 @@ def readSCData(dataPath, labelPath):
 
     with open(labelPath) as fp:
         labels = list(csv.reader(fp))[1:]
-        # 源数据第一列是序号
+
         labels = (np.array(labels)[:,:]).astype(np.int64).reshape(-1)
         fp.close()
 
@@ -241,14 +248,27 @@ def showClusters(data, label, title):
     # tsne = TSNE()
     # data_2d = tsne.fit_transform(data)
 
-    plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
-    # plt.gca().set_aspect('equal', 'datalim')
+    data = {
+        'x':data_2d[:,0],
+        'y':data_2d[:,1],
+        'label':label
+    }
 
-    classes_num = len(set(label))
-    plt.colorbar().set_ticks(np.arange(1,classes_num+1))
+    df = pd.DataFrame(data=data)
+    arr = [(i+1) for i in range(11)] # 1...11
+    df['label'].replace(arr, label, inplace=True)
 
-    plt.title(title)
+    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep')
     plt.show()
+    # 用matplot绘制图片，想要画出好一点的图片不方便
+    # plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
+    # # plt.gca().set_aspect('equal', 'datalim')
+    #
+    # classes_num = len(set(label))
+    # plt.colorbar().set_ticks(np.arange(1,classes_num+1))
+    #
+    # plt.title(title)
+    # plt.show()
 
 
 
