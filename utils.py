@@ -262,7 +262,7 @@ def showClusters(data, label, title):
 
 
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=6)
-    plt.legend(bbox_to_anchor=(1, 0)) # 设置图例位置
+    plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)

@@ -255,6 +255,20 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 transfer_labels(dataPath, labelPath, SMPath, config)
 
+
+# data = {
+#     'x':[1,2,3],
+#     'y':[3,4,5],
+#     'c':[1,2,3]
+# }
+#
+# df = pd.DataFrame(data=data)
+# fig = sns.scatterplot(data=df, x='x', y='y', hue='c')
+# # plt.legend(loc=3, bbox_to_anchor=(1,0))
+# fig.legend(loc=2, bbox_to_anchor=(1,1))
+# plt.show()
+
+
 # 最后进行一个分类
 # label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
 #
