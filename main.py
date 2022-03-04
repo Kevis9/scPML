@@ -151,7 +151,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Reference数据读取, 得到表达矩阵和标签（Reference）
 dataPath = os.path.join(os.getcwd(), "..", "transfer_across_species_data")
-scData, scLabels = readSCData(os.path.join(dataPath, "scData", "mouse_pancreas.csv"), os.path.join(dataPath, "label","mouse_pancreas_label.csv"))
+scData, scLabels = readSCData(os.path.join(dataPath, "scData", "mouse_pancreas.csv"), os.path.join(dataPath, "label", "mouse_pancreas_label.csv"))
 
 showClusters(scData, scLabels, 'Raw Reference Data')
 
@@ -160,7 +160,7 @@ showClusters(scData, scLabels, 'Raw Reference Data')
 '''
 # 对单细胞表达矩阵做归一化
 scDataNorm = Normalization(scData)
-scDataNorm = z_score_Normalization(scDataNorm)
+# scDataNorm = z_score_Normalization(scDataNorm)
 
 #对数据进行随机mask
 masked_prob = min(len(scDataNorm.nonzero()[0]) / (scDataNorm.shape[0] * scDataNorm.shape[1]), 0.3)
