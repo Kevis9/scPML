@@ -61,8 +61,8 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     # 数据预处理
     ref_norm_data = Normalization(ref_Data)
-    ref_norm_data = z_score_Normalization(ref_norm_data)
-    
+    # ref_norm_data = z_score_Normalization(ref_norm_data)
+
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
     showClusters(masked_ref_data, ref_labels, "ref masked data")
@@ -243,7 +243,7 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':1500, # Huang model 训练的epoch
+    'epoch_GCN':15, # Huang model 训练的epoch
     'epoch_CPM':5000,
     'lsd_dim':64, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
@@ -255,7 +255,11 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-transfer_labels(dataPath, labelPath, SMPath, config)
+# arr = np.array([1,2,4,10,100000])
+# print(z_score_Normalization(arr))
+# exit()
+
+# transfer_labels(dataPath, labelPath, SMPath, config)
 
 
 # data = {
