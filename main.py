@@ -62,7 +62,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 数据预处理
     ref_norm_data = Normalization(ref_Data)
     ref_norm_data = z_score_Normalization(ref_norm_data)
-    exit()
+    
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
     showClusters(masked_ref_data, ref_labels, "ref masked data")
