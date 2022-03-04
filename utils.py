@@ -36,6 +36,7 @@ def z_score_Normalization(data):
     '''
     means = np.mean(data, axis=0)
     standard = np.std(data, axis=0)
+    print(standard)
     return (data - means)/standard
 
 
