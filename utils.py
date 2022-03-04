@@ -263,7 +263,9 @@ def showClusters(data, label, title):
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
+    plt.savefig(title+".png")
     plt.show()
+
     # 用matplot绘制图片，想要画出好一点的图片不方便
     # plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
     # # plt.gca().set_aspect('equal', 'datalim')
