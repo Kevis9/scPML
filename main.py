@@ -63,7 +63,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     ref_norm_data = Normalization(ref_Data)
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
-    showClusters(masked_ref_data, ref_labels, "ref: masked data")
+    showClusters(masked_ref_data, ref_labels, "ref masked data")
 
     ref_sm_arr = [readSimilarityMatrix(SMPath['ref'][0]),
                   readSimilarityMatrix(SMPath['ref'][1]),
@@ -102,7 +102,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
         ref_view_feat.append(ref_views[i].shape[1])
     # 查看所有view的类别分布情况
     for i in range(ref_view_num):
-        showClusters(ref_views[i], ref_labels, 'ref: view' + str(i + 1))
+        showClusters(ref_views[i], ref_labels, 'ref view' + str(i + 1))
 
     # 把所有的view连接在一起
     ref_data_embeddings = np.concatenate(ref_views, axis=1).astype(np.float64)
@@ -141,7 +141,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     query_embeddings = []
     for i in range(len(GCN_models)):
         query_embeddings.append(GCN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
-        showClusters(query_embeddings[i], query_Label, 'query: view' + str(i + 1))
+        showClusters(query_embeddings[i], query_Label, 'query view' + str(i + 1))
 
     query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
     # 做一个z-score归一化
