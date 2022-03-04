@@ -256,10 +256,12 @@ def showClusters(data, label, title):
 
     df = pd.DataFrame(data=data)
     arr = [(i+1) for i in range(11)] # 1...11
+    print(set(df['label'].tolist()))
     df['label'].replace(arr, label_name, inplace=True)
+    print(set(df['label'].tolist()))
 
     fig = sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', size=5)
-    fig.legend(loc=3, bbox_to_anchor=(1.0, 0)) # 设置图例位置
+    fig.legend(loc=3, bbox_to_anchor=(1.0, 0), borderaxespad=0) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
