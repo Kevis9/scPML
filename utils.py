@@ -258,14 +258,14 @@ def showClusters(data, label, title):
     df = pd.DataFrame(data=data)
     # arr = [(i+1) for i in range(11)] # 1...11
     # df['label'].replace(arr, label_name, inplace=True)
-
+    plt.figure(figsize=(8,5))
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=6)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
     plt.savefig(title+".png")
-    # plt.show()
+    plt.show()
 
     # 用matplot绘制图片，想要画出好一点的图片不方便
     # plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
