@@ -159,7 +159,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     test_len = query_data_embeddings.shape[0]
 
     # lsd_dim 作为超参数可调
-    model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat, lsd_dim=config['lsd_dim'])
+    model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat, class_num = 11, lsd_dim=config['lsd_dim'])
 
     n_epochs = config['epoch_CPM']
 
