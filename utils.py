@@ -256,7 +256,7 @@ def showClusters(data, label, title):
 
     df = pd.DataFrame(data=data)
     arr = [(i+1) for i in range(11)] # 1...11
-    df['label'].replace(arr, label, inplace=True)
+    df['label'].replace(arr, label_name, inplace=True)
 
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep')
     plt.show()
