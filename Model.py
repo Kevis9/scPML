@@ -118,8 +118,8 @@ class CPMNets():
 
             c_loss = self.classification_loss(labels)
 
-            # 每个样本的平均loss
-            all_loss = (r_loss + c_loss) / self.train_len
+            # 每个样本的平均loss, 在这里 *2 来着重降低classfication loss
+            all_loss = (r_loss + 2*c_loss) / self.train_len
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
