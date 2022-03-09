@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.manifold import TSNE
 
 
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_idx, scDataNorm):
     '''
@@ -61,8 +62,8 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     # 数据预处理
     ref_norm_data = Normalization(ref_Data)
-    # ref_norm_data = z_score_Normalization(ref_norm_data)
-
+    ref_norm_data = z_score_Normalization(ref_norm_data)
+    exit()
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
     showClusters(masked_ref_data, ref_labels, "ref masked data")
@@ -257,19 +258,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 transfer_labels(dataPath, labelPath, SMPath, config)
-
-
-# data = {
-#     'x':[1,2,3],
-#     'y':[3,4,5],
-#     'c':[1,2,3]
-# }
-#
-# df = pd.DataFrame(data=data)
-# fig = sns.scatterplot(data=df, x='x', y='y', hue='c')
-# # plt.legend(loc=3, bbox_to_anchor=(1,0))
-# fig.legend(loc=2, bbox_to_anchor=(1,1))
-# plt.show()
 
 
 # 最后进行一个分类
