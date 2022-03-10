@@ -130,3 +130,43 @@
 # print(mouse_df.shape)
 # print(human_df.shape)
 # exit()
+
+# mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/scData/mouse_pancreas.csv',index_col=0)
+# human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/scData/human_pancreas.csv',index_col=0)
+# print(mouse_df.shape)
+# print(human_df.shape)
+#
+# mouse_std_idx = (mouse_df.std()!=0).tolist()
+#
+#
+# mouse_df = mouse_df.loc[:, mouse_std_idx]
+# human_df = human_df.loc[:, mouse_std_idx]
+#
+# human_std_idx = (human_df.std()!=0).tolist()
+#
+# mouse_df = mouse_df.loc[:, human_std_idx]
+# human_df = human_df.loc[:, human_std_idx]
+#
+#
+# human_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/label/human_pancreas_label.csv')
+# mouse_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/label/mouse_pancreas_label.csv')
+#
+#
+#
+# h_idx = ((human_label['class'] != 10) & (human_label['class'] != 1)).tolist()
+#
+# human_df = human_df.loc[h_idx, :]
+# human_label = human_label.loc[h_idx, :]
+#
+# mouse_label.replace([2,3,4,5,6,7,8,9,11],[1,2,3,4,5,6,7,8,9])
+# human_label.replace([2,3,4,5,6,7,8,9,11],[1,2,3,4,5,6,7,8,9])
+#
+# mouse_df.to_csv('mouse_pancreas.csv')
+# human_df.to_csv('human_pancreas.csv')
+# print(mouse_df.shape)
+# print(human_df.shape)
+# mouse_label.to_csv('mouse_pancreas_label.csv', index=False)
+# human_label.to_csv('human_pancreas_label.csv', index=False)
+# print(mouse_label.shape)
+# print(human_label.shape)
+# exit()

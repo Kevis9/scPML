@@ -12,8 +12,7 @@ from sklearn import cluster
 import seaborn as sns
 import pandas as pd
 from sklearn.manifold import TSNE
-
-
+from sklearn.metrics import silhouette_score, adjusted_rand_score
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_idx, scDataNorm):
@@ -63,7 +62,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 数据预处理
     ref_norm_data = Normalization(ref_Data)
     ref_norm_data = z_score_Normalization(ref_norm_data)
-    exit()
+
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
     showClusters(masked_ref_data, ref_labels, "ref masked data")
@@ -188,17 +187,22 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     '''
         ref_h做一个 k-means聚类
     '''
-    kmeans_model = cluster.KMeans(n_clusters=config['ref_class_num'], max_iter=500, init="k-means++")
+    kmeans_model = cluster.KMeans(n_clusters=config['ref_class_num'], max_iter=500, init="k-means++", random_state=42)
     ref_h_labels = kmeans_model.fit_predict(ref_h)
     showClusters(ref_h, ref_h_labels, 'reference h')
+    ref_s_score = silhouette_score(ref_h,ref_h_labels)
+    ref_ari = adjusted_rand_score(ref_labels, ref_h_labels)
+    print("Reference K-means result: Silhouette score is : {}, ARI is :".format(ref_s_score, ref_ari))
 
     '''
         query_h做一个 k-means聚类
     '''
-    kmeans_model = cluster.KMeans(n_clusters=config['query_class_num'], max_iter=500, init="k-means++")
+    kmeans_model = cluster.KMeans(n_clusters=config['query_class_num'], max_iter=500, init="k-means++", random_state=42)
     q_h_labels = kmeans_model.fit_predict(query_h)
     showClusters(query_h, q_h_labels, 'query h')
-
+    q_s_score = silhouette_score(query_h, q_h_labels)
+    q_ari = adjusted_rand_score(query_Label, q_h_labels)
+    print("Query K-means result: Silhouette score is : {}, ARI is :".format(q_s_score, q_ari))
 
 
 dataset_name = "transfer_across_species_data"
@@ -249,7 +253,7 @@ config = {
     'lsd_dim':64, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
-    'query_class_num':11, # query data的类别数
+    'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
     'middle_out':128 # GCN中间层维数
 }
