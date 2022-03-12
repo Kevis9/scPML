@@ -61,7 +61,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     # 数据预处理
     ref_norm_data = Normalization(ref_Data)
-    ref_norm_data = z_score_Normalization(ref_norm_data)
+    # ref_norm_data = z_score_Normalization(ref_norm_data)
 
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
@@ -109,7 +109,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 把所有的view连接在一起
     ref_data_embeddings = np.concatenate(ref_views, axis=1).astype(np.float64)
     # 做一个z-score归一化
-    ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
+    # ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
     ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
     ref_label_tensor = torch.from_numpy(ref_labels).view(1, ref_labels.shape[0]).long()
 
@@ -123,6 +123,8 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
                                            labelPath['query'])
 
     # 可视化原数据分布
+    print(query_scData.shape)
+    print(query_Label.shape)
     showClusters(query_scData, query_Label, 'Raw Query Data')
 
     # 数据预处理
@@ -147,7 +149,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
     # 做一个z-score归一化
-    query_data_embeddings = z_score_Normalization(query_data_embeddings)
+    # query_data_embeddings = z_score_Normalization(query_data_embeddings)
     query_data_embeddings = torch.from_numpy(query_data_embeddings).float()
     query_label_tensor = torch.from_numpy(query_Label).view(1, query_Label.shape[0]).long()
 
@@ -248,8 +250,8 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':1500, # Huang model 训练的epoch
-    'epoch_CPM':5000,
+    'epoch_GCN':10, # Huang model 训练的epoch
+    'epoch_CPM':10,
     'lsd_dim':64, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
