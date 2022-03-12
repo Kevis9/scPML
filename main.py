@@ -194,7 +194,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     showClusters(ref_h, ref_h_labels, 'reference h')
     ref_s_score = silhouette_score(ref_h,ref_h_labels)
     ref_ari = adjusted_rand_score(ref_labels, ref_h_labels)
-    print("Reference K-means result: Silhouette score is : {}, ARI is :".format(ref_s_score, ref_ari))
+    print("Reference K-means result: Silhouette score is : {}, ARI is :{}".format(ref_s_score, ref_ari))
 
     '''
         query_h做一个 k-means聚类
@@ -204,7 +204,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     showClusters(query_h, q_h_labels, 'query h')
     q_s_score = silhouette_score(query_h, q_h_labels)
     q_ari = adjusted_rand_score(query_Label, q_h_labels)
-    print("Query K-means result: Silhouette score is : {}, ARI is :".format(q_s_score, q_ari))
+    print("Query K-means result: Silhouette score is : {}, ARI is :{}".format(q_s_score, q_ari))
 
 
 dataset_name = "transfer_across_species_data"
@@ -250,14 +250,14 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':10, # Huang model 训练的epoch
-    'epoch_CPM':10,
-    'lsd_dim':64, # CPM_net latent space dimension
+    'epoch_GCN':1500, # Huang model 训练的epoch
+    'epoch_CPM':5000,
+    'lsd_dim':128, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
-    'middle_out':128 # GCN中间层维数
+    'middle_out':256 # GCN中间层维数
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -255,8 +255,8 @@ def showClusters(data, label, title):
         'y':data_2d[:,1],
         'label':label
     }
-    print(title)
-    print(set(label))
+    # print(title)
+    # print(set(label))
     df = pd.DataFrame(data=data)
     # arr = [(i+1) for i in range(11)] # 1...11
     # df['label'].replace(arr, label_name, inplace=True)
