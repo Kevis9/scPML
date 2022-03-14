@@ -166,7 +166,7 @@ class CPMNets():
             r_loss.backward()
             optimizer_for_test_h.step()
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 1000 == 0:
+            if epoch % 5000 == 0:
                 print('TEST: epoch %d: Reconstruction loss = %.3f '%(
                     epoch, r_loss.detach().item() / self.train_len))
             r_loss_list.append(r_loss.detach().item() / self.train_len)
