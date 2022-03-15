@@ -264,9 +264,26 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
+print("64---32")
+config['epoch_GCN'] = 64
+config['epoch_CPM'] = 32
 transfer_labels(dataPath, labelPath, SMPath, config)
 
+print("128---64")
+config['epoch_GCN'] = 128
+config['epoch_CPM'] = 64
+transfer_labels(dataPath, labelPath, SMPath, config)
+
+
+print("256---128")
+config['epoch_GCN'] = 256
+config['epoch_CPM'] = 128
+transfer_labels(dataPath, labelPath, SMPath, config)
+
+print("512---256")
+config['epoch_GCN'] = 512
+config['epoch_CPM'] = 256
+transfer_labels(dataPath, labelPath, SMPath, config)
 
 # 最后进行一个分类
 # label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
