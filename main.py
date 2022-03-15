@@ -15,6 +15,7 @@ from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 
 
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_idx, scDataNorm):
     '''
@@ -179,12 +180,12 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     # 保存ref_h
     ref_h = ref_h.detach().numpy()
-    ref_h_path = os.path.join(os.getcwd(), "ref_h.npy")
+    ref_h_path = os.path.join(os.getcwd(), "result", "ref_h.npy")
     np.save(ref_h_path, ref_h)
 
     # 保存query_h
     query_h = query_h.detach().numpy()
-    query_h_path = os.path.join(os.getcwd(), "query_h.npy")
+    query_h_path = os.path.join(os.getcwd(),"result", "query_h.npy")
     np.save(query_h_path, query_h)
 
     '''

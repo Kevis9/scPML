@@ -140,8 +140,8 @@ class CPMNets():
 
         # 绘制loss训练图像
         # lossPolt(r_loss_list, c_loss_list, n_epochs)
-        np.save('r_loss.npy', np.array(r_loss_list))
-        np.save('c_loss.npy', np.array(c_loss_list))
+        # np.save('r_loss.npy', np.array(r_loss_list))
+        # np.save('c_loss.npy', np.array(c_loss_list))
 
     def test(self, data, n_epochs):
         '''
@@ -170,7 +170,7 @@ class CPMNets():
                 print('TEST: epoch %d: Reconstruction loss = %.3f '%(
                     epoch, r_loss.detach().item() / self.train_len))
             r_loss_list.append(r_loss.detach().item() / self.train_len)
-        np.save('test_r_loss.npy', np.array(r_loss_list))
+        # np.save('test_r_loss.npy', np.array(r_loss_list))
 
 
     def get_h_train(self):
