@@ -252,8 +252,8 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':100, # Huang model 训练的epoch
-    'epoch_CPM':500,
+    'epoch_GCN':2000, # Huang model 训练的epoch
+    'epoch_CPM':25000,
     'lsd_dim':128, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
