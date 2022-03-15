@@ -252,14 +252,14 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':2500, # Huang model 训练的epoch
-    'epoch_CPM':25000,
-    'lsd_dim':256, # CPM_net latent space dimension
+    'epoch_GCN':100, # Huang model 训练的epoch
+    'epoch_CPM':500,
+    'lsd_dim':128, # CPM_net latent space dimension
     'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
-    'middle_out':512 # GCN中间层维数
+    'middle_out':256 # GCN中间层维数
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
