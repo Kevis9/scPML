@@ -124,8 +124,8 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
                                            labelPath['query'])
 
     # 可视化原数据分布
-    print(query_scData.shape)
-    print(query_Label.shape)
+    # print(query_scData.shape)
+    # print(query_Label.shape)
     showClusters(query_scData, query_Label, 'Raw Query Data')
 
     # 数据预处理
