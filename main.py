@@ -117,6 +117,8 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 可视化reference data embedding
     showClusters(ref_data_embeddings, ref_labels, 'reference data embeddings')
 
+
+
     '''
         Query data
     '''
@@ -252,14 +254,14 @@ SMPath = {
 
 config = {
     'epoch_GCN':1000, # Huang model 训练的epoch
-    'epoch_CPM':1000,
+    'epoch_CPM':3000,
     'lsd_dim':128, # CPM_net latent space dimension
-    'CPM_lr':[0.0005, 0.0005], # CPM_ner中train和test的学习率
+    'CPM_lr':[0.001, 0.001], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
     'middle_out':256,  # GCN中间层维数
-    'w_classify': 1 # classfication loss的权重
+    'w_classify': 0 # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

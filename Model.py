@@ -51,9 +51,9 @@ class CPMNets():
         self.net = dict()
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
-                nn.Linear(self.lsd_dim, 2 * self.lsd_dim),  # 我对源码的理解就是只有一层全连接
-                nn.ReLU(),
-                nn.Linear(2 * self.lsd_dim,  view_d_arr[i])
+                nn.Linear(self.lsd_dim, view_d_arr[i]),  # 我对源码的理解就是只有一层全连接
+                # nn.ReLU(),
+                # nn.Linear(2 * self.lsd_dim,  view_d_arr[i])
                 # nn.Dropout(0.2)
             )
 
@@ -92,7 +92,7 @@ class CPMNets():
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_model(self, data, labels, n_epochs, lr=[0.001, 0.001]):
+    def train_model(self, data, labels, n_epochs, lr):
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
@@ -117,8 +117,8 @@ class CPMNets():
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
 
-            # 每个view的平均loss
-            r_loss = r_loss
+            # 每个样本的平均loss
+            r_loss = r_loss / self.train_len
 
             c_loss = self.classification_loss(labels)
 
@@ -138,9 +138,9 @@ class CPMNets():
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
             if epoch % 500 == 0:
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                    epoch, r_loss.detach().item() / (self.view_num * self.train_len), c_loss.detach().item() / self.train_len))
-            r_loss_list.append(r_loss.detach().item() / self.train_len)
-            c_loss_list.append(c_loss.detach().item() / self.train_len)
+                    epoch, r_loss.detach().item() , c_loss.detach().item()))
+            # r_loss_list.append(r_loss.detach().item() / self.train_len)
+            # c_loss_list.append(c_loss.detach().item() / self.train_len)
 
         # 绘制loss训练图像
         # lossPolt(r_loss_list, c_loss_list, n_epochs)
@@ -162,7 +162,7 @@ class CPMNets():
                 r_loss += self.reconstrution_loss(self.net[str(v)](self.h_test), data[:, self.view_idx[v]])
 
             # 每个view的平均loss
-            r_loss = r_loss / self.view_num
+            # r_loss = r_loss / self.view_num
             # 每个测试样本的平均r_loss
             r_loss = r_loss / self.test_len
 
@@ -170,10 +170,10 @@ class CPMNets():
             r_loss.backward()
             optimizer_for_test_h.step()
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 5000 == 0:
+            if epoch % 100 == 0:
                 print('TEST: epoch %d: Reconstruction loss = %.3f '%(
-                    epoch, r_loss.detach().item() / self.train_len))
-            r_loss_list.append(r_loss.detach().item() / self.train_len)
+                    epoch, r_loss.detach().item()))
+            # r_loss_list.append(r_loss.detach().item() / self.train_len)
         # np.save('test_r_loss.npy', np.array(r_loss_list))
 
 
