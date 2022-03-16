@@ -11,23 +11,25 @@ import torch.optim as optim
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class CPMNets():
-    def __init__(self, view_num, train_len, test_len, view_len_arr, class_num, lsd_dim=128):
+    def __init__(self, view_num, train_len, test_len, view_d_arr, class_num, lsd_dim, w):
         '''
         :param view_num: view的数目
         :param train_len: training data length
         :param test_len: test data length
-        :param view_feat_arr: 一个数组，代表每一个view的特征长度
+        :param view_d_arr: 一个数组，代表每一个view的特征长度
         :param lsd_dim: latent space H dimension
         :param class_num: 类别数
+        :param w: classfication loss的权重
         这里也不考虑用源码中的sn矩阵，因为我们不缺view，也没必要随机取产生缺失的view
         '''
         super(CPMNets, self).__init__()
+        self.w = w
         self.view_num = view_num
         # 记录每一个view在data中的index 比如第一个view的长度是10，那么0,1,...,9都放在view_idx[0]中
-        self.view_idx = [[] for v in view_len_arr]
+        self.view_idx = [[] for v in view_d_arr]
         cnt = 0
-        for i in range(len(view_len_arr)):
-            for j in range(view_len_arr[i]):
+        for i in range(len(view_d_arr)):
+            for j in range(view_d_arr[i]):
                 self.view_idx[i].append(cnt)
                 cnt += 1
 
@@ -49,7 +51,9 @@ class CPMNets():
         self.net = dict()
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
-                nn.Linear(self.lsd_dim, view_len_arr[i]),  # 我对源码的理解就是只有一层全连接
+                nn.Linear(self.lsd_dim, view_d_arr[i]/2),  # 我对源码的理解就是只有一层全连接
+                nn.ReLU(),
+                nn.Linear(view_d_arr[i]/2,  view_d_arr[i])
                 # nn.Dropout(0.2)
             )
 
@@ -119,7 +123,7 @@ class CPMNets():
             c_loss = self.classification_loss(labels)
 
             # 每个样本的平均loss, 在这里 *2 来着重降低classfication loss
-            all_loss = (r_loss + 2*c_loss) / self.train_len
+            all_loss = (r_loss + self.w * c_loss) / self.train_len
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
