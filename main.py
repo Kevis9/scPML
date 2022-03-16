@@ -164,7 +164,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     test_len = query_data_embeddings.shape[0]
 
     # lsd_dim 作为超参数可调
-    model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat, class_num = 11, lsd_dim=config['lsd_dim'])
+    model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat, config['ref_class_num'], config['lsd_dim'], config['w_classify'])
 
     n_epochs = config['epoch_CPM']
 
@@ -258,7 +258,8 @@ config = {
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
-    'middle_out':256 # GCN中间层维数
+    'middle_out':256,  # GCN中间层维数
+    'w_classify': 5 # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

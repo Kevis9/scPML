@@ -114,21 +114,21 @@ class CPMNets():
         c_loss_list = []
         for epoch in range(n_epochs):
             r_loss = 0
-            for v in range(self.view_num):
-                r_loss += self.reconstrution_loss(self.net[str(v)](self.h_train), data[:, self.view_idx[v]])
+            for i in range(self.view_num):
+                r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
 
             # 每个view的平均loss
-            r_loss = r_loss / self.view_num
+            r_loss = r_loss
 
             c_loss = self.classification_loss(labels)
 
-            # 每个样本的平均loss, 在这里 *2 来着重降低classfication loss
-            all_loss = (r_loss + self.w * c_loss) / self.train_len
+            # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
+            all_loss = r_loss + self.w * c_loss
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
 
-            # 这里的写all_loss想法是这样：对net参数求导，r_loss为0，对h求导，r_loss和c_loss都要考虑
+            # 这里的写all_loss想法是这样：对net参数求导，c_loss为0，对h求导，r_loss和c_loss都要考虑
             all_loss.backward()
             # 更新net部分
             optimizer_for_net.step()
@@ -138,7 +138,7 @@ class CPMNets():
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
             if epoch % 500 == 0:
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                    epoch, r_loss.detach().item() / self.train_len, c_loss.detach().item() / self.train_len))
+                    epoch, r_loss.detach().item() / (self.view_num * self.train_len), c_loss.detach().item() / self.train_len))
             r_loss_list.append(r_loss.detach().item() / self.train_len)
             c_loss_list.append(c_loss.detach().item() / self.train_len)
 
