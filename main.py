@@ -112,6 +112,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 做一个z-score归一化
     ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
     ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
+    print("ref data embeddings silhouette score is :{}", silhouette_score(ref_data_embeddings, ref_labels))
     ref_label_tensor = torch.from_numpy(ref_labels).view(1, ref_labels.shape[0]).long()
 
     # 可视化reference data embedding
@@ -158,7 +159,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     # 可视化query data embedding
     showClusters(query_data_embeddings, query_Label, 'query data embeddings')
-
+    print("query data embeddings silhouette score is :{}", silhouette_score(query_data_embeddings, query_Label))
     '''
         CPM-Net
     '''
