@@ -201,40 +201,13 @@ def Classify(lsd1, lsd2, label):
     label = label.reshape(len(label), 1) - 1
     enc = OneHotEncoder()
     a = enc.fit_transform(label)
+    print(a)
     label_onehot = a.toarray()
     label_num = np.sum(label_onehot, axis=0)
     F_h_h_sum = np.dot(F_h_h, label_onehot)
     F_h_h_mean = F_h_h_sum / label_num
     label_pre = np.argmax(F_h_h_mean, axis=1) + 1
     return label_pre
-
-
-def sharedGeneMatrix(path1, path2):
-
-    pd1 = pd.read_csv(path1)
-    # 这地方给的pd2要转置
-    pd2 = pd.read_csv(path2, index_col=0).T
-    pd3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/mouse_VISp_gene_expression_matrices_2018-06-14/mouse_VISp_2018-06-14_genes-rows.csv')
-    pd2 = pd.DataFrame(data=pd2.values, columns=pd3['gene_symbol'].tolist())
-    print("数据读取完成")
-
-    names1 = pd1.columns
-    names2 = pd2.columns
-    print(names1)
-    print(names2)
-
-    # 取交集
-    shared_names = names1.intersection(names2)
-    print(shared_names)
-
-    # 拿到human和mouse的DataFrame
-    matrix1 = pd1[shared_names]
-    matrix2 = pd2[shared_names]
-
-    # 保存数据
-    matrix1.to_csv('mouse1_pancreas.csv')
-    matrix2.to_csv('mouse_VISP.csv')
-
 
 
 def showClusters(data, label, title):

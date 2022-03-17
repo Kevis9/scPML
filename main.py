@@ -4,7 +4,7 @@ from torch import nn
 from utils import Normalization, Mask_Data, Graph, readSCData, \
     setByPathway, readSimilarityMatrix, \
     Classify, z_score_Normalization, sharedGeneMatrix, showClusters
-from Model import scGNN, CPMNets
+from model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
 import matplotlib.pyplot as plt
@@ -216,6 +216,12 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     q_ari = adjusted_rand_score(query_Label, q_h_labels)
     print("Query K-means result: Silhouette score is : {}, ARI is :{}".format(q_s_score, q_ari))
 
+    pred = Classify(ref_h, query_h, ref_labels)
+
+    print(query_Label.shape)
+    print(pred.shape)
+
+
 
 dataset_name = "transfer_across_species_data"
 data_path_pre = os.path.join(os.getcwd(), "..", dataset_name, "scData")
@@ -260,10 +266,10 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':3000, # Huang model 训练的epoch
-    'epoch_CPM':5000,
+    'epoch_GCN':10, # Huang model 训练的epoch
+    'epoch_CPM':10,
     'lsd_dim':128, # CPM_net latent space dimension
-    'CPM_lr':[0.005, 0.005], # CPM_ner中train和test的学习率
+    'CPM_lr':[0.05, 0.05], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
@@ -272,18 +278,7 @@ config = {
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-import csv
-ref_h = np.load('result\\ref_h.npy')
-print(ref_h.shape)
-with open(labelPath['ref']) as fp:
-    labels = list(csv.reader(fp))[1:]
-    labels = (np.array(labels)[:, :]).astype(np.int64).reshape(-1)
-    fp.close()
-umap_model = umap.UMAP(random_state=29)
 
-data_2d = umap_model.fit_transform(ref_h)
-print("2d silhouette score is :", silhouette_score(data_2d, labels))
-exit()
 
 transfer_labels(dataPath, labelPath, SMPath, config)
 
