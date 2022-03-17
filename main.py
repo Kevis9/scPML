@@ -13,6 +13,7 @@ import seaborn as sns
 import pandas as pd
 from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
+import umap
 
 
 # 训练scGNN，得到每个Pathway的embedding
@@ -271,7 +272,17 @@ config = {
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import csv
+ref_h = np.load('result\\ref_h.npy')
+with open(labelPath['query']) as fp:
+    labels = list(csv.reader(fp))[1:]
+    labels = (np.array(labels)[:, :]).astype(np.int64).reshape(-1)
+    fp.close()
+umap_model = umap.UMAP(random_state=29)
 
+data_2d = umap_model.fit_transform(ref_h)
+print("2d silhouette score is :", silhouette_score(data_2d, labels))
+exit()
 
 transfer_labels(dataPath, labelPath, SMPath, config)
 
