@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from utils import Normalization, Mask_Data, Graph, readSCData, \
     setByPathway, readSimilarityMatrix, \
-    Classify, z_score_Normalization, sharedGeneMatrix, showClusters
+    Classify, z_score_Normalization, showClusters
 from model import scGNN, CPMNets
 from torch.utils.data import Dataset
 import numpy as np
