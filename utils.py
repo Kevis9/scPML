@@ -201,7 +201,7 @@ def Classify(lsd1, lsd2, label):
     label = label.reshape(len(label), 1) - 1
     enc = OneHotEncoder()
     a = enc.fit_transform(label)
-    print(a)
+    # print(a)
     label_onehot = a.toarray()
     label_num = np.sum(label_onehot, axis=0)
     F_h_h_sum = np.dot(F_h_h, label_onehot)

@@ -124,13 +124,13 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     '''
         Query data
     '''
-    query_scData, query_Label = readSCData(dataPath['query'],
+    query_scData, query_label = readSCData(dataPath['query'],
                                            labelPath['query'])
 
     # 可视化原数据分布
     # print(query_scData.shape)
     # print(query_Label.shape)
-    showClusters(query_scData, query_Label, 'Raw Query Data')
+    showClusters(query_scData, query_label, 'Raw Query Data')
 
     # 数据预处理
     query_norm_scData = Normalization(query_scData)
@@ -150,17 +150,17 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     query_embeddings = []
     for i in range(len(GCN_models)):
         query_embeddings.append(GCN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
-        showClusters(query_embeddings[i], query_Label, 'query view' + str(i + 1))
+        showClusters(query_embeddings[i], query_label, 'query view' + str(i + 1))
 
     query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
     # 做一个z-score归一化
     query_data_embeddings = z_score_Normalization(query_data_embeddings)
     query_data_embeddings = torch.from_numpy(query_data_embeddings).float()
-    query_label_tensor = torch.from_numpy(query_Label).view(1, query_Label.shape[0]).long()
+    query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long()
 
     # 可视化query data embedding
-    showClusters(query_data_embeddings, query_Label, 'query data embeddings')
-    print("query data embeddings silhouette score is :", silhouette_score(query_data_embeddings, query_Label))
+    showClusters(query_data_embeddings, query_label, 'query data embeddings')
+    print("query data embeddings silhouette score is :", silhouette_score(query_data_embeddings, query_label))
     '''
         CPM-Net
     '''
@@ -211,15 +211,16 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     q_h_labels = kmeans_model.fit_predict(query_h)
     # showClusters(query_h, q_h_labels, 'query h')
     # q_s_score = silhouette_score(query_h, q_h_labels)
-    showClusters(query_h, query_Label, 'query h')
-    q_s_score = silhouette_score(query_h, query_Label)
-    q_ari = adjusted_rand_score(query_Label, q_h_labels)
+    showClusters(query_h, query_label, 'query h')
+    q_s_score = silhouette_score(query_h, query_label)
+    q_ari = adjusted_rand_score(query_label, q_h_labels)
     print("Query K-means result: Silhouette score is : {}, ARI is :{}".format(q_s_score, q_ari))
 
     pred = Classify(ref_h, query_h, ref_labels)
-
-    print(query_Label.shape)
-    print(pred.shape)
+    acc = (pred == query_label).sum()
+    acc = acc / pred.shape[0]
+    print("Prediction Accuracy is {:.3f}".format(acc))
+    
 
 
 
@@ -266,10 +267,10 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':10, # Huang model 训练的epoch
-    'epoch_CPM':10,
+    'epoch_GCN':1000, # Huang model 训练的epoch
+    'epoch_CPM':5000,
     'lsd_dim':128, # CPM_net latent space dimension
-    'CPM_lr':[0.05, 0.05], # CPM_ner中train和test的学习率
+    'CPM_lr':[0.005, 0.005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
