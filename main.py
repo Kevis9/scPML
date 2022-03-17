@@ -275,7 +275,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import csv
 ref_h = np.load('result\\ref_h.npy')
 print(ref_h.shape)
-with open(labelPath['query']) as fp:
+with open(labelPath['ref']) as fp:
     labels = list(csv.reader(fp))[1:]
     labels = (np.array(labels)[:, :]).astype(np.int64).reshape(-1)
     fp.close()
