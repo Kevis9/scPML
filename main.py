@@ -194,8 +194,11 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     '''
     kmeans_model = cluster.KMeans(n_clusters=config['ref_class_num'], max_iter=500, init="k-means++", random_state=42)
     ref_h_labels = kmeans_model.fit_predict(ref_h)
-    showClusters(ref_h, ref_h_labels, 'reference h')
-    ref_s_score = silhouette_score(ref_h,ref_h_labels)
+    # showClusters(ref_h, ref_h_labels, 'reference h')
+    showClusters(ref_h, ref_labels, 'reference h')
+
+    # ref_s_score = silhouette_score(ref_h,ref_h_labels)
+    ref_s_score = silhouette_score(ref_h, ref_labels)
     ref_ari = adjusted_rand_score(ref_labels, ref_h_labels)
     print("Reference K-means result: Silhouette score is : {}, ARI is :{}".format(ref_s_score, ref_ari))
 
@@ -204,8 +207,10 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     '''
     kmeans_model = cluster.KMeans(n_clusters=config['query_class_num'], max_iter=500, init="k-means++", random_state=42)
     q_h_labels = kmeans_model.fit_predict(query_h)
-    showClusters(query_h, q_h_labels, 'query h')
-    q_s_score = silhouette_score(query_h, q_h_labels)
+    # showClusters(query_h, q_h_labels, 'query h')
+    # q_s_score = silhouette_score(query_h, q_h_labels)
+    showClusters(query_h, query_Label, 'query h')
+    q_s_score = silhouette_score(query_h, query_Label)
     q_ari = adjusted_rand_score(query_Label, q_h_labels)
     print("Query K-means result: Silhouette score is : {}, ARI is :{}".format(q_s_score, q_ari))
 
@@ -253,14 +258,14 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':5000, # Huang model 训练的epoch
-    'epoch_CPM':20000,
-    'lsd_dim':128, # CPM_net latent space dimension
+    'epoch_GCN':3000, # Huang model 训练的epoch
+    'epoch_CPM':5000,
+    'lsd_dim':3, # CPM_net latent space dimension
     'CPM_lr':[0.001, 0.001], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
-    'middle_out':256,  # GCN中间层维数
+    'middle_out':3,  # GCN中间层维数
     'w_classify': 1 # classfication loss的权重
 }
 
