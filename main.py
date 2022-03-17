@@ -112,7 +112,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 做一个z-score归一化
     ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
     ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
-    print("ref data embeddings silhouette score is :{}", silhouette_score(ref_data_embeddings, ref_labels))
+    print("ref data embeddings silhouette score is :", silhouette_score(ref_data_embeddings, ref_labels))
     ref_label_tensor = torch.from_numpy(ref_labels).view(1, ref_labels.shape[0]).long()
 
     # 可视化reference data embedding
@@ -159,7 +159,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     # 可视化query data embedding
     showClusters(query_data_embeddings, query_Label, 'query data embeddings')
-    print("query data embeddings silhouette score is :{}", silhouette_score(query_data_embeddings, query_Label))
+    print("query data embeddings silhouette score is :", silhouette_score(query_data_embeddings, query_Label))
     '''
         CPM-Net
     '''
@@ -233,24 +233,24 @@ query_SM_path = os.path.join(sm_path_pre, "human")
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path_pre, ref_data_name),
-    'query': os.path.join(data_path_pre, query_data_name),
+    'query': os.path.join(data_path_pre, ref_data_name),
+    'ref': os.path.join(data_path_pre, query_data_name),
 }
 # label所在的路径
 labelPath = {
-    'ref': os.path.join(label_path_pre, ref_label_name),
-    'query': os.path.join(label_path_pre, query_label_name),
+    'query': os.path.join(label_path_pre, ref_label_name),
+    'ref': os.path.join(label_path_pre, query_label_name),
 }
 
 
 SMPath = {
-    'ref': [
+    'query': [
         os.path.join(ref_SM_path, "SM_mouse_pancreas_KEGG.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_Reactome.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_Wikipathways.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_biase.csv"),
     ],
-    'query': [
+    'ref': [
         os.path.join(query_SM_path, "SM_human_pancreas_KEGG.csv"),
         os.path.join(query_SM_path, "SM_human_pancreas_Reactome.csv"),
         os.path.join(query_SM_path, "SM_human_pancreas_Wikipathways.csv"),
@@ -259,10 +259,10 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':100, # Huang model 训练的epoch
-    'epoch_CPM':1000,
+    'epoch_GCN':3000, # Huang model 训练的epoch
+    'epoch_CPM':5000,
     'lsd_dim':128, # CPM_net latent space dimension
-    'CPM_lr':[0.0001, 0.0001], # CPM_ner中train和test的学习率
+    'CPM_lr':[0.005, 0.005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数
     'query_class_num':9, # query data的类别数
     'k':4, # 图构造的时候k_neighbor参数
