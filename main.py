@@ -220,7 +220,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
     print("Prediction Accuracy is {:.3f}".format(acc))
-    
+
 
 
 
@@ -267,7 +267,7 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':1000, # Huang model 训练的epoch
+    'epoch_GCN':3000, # Huang model 训练的epoch
     'epoch_CPM':5000,
     'lsd_dim':128, # CPM_net latent space dimension
     'CPM_lr':[0.005, 0.005], # CPM_ner中train和test的学习率
