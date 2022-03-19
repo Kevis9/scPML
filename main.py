@@ -200,23 +200,23 @@ query_SM_path = os.path.join(sm_path_pre, "human")
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'query': os.path.join(data_path_pre, ref_data_name),
-    'ref': os.path.join(data_path_pre, query_data_name),
+    'ref': os.path.join(data_path_pre, ref_data_name),
+    'query': os.path.join(data_path_pre, query_data_name),
 }
 # label所在的路径
 labelPath = {
-    'query': os.path.join(label_path_pre, ref_label_name),
-    'ref': os.path.join(label_path_pre, query_label_name),
+    'ref': os.path.join(label_path_pre, ref_label_name),
+    'query': os.path.join(label_path_pre, query_label_name),
 }
 
 SMPath = {
-    'query': [
+    'ref': [
         os.path.join(ref_SM_path, "SM_mouse_pancreas_KEGG.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_Reactome.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_Wikipathways.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_biase.csv"),
     ],
-    'ref': [
+    'querys': [
         os.path.join(query_SM_path, "SM_human_pancreas_KEGG.csv"),
         os.path.join(query_SM_path, "SM_human_pancreas_Reactome.csv"),
         os.path.join(query_SM_path, "SM_human_pancreas_Wikipathways.csv"),
