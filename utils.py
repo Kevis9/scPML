@@ -210,7 +210,7 @@ def show_cluster(data, label, title):
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
-    plt.savefig(os.path.join(RESULT_PATH, title + '.png'), dpi=600, format='svg')
+    plt.savefig(os.path.join(RESULT_PATH, title), dpi=600, format='svg')
     # plt.show()
 
 
