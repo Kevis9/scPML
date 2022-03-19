@@ -140,12 +140,12 @@ def read_data_label(data_path, label_path):
 
 def read_similarity_mat(path):
 
-    mat_df = pd.read_csv(path, index_col=0)
-    similarity_mat = mat_df.to_numpy()
-    # with open(path) as fp:
-    #     mat_similarity = np.array(list(csv.reader(fp))[1:])[:,1:]
-    #     mat_similarity = mat_similarity.astype(np.float64) # 记得做个类型转换
-    #     fp.close()
+    # mat_df = pd.read_csv(path, index_col=0)
+    # similarity_mat = mat_df.to_numpy()
+    with open(path) as fp:
+        similarity_mat = np.array(list(csv.reader(fp))[1:])[:,1:]
+        similarity_mat = similarity_mat.astype(np.float64) # 记得做个类型转换
+        fp.close()
     return similarity_mat.astype(np.float64)
 
 
