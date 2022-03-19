@@ -28,8 +28,17 @@ import csv
 # print(res_df.shape)
 # res_df.to_csv('data.csv',index=True)
 # exit()
-# data = pd.read_csv('')
-# df = pd.DataFrame(data=df.values, columns=)
+
+# data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/E_MTAB_5061_scdata.csv', index_col=0)
+# info = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/E-MTAB-5061.sdrf.txt', sep='\t')
+#
+# cell_type = info['Factor Value[cell type]'].tolist()
+# name = info['Source Name'].tolist()
+# type_df = pd.DataFrame(data=cell_type, index=name).T
+# print(data.index.tolist())
+# label_df = type_df[data.index.tolist()]
+
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data):
@@ -245,12 +254,12 @@ config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
-    'CPM_lr': [0.05, 0.05],  # CPM_ner中train和test的学习率
+    'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
     'k': 4,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 10  # classfication loss的权重
+    'w_classify': 1  # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
