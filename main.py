@@ -216,7 +216,7 @@ SMPath = {
         os.path.join(ref_SM_path, "SM_mouse_pancreas_Wikipathways.csv"),
         os.path.join(ref_SM_path, "SM_mouse_pancreas_biase.csv"),
     ],
-    'querys': [
+    'query': [
         os.path.join(query_SM_path, "SM_human_pancreas_KEGG.csv"),
         os.path.join(query_SM_path, "SM_human_pancreas_Reactome.csv"),
         os.path.join(query_SM_path, "SM_human_pancreas_Wikipathways.csv"),
