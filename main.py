@@ -1,4 +1,6 @@
 import os.path
+
+import pandas as pd
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
@@ -13,8 +15,20 @@ from sklearn import cluster
 # from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
+import csv
 
+df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt', sep='\t', skiprows=1, header=None)
+df = df.iloc[:26179, 3516:]
+df_name = pd.read_table('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt')
+names = df_name.columns.tolist()
+del names[0]
+print(len(names))
+res_df = pd.DataFrame(data=df.values, columns=names, index=df.iloc[:,0].to_list()).T
+print(res_df.shape)
 
+res_df.to_csv('data.csv')
+exit()
+# df = pd.DataFrame(data=df.values, columns=)
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data):
