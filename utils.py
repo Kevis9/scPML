@@ -8,8 +8,7 @@ import networkx as nx
 import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
-# import pandas as pd
-import modin.pandas as pd
+import pandas as pd
 # from sklearn.manifold import TSNE
 import umap
 import seaborn as sns
