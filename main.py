@@ -1,8 +1,7 @@
 import os.path
 import torch
 from torch import nn
-from utils import sc_normalization, mask_data, construct_graph, read_data_label, \
-    setByPathway, readSimilarityMatrix, \
+from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
     Classify, z_score_normalization, showClusters
 from model import scGNN, CPMNets
 # from torch.utils.data import Dataset
@@ -72,10 +71,10 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
     showClusters(masked_ref_data, ref_labels, "ref masked data")
 
-    ref_sm_arr = [readSimilarityMatrix(SMPath['ref'][0]),
-                  readSimilarityMatrix(SMPath['ref'][1]),
-                  readSimilarityMatrix(SMPath['ref'][2]),
-                  readSimilarityMatrix(SMPath['ref'][3])]
+    ref_sm_arr = [read_similarity_mat(SMPath['ref'][0]),
+                  read_similarity_mat(SMPath['ref'][1]),
+                  read_similarity_mat(SMPath['ref'][2]),
+                  read_similarity_mat(SMPath['ref'][3])]
 
     ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[0], config['k']),
                   construct_graph(masked_ref_data, ref_sm_arr[1], config['k']),
@@ -139,10 +138,10 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     query_norm_scData = sc_normalization(query_scData)
 
     # 构造Query data的Graph
-    query_sm_arr = [readSimilarityMatrix(SMPath['query'][0]),
-                    readSimilarityMatrix(SMPath['query'][1]),
-                    readSimilarityMatrix(SMPath['query'][2]),
-                    readSimilarityMatrix(SMPath['query'][3])]
+    query_sm_arr = [read_similarity_mat(SMPath['query'][0]),
+                    read_similarity_mat(SMPath['query'][1]),
+                    read_similarity_mat(SMPath['query'][2]),
+                    read_similarity_mat(SMPath['query'][3])]
 
     query_graphs = [construct_graph(query_norm_scData, query_sm_arr[0], config['k']),
                     construct_graph(query_norm_scData, query_sm_arr[1], config['k']),

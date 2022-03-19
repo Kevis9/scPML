@@ -119,7 +119,7 @@ def read_data_label(data_path, label_path):
     data = data_df.to_numpy()
 
     label_df = pd.read_csv(label_path)
-    label = label_df.to_numpy()
+    label = label_df.to_numpy().reshape(-1)
     # with open(data_path) as fp:
     #     data = list(csv.reader(fp))
     #     data = np.array(data[1:])[:, 1:].astype(np.float64)
@@ -132,50 +132,21 @@ def read_data_label(data_path, label_path):
     #     fp.close()
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
+    print('label的shape为 : {}'.format(label.shape))
     return data.astype(np.float64), label.astype(np.int64)
 
 
-def setByPathway(data, labels, gene_names, path):
-    '''
-    :param data: 训练数据
-    :param labels: 标签
-    :param gene_names: 基因的名称
-    :param path: pathway文件所在路径
-    :return:
-    '''
-    with open(path) as fp:
-        pathway = list(csv.reader(fp))
-        groups = dict()
-        # 把每一个基因的组建立一个映射
-        for i in range(len(pathway)):
-            for j in range(1, len(pathway[i])):
-                # 注意全部转为小写
-                groups[pathway[i][j].lower()] = int(pathway[i][0])
-        fp.close()
-    # 记录每个组（比如第一组）基因在data中的下标位置, 下标代表的是某一组
-    # +1的原因是组从1开始计算
-    gene_idx = [[] for g in range(len(pathway)+1)]
-    for i in range(len(gene_names)):
-        if gene_names[i] in groups.keys():
-            # 如果不在Gene不再Pathway数据集里面，就不要了
-            gene_idx[groups[gene_names[i]]].append(i) # i是矩阵里面gene的下标，从0开始
-
-    gene_set = []
-    for group_id in range(len(pathway)):
-        # 控制每一组的基因数目都要大于2
-        if len(gene_idx[group_id+1]) < 3:
-            continue
-        gene_set.append(data[:,gene_idx[group_id+1]]) #拿第1、2、3...组基因放到gene_set里面
-
-    return gene_set
 
 
-def readSimilarityMatrix(path):
-    with open(path) as fp:
-        mat_similarity = np.array(list(csv.reader(fp))[1:])[:,1:]
-        mat_similarity = mat_similarity.astype(np.float64) # 记得做个类型转换
-        fp.close()
-    return mat_similarity
+def read_similarity_mat(path):
+
+    mat_df = pd.read_csv(path, index_col=0)
+    similarity_mat = mat_df.to_numpy()
+    # with open(path) as fp:
+    #     mat_similarity = np.array(list(csv.reader(fp))[1:])[:,1:]
+    #     mat_similarity = mat_similarity.astype(np.float64) # 记得做个类型转换
+    #     fp.close()
+    return similarity_mat.astype(np.float64)
 
 
 
