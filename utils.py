@@ -151,7 +151,7 @@ def read_similarity_mat(path):
 
 
 
-def lossPolt(r_loss, c_loss, n_epoch):
+def loss_plot(r_loss, c_loss, n_epoch):
     fig, ax = plt.subplots()
     x = [i for i in range(n_epoch)]
     ax.plot(x, r_loss, label='Reconstruction')
@@ -163,7 +163,7 @@ def lossPolt(r_loss, c_loss, n_epoch):
     plt.show()
 
 
-def Classify(lsd1, lsd2, label):
+def cpm_classify(lsd1, lsd2, label):
     """In most cases, this method is used to predict the highest accuracy.
     :param lsd1: train set's latent space data
     :param lsd2: test set's latent space data
@@ -183,7 +183,7 @@ def Classify(lsd1, lsd2, label):
     return label_pre
 
 
-def showClusters(data, label, title):
+def show_cluster(data, label, title):
     '''
     可视化聚类的函数
     :param data: 表达矩阵
@@ -214,4 +214,6 @@ def showClusters(data, label, title):
     # plt.show()
 
 
+def concat_views(views):
+    return np.concatenate(views, axis=1).astype(np.float64)
 

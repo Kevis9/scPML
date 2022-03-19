@@ -2,7 +2,7 @@ import os.path
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
-    Classify, z_score_normalization, showClusters
+    cpm_classify, z_score_normalization, show_cluster, concat_views
 from model import scGNN, CPMNets
 # from torch.utils.data import Dataset
 import numpy as np
@@ -14,24 +14,18 @@ from sklearn import cluster
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
 
-# data = {
-#     "x" : [1,2,3,4],
-#     "y": [5,6,7,8]
-# }
-# df = pd.DataFrame(data=data)
-# print(df.to_numpy())
-# exit()
 
 # 训练scGNN，得到每个Pathway的embedding
-def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_idx, scDataNorm):
+def train_scGNN(model, n_epochs, G_data, optimizer,
+                index_pair, masking_idx, norm_data):
     '''
     :param model: 待训练的模型
     :param n_epochs:
     :param G_data: 训练的图数据
     :param optimizer:
-    :param index_pair: 做过mask元素的index
+    :param index_pair: 做过mask元素的index pair
     :param masking_idx: mask元素的index
-    :param scDataNorm: mask之前的normdata
+    :param norm_data: mask之后的norm_data
     :return:
     '''
     model = model.to(device)
@@ -41,40 +35,62 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_
         pred = model(G_data.to(device))
         # 得到预测的droout
         dropout_pred = pred[index_pair[0][masking_idx], index_pair[1][masking_idx]]
-        dropout_true = scDataNorm[index_pair[0][masking_idx], index_pair[1][masking_idx]]
+        dropout_true = norm_data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
         loss_fct = nn.MSELoss()
         loss = loss_fct(dropout_pred.view(1, -1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1, -1))
         loss.backward()
         optimizer.step()
         if epoch % 1000 == 0:
             print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
-
     return model
 
+def train_cpm_net(ref_data_embeddings: torch.Tensor,
+                  ref_label: torch.Tensor,
+                  query_data_embeddings: torch.Tensor,
+                  ref_view_num: int,
+                  ref_view_feat_len: list):
 
-def transfer_labels(dataPath, labelPath, SMPath, config):
+    train_len = ref_data_embeddings.shape[0]
+    test_len = query_data_embeddings.shape[0]
+    # lsd_dim 作为超参数可调
+    model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat_len, config['ref_class_num'], config['lsd_dim'],
+                    config['w_classify'])
+
+    n_epochs = config['epoch_CPM']
+
+    # 开始训练
+    model.train_model(ref_data_embeddings, ref_label, n_epochs, lr=config['CPM_lr'])
+
+    # 对test_h进行adjust（按照论文的想法，保证consistency）
+    model.test(query_data_embeddings, n_epochs)
+    ref_h = model.get_h_train().detach().numpy()
+    query_h = model.get_h_test().detach().numpy()
+    return model, ref_h, query_h
+
+def transfer_label(data_path: dict,
+                   label_path: dict,
+                   sm_path: dict,
+                   config: dict):
     '''
-    :param dataPath: 表达矩阵的路径
-    :param labelPath: 标签路径
-    :param SMPath: 相似矩阵的路径
+    :param data_path: 表达矩阵的路径
+    :param label_path: 标签路径
+    :param sm_path: 相似矩阵的路径
     :param config: 相关参数的配置
     :return:
     '''
-    ref_Data, ref_labels = read_data_label(dataPath['ref'], labelPath['ref'])
-    showClusters(ref_Data, ref_labels, 'raw reference data')
+    ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
+
 
     # 数据预处理
-    ref_norm_data = sc_normalization(ref_Data)
-    # ref_norm_data = z_score_Normalization(ref_norm_data)
-
+    ref_norm_data = sc_normalization(ref_data)
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
-    showClusters(masked_ref_data, ref_labels, "ref masked data")
 
-    ref_sm_arr = [read_similarity_mat(SMPath['ref'][0]),
-                  read_similarity_mat(SMPath['ref'][1]),
-                  read_similarity_mat(SMPath['ref'][2]),
-                  read_similarity_mat(SMPath['ref'][3])]
+
+    ref_sm_arr = [read_similarity_mat(sm_path['ref'][0]),
+                  read_similarity_mat(sm_path['ref'][1]),
+                  read_similarity_mat(sm_path['ref'][2]),
+                  read_similarity_mat(sm_path['ref'][3])]
 
     ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[0], config['k']),
                   construct_graph(masked_ref_data, ref_sm_arr[1], config['k']),
@@ -82,147 +98,89 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
                   construct_graph(masked_ref_data, ref_sm_arr[3], config['k'])]
 
     ref_views = []
-    GCN_models = []
+    GNN_models = []
 
     # 训练ref data in scGNN
     for i in range(len(ref_graphs)):
         model = scGNN(ref_graphs[i], config['middle_out'])
         optimizer = torch.optim.Adam(model.parameters())
-        model = train_scGNN_wrapper(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx, ref_norm_data)
-        model = model.to(device)
+        model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
+                            ref_norm_data)
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
         # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
         # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
         embedding = model.get_embedding(ref_graphs[i])
         ref_views.append(embedding.detach().cpu().numpy())
-        GCN_models.append(model)
+        GNN_models.append(model)
 
     '''
         Reference Data Embeddings  
     '''
     # view的个数
     ref_view_num = len(ref_views)
-    # 每个view的特征长度可能不一样 (在这里是一样的)
-    ref_view_feat = []
+    # 每个view的特征长度
+    ref_view_feat_len = []
     for i in range(ref_view_num):
-        ref_view_feat.append(ref_views[i].shape[1])
-    # 查看所有view的类别分布情况
-    for i in range(ref_view_num):
-        showClusters(ref_views[i], ref_labels, 'ref view' + str(i + 1))
+        ref_view_feat_len.append(ref_views[i].shape[1])
 
     # 把所有的view连接在一起
-    ref_data_embeddings = np.concatenate(ref_views, axis=1).astype(np.float64)
-    # 做一个z-score归一化
-    ref_data_embeddings = z_score_normalization(ref_data_embeddings)
-    ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
-    print("ref data embeddings silhouette score is :", silhouette_score(ref_data_embeddings, ref_labels))
-    ref_label_tensor = torch.from_numpy(ref_labels).view(1, ref_labels.shape[0]).long()
-
-    # 可视化reference data embedding
-    showClusters(ref_data_embeddings, ref_labels, 'reference data embeddings')
-
+    ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float()
+    ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long()
 
 
     '''
         Query data
     '''
-    query_scData, query_label = read_data_label(dataPath['query'],
-                                                labelPath['query'])
+    query_data, query_label = read_data_label(data_path['query'], label_path['query'])
 
-    # 可视化原数据分布
-    # print(query_scData.shape)
-    # print(query_Label.shape)
-    showClusters(query_scData, query_label, 'Raw Query Data')
 
     # 数据预处理
-    query_norm_scData = sc_normalization(query_scData)
+    query_norm_data = sc_normalization(query_data)
 
     # 构造Query data的Graph
-    query_sm_arr = [read_similarity_mat(SMPath['query'][0]),
-                    read_similarity_mat(SMPath['query'][1]),
-                    read_similarity_mat(SMPath['query'][2]),
-                    read_similarity_mat(SMPath['query'][3])]
+    query_sm_arr = [read_similarity_mat(sm_path['query'][0]),
+                    read_similarity_mat(sm_path['query'][1]),
+                    read_similarity_mat(sm_path['query'][2]),
+                    read_similarity_mat(sm_path['query'][3])]
 
-    query_graphs = [construct_graph(query_norm_scData, query_sm_arr[0], config['k']),
-                    construct_graph(query_norm_scData, query_sm_arr[1], config['k']),
-                    construct_graph(query_norm_scData, query_sm_arr[2], config['k']),
-                    construct_graph(query_norm_scData, query_sm_arr[3], config['k'])]
+    query_graphs = [construct_graph(query_norm_data, query_sm_arr[0], config['k']),
+                    construct_graph(query_norm_data, query_sm_arr[1], config['k']),
+                    construct_graph(query_norm_data, query_sm_arr[2], config['k']),
+                    construct_graph(query_norm_data, query_sm_arr[3], config['k'])]
 
     # 获得Embedding
-    query_embeddings = []
-    for i in range(len(GCN_models)):
-        query_embeddings.append(GCN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
-        showClusters(query_embeddings[i], query_label, 'query view' + str(i + 1))
+    query_views = []
+    for i in range(len(GNN_models)):
+        query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
-    query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
-    # 做一个z-score归一化
-    query_data_embeddings = z_score_normalization(query_data_embeddings)
-    query_data_embeddings = torch.from_numpy(query_data_embeddings).float()
+    query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float()
+
     query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long()
 
-    # 可视化query data embedding
-    showClusters(query_data_embeddings, query_label, 'query data embeddings')
-    print("query data embeddings silhouette score is :", silhouette_score(query_data_embeddings, query_label))
     '''
         CPM-Net
     '''
-    train_len = ref_data_embeddings.shape[0]
-    test_len = query_data_embeddings.shape[0]
+    cpm_model, ref_h, query_h = train_cpm_net(ref_data_embeddings_tensor,
+                                              ref_label_tensor,
+                                              query_data_embeddings_tensor,
+                                              ref_view_num,
+                                              ref_view_feat_len)
 
-    # lsd_dim 作为超参数可调
-    model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat, config['ref_class_num'], config['lsd_dim'], config['w_classify'])
-
-    n_epochs = config['epoch_CPM']
-
-    # 开始训练
-    model.train_model(ref_data_embeddings, ref_label_tensor, n_epochs, lr=config['CPM_lr'])
-
-    # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.test(query_data_embeddings, n_epochs)
-
-    ref_h = model.get_h_train()
-    query_h = model.get_h_test()
-
-    # 保存ref_h
-    ref_h = ref_h.detach().numpy()
-    ref_h_path = os.path.join(os.getcwd(), "result", "ref_h.npy")
-    np.save(ref_h_path, ref_h)
-
-    # 保存query_h
-    query_h = query_h.detach().numpy()
-    query_h_path = os.path.join(os.getcwd(),"result", "query_h.npy")
-    np.save(query_h_path, query_h)
-
-    '''
-        ref_h做一个 k-means聚类
-    '''
-    kmeans_model = cluster.KMeans(n_clusters=config['ref_class_num'], max_iter=500, init="k-means++", random_state=42)
-    ref_h_labels = kmeans_model.fit_predict(ref_h)
-    # showClusters(ref_h, ref_h_labels, 'reference h')
-    showClusters(ref_h, ref_labels, 'reference h')
-
-    # ref_s_score = silhouette_score(ref_h,ref_h_labels)
-    ref_s_score = silhouette_score(ref_h, ref_labels)
-    ref_ari = adjusted_rand_score(ref_labels, ref_h_labels)
-    print("Reference K-means result: Silhouette score is : {}, ARI is :{}".format(ref_s_score, ref_ari))
-
-    '''
-        query_h做一个 k-means聚类
-    '''
-    kmeans_model = cluster.KMeans(n_clusters=config['query_class_num'], max_iter=500, init="k-means++", random_state=42)
-    q_h_labels = kmeans_model.fit_predict(query_h)
-    # showClusters(query_h, q_h_labels, 'query h')
-    # q_s_score = silhouette_score(query_h, q_h_labels)
-    showClusters(query_h, query_label, 'query h')
-    q_s_score = silhouette_score(query_h, query_label)
-    q_ari = adjusted_rand_score(query_label, q_h_labels)
-    print("Query K-means result: Silhouette score is : {}, ARI is :{}".format(q_s_score, q_ari))
-
-    pred = Classify(ref_h, query_h, ref_labels)
+    pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
-    print("Prediction Accuracy is {:.3f}".format(acc))
-
+    ret = {
+        'acc' : acc,
+        'ref_h': ref_h,
+        'query_h': query_h,
+        'ref_raw_data': ref_data,
+        'ref_label': ref_label,
+        'query_raw_data': query_data,
+        'query_label': query_label,
+        'pred': pred
+    }
+    # print("Prediction Accuracy is {:.3f}".format(acc))
+    return ret
 
 
 
@@ -240,7 +198,6 @@ sm_path_pre = os.path.join(os.getcwd(), "..", dataset_name, "similarity_matrix")
 ref_SM_path = os.path.join(sm_path_pre, "mouse")
 query_SM_path = os.path.join(sm_path_pre, "human")
 
-
 # 给出ref和query data所在的路径
 dataPath = {
     'query': os.path.join(data_path_pre, ref_data_name),
@@ -251,7 +208,6 @@ labelPath = {
     'query': os.path.join(label_path_pre, ref_label_name),
     'ref': os.path.join(label_path_pre, query_label_name),
 }
-
 
 SMPath = {
     'query': [
@@ -269,23 +225,31 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':10, # Huang model 训练的epoch
-    'epoch_CPM':10,
-    'lsd_dim':128, # CPM_net latent space dimension
-    'CPM_lr':[0.005, 0.005], # CPM_ner中train和test的学习率
-    'ref_class_num':9, # Reference data的类别数
-    'query_class_num':9, # query data的类别数
-    'k':4, # 图构造的时候k_neighbor参数
-    'middle_out':256,  # GCN中间层维数
-    'w_classify': 10 # classfication loss的权重
+    'epoch_GCN': 10,  # Huang model 训练的epoch
+    'epoch_CPM': 10,
+    'lsd_dim': 128,  # CPM_net latent space dimension
+    'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
+    'ref_class_num': 9,  # Reference data的类别数
+    'query_class_num': 9,  # query data的类别数
+    'k': 4,  # 图构造的时候k_neighbor参数
+    'middle_out': 256,  # GCN中间层维数
+    'w_classify': 10  # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+ret = transfer_label(dataPath, labelPath, SMPath, config)
 
-transfer_labels(dataPath, labelPath, SMPath, config)
+show_cluster(ret['ref_raw_data'], ret['ref_label'], 'Raw reference data')
+show_cluster(ret['query_raw_data'], ret['query_label'], 'Raw query data')
+show_cluster(ret['ref_h'], ret['ref_label'], 'Reference h')
+show_cluster(ret['query_h'], ret['query_label'], 'Query h')
+show_cluster(ret['query_h'], ret['pred'], 'Query h with prediction label')
 
-# 最后进行一个分类
-# label_pre = torch.from_numpy(Classify(train_H, test_H, train_labels)).view(1, -1).long()
-#
-# print("Prediction Accuracy: %.3f" % ((label_pre == test_labels).sum().flaot()/(test_len)))
+print("Prediction Accuracy is {:.3f}".format(ret['acc']))
+print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(ret['query_h'], ret['pred'])))
+print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'],ret['pred'])))
+
+np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
+np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
+
