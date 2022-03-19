@@ -36,13 +36,10 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_
         # 得到预测的droout
         dropout_pred = pred[index_pair[0][masking_idx], index_pair[1][masking_idx]]
         dropout_true = scDataNorm[index_pair[0][masking_idx], index_pair[1][masking_idx]]
-
         loss_fct = nn.MSELoss()
         loss = loss_fct(dropout_pred.view(1, -1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1, -1))
-
         loss.backward()
         optimizer.step()
-
         if epoch % 1000 == 0:
             print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
 
@@ -51,7 +48,6 @@ def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_
 
 def transfer_labels(dataPath, labelPath, SMPath, config):
     '''
-
     :param dataPath: 表达矩阵的路径
     :param labelPath: 标签路径
     :param SMPath: 相似矩阵的路径
@@ -267,8 +263,8 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN':3000, # Huang model 训练的epoch
-    'epoch_CPM':4000,
+    'epoch_GCN':10, # Huang model 训练的epoch
+    'epoch_CPM':10,
     'lsd_dim':128, # CPM_net latent space dimension
     'CPM_lr':[0.005, 0.005], # CPM_ner中train和test的学习率
     'ref_class_num':9, # Reference data的类别数

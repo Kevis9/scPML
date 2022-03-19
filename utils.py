@@ -221,7 +221,7 @@ def showClusters(data, label, title):
     # To ensure that results can be reproduced exactly UMAP allows the user to set a random seed state
     umap_model = umap.UMAP(random_state=29)
     data_2d = umap_model.fit_transform(data)
-    # tsne = TSNE()
+    # tsne = TSNE() # TSNE进行降维处理
     # data_2d = tsne.fit_transform(data)
 
     data = {
@@ -229,28 +229,15 @@ def showClusters(data, label, title):
         'y':data_2d[:,1],
         'label':label
     }
-    # print(title)
-    # print(set(label))
-    df = pd.DataFrame(data=data)
-    # arr = [(i+1) for i in range(11)] # 1...11
 
-    plt.figure(figsize=(8,5))
-    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=6)
+    df = pd.DataFrame(data=data)
+    # plt.figure(figsize=(8,5))
+    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=8)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
-    plt.savefig(os.path.join(result_path,title+'.png'))
-    # plt.show()
-
-    # 用matplot绘制图片，想要画出好一点的图片不方便
-    # plt.scatter(data_2d[:, 0], data_2d[:, 1], c=label, cmap='Spectral', s=5)
-    # # plt.gca().set_aspect('equal', 'datalim')
-    #
-    # classes_num = len(set(label))
-    # plt.colorbar().set_ticks(np.arange(1,classes_num+1))
-    #
-    # plt.title(title)
+    plt.savefig(os.path.join(result_path,title+'.png'), dpi=600, format='svg')
     # plt.show()
 
 
