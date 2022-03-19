@@ -17,17 +17,18 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
 import csv
 
-df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt', sep='\t', skiprows=1, header=None)
-df = df.iloc[:26179, 3516:]
-df_name = pd.read_table('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt')
-names = df_name.columns.tolist()
-del names[0]
-print(len(names))
-res_df = pd.DataFrame(data=df.values, columns=names, index=df.iloc[:,0].to_list()).T
-print(res_df.shape)
-
-res_df.to_csv('data.csv')
-exit()
+# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt', sep='\t', skiprows=1, header=None)
+# idx = df.iloc[:26179,0].to_list()
+# df = df.iloc[:26179, 3516:]
+# df_name = pd.read_table('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt')
+# names = df_name.columns.tolist()
+# del names[0]
+# print(len(names))
+# res_df = pd.DataFrame(data=df.values, columns=names, index=idx).T
+# print(res_df.shape)
+# res_df.to_csv('data.csv',index=True)
+# exit()
+# data = pd.read_csv('')
 # df = pd.DataFrame(data=df.values, columns=)
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
@@ -62,7 +63,8 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
                   ref_label: torch.Tensor,
                   query_data_embeddings: torch.Tensor,
                   ref_view_num: int,
-                  ref_view_feat_len: list):
+                  ref_view_feat_len: list,
+                  config: dict):
 
     train_len = ref_data_embeddings.shape[0]
     test_len = query_data_embeddings.shape[0]
@@ -178,7 +180,8 @@ def transfer_label(data_path: dict,
                                               ref_label_tensor,
                                               query_data_embeddings_tensor,
                                               ref_view_num,
-                                              ref_view_feat_len)
+                                              ref_view_feat_len,
+                                              config)
 
     pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
