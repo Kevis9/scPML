@@ -110,8 +110,7 @@ class CPMNets():
 
         optimizer_for_net = optim.Adam(params=netParams, lr=lr[0])
         optimizer_for_h = optim.Adam(params=[self.h_train], lr=lr[1])
-        r_loss_list = []
-        c_loss_list = []
+
         for epoch in range(n_epochs):
             r_loss = 0
             for i in range(self.view_num):

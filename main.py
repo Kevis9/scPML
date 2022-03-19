@@ -15,30 +15,6 @@ from sklearn import cluster
 # from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
-import csv
-
-# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt', sep='\t', skiprows=1, header=None)
-# idx = df.iloc[:26179,0].to_list()
-# df = df.iloc[:26179, 3516:]
-# df_name = pd.read_table('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/pancreas_refseq_rpkms_counts_3514sc.txt')
-# names = df_name.columns.tolist()
-# del names[0]
-# print(len(names))
-# res_df = pd.DataFrame(data=df.values, columns=names, index=idx).T
-# print(res_df.shape)
-# res_df.to_csv('data.csv',index=True)
-# exit()
-
-# data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/E_MTAB_5061_scdata.csv', index_col=0)
-# info = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/E-MTAB-5061/E-MTAB-5061.sdrf.txt', sep='\t')
-#
-# cell_type = info['Factor Value[cell type]'].tolist()
-# name = info['Source Name'].tolist()
-# type_df = pd.DataFrame(data=cell_type, index=name).T
-# print(data.index.tolist())
-# label_df = type_df[data.index.tolist()]
-
-# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data):
@@ -81,13 +57,13 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat_len, config['ref_class_num'], config['lsd_dim'],
                     config['w_classify'])
 
-    n_epochs = config['epoch_CPM']
 
     # 开始训练
-    model.train_model(ref_data_embeddings, ref_label, n_epochs, lr=config['CPM_lr'])
+    model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], lr=config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.test(query_data_embeddings, n_epochs)
+    model.test(query_data_embeddings, config['epoch_CPM_test'])
+
     ref_h = model.get_h_train().detach().numpy()
     query_h = model.get_h_test().detach().numpy()
     return model, ref_h, query_h
@@ -252,8 +228,10 @@ SMPath = {
 
 config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
-    'epoch_CPM': 3000,
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
+    'GNN_lr': 0.05,
     'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
