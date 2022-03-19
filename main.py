@@ -1,20 +1,27 @@
 import os.path
 import torch
 from torch import nn
-from utils import Normalization, Mask_Data, Graph, readSCData, \
+from utils import sc_normalization, mask_data, construct_graph, read_data_label, \
     setByPathway, readSimilarityMatrix, \
-    Classify, z_score_Normalization, showClusters
+    Classify, z_score_normalization, showClusters
 from model import scGNN, CPMNets
-from torch.utils.data import Dataset
+# from torch.utils.data import Dataset
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from sklearn import cluster
-import seaborn as sns
-import pandas as pd
-from sklearn.manifold import TSNE
+# import seaborn as sns
+# import pandas as pd
+# from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
 
+# data = {
+#     "x" : [1,2,3,4],
+#     "y": [5,6,7,8]
+# }
+# df = pd.DataFrame(data=data)
+# print(df.to_numpy())
+# exit()
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN_wrapper(model, n_epochs, G_data, optimizer, index_pair, masking_idx, scDataNorm):
@@ -54,15 +61,15 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     :param config: 相关参数的配置
     :return:
     '''
-    ref_Data, ref_labels = readSCData(dataPath['ref'], labelPath['ref'])
+    ref_Data, ref_labels = read_data_label(dataPath['ref'], labelPath['ref'])
     showClusters(ref_Data, ref_labels, 'raw reference data')
 
     # 数据预处理
-    ref_norm_data = Normalization(ref_Data)
+    ref_norm_data = sc_normalization(ref_Data)
     # ref_norm_data = z_score_Normalization(ref_norm_data)
 
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
-    masked_ref_data, index_pair, masking_idx = Mask_Data(ref_norm_data, masked_prob)
+    masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
     showClusters(masked_ref_data, ref_labels, "ref masked data")
 
     ref_sm_arr = [readSimilarityMatrix(SMPath['ref'][0]),
@@ -70,10 +77,10 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
                   readSimilarityMatrix(SMPath['ref'][2]),
                   readSimilarityMatrix(SMPath['ref'][3])]
 
-    ref_graphs = [Graph(masked_ref_data, ref_sm_arr[0], config['k']),
-                  Graph(masked_ref_data, ref_sm_arr[1], config['k']),
-                  Graph(masked_ref_data, ref_sm_arr[2], config['k']),
-                  Graph(masked_ref_data, ref_sm_arr[3], config['k'])]
+    ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[0], config['k']),
+                  construct_graph(masked_ref_data, ref_sm_arr[1], config['k']),
+                  construct_graph(masked_ref_data, ref_sm_arr[2], config['k']),
+                  construct_graph(masked_ref_data, ref_sm_arr[3], config['k'])]
 
     ref_views = []
     GCN_models = []
@@ -107,7 +114,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     # 把所有的view连接在一起
     ref_data_embeddings = np.concatenate(ref_views, axis=1).astype(np.float64)
     # 做一个z-score归一化
-    ref_data_embeddings = z_score_Normalization(ref_data_embeddings)
+    ref_data_embeddings = z_score_normalization(ref_data_embeddings)
     ref_data_embeddings = torch.from_numpy(ref_data_embeddings).float()
     print("ref data embeddings silhouette score is :", silhouette_score(ref_data_embeddings, ref_labels))
     ref_label_tensor = torch.from_numpy(ref_labels).view(1, ref_labels.shape[0]).long()
@@ -120,8 +127,8 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     '''
         Query data
     '''
-    query_scData, query_label = readSCData(dataPath['query'],
-                                           labelPath['query'])
+    query_scData, query_label = read_data_label(dataPath['query'],
+                                                labelPath['query'])
 
     # 可视化原数据分布
     # print(query_scData.shape)
@@ -129,7 +136,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
     showClusters(query_scData, query_label, 'Raw Query Data')
 
     # 数据预处理
-    query_norm_scData = Normalization(query_scData)
+    query_norm_scData = sc_normalization(query_scData)
 
     # 构造Query data的Graph
     query_sm_arr = [readSimilarityMatrix(SMPath['query'][0]),
@@ -137,10 +144,10 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
                     readSimilarityMatrix(SMPath['query'][2]),
                     readSimilarityMatrix(SMPath['query'][3])]
 
-    query_graphs = [Graph(query_norm_scData, query_sm_arr[0], config['k']),
-                    Graph(query_norm_scData, query_sm_arr[1], config['k']),
-                    Graph(query_norm_scData, query_sm_arr[2], config['k']),
-                    Graph(query_norm_scData, query_sm_arr[3], config['k'])]
+    query_graphs = [construct_graph(query_norm_scData, query_sm_arr[0], config['k']),
+                    construct_graph(query_norm_scData, query_sm_arr[1], config['k']),
+                    construct_graph(query_norm_scData, query_sm_arr[2], config['k']),
+                    construct_graph(query_norm_scData, query_sm_arr[3], config['k'])]
 
     # 获得Embedding
     query_embeddings = []
@@ -150,7 +157,7 @@ def transfer_labels(dataPath, labelPath, SMPath, config):
 
     query_data_embeddings = np.concatenate(query_embeddings, axis=1).astype(np.float64)
     # 做一个z-score归一化
-    query_data_embeddings = z_score_Normalization(query_data_embeddings)
+    query_data_embeddings = z_score_normalization(query_data_embeddings)
     query_data_embeddings = torch.from_numpy(query_data_embeddings).float()
     query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long()
 

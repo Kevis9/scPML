@@ -1,25 +1,24 @@
 import os.path
 import numpy as np
 import copy
-from sklearn.neighbors import kneighbors_graph
+# from sklearn.neighbors import kneighbors_graph
 import torch
 from torch_geometric.data import Data as geoData
 import networkx as nx
 import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn.manifold import TSNE
+# import pandas as pd
+import modin.pandas as pd
+# from sklearn.manifold import TSNE
 import umap
 import seaborn as sns
 
-result_path = os.path.join(os.getcwd(),'result')
-# 这里给出human-mouse(transfer across species)里面的类别
-# label_name = ['acinar', 'activated_stellate', 'alpha', 'beta', 'delta', 'ductal', 'endothelial', 'gamma', 'macrophage', 'mast', 'quiescent_stellate']
+RESULT_PATH = os.path.join(os.getcwd(), 'result')
 
-def Normalization(data):
+def sc_normalization(data):
     '''
-    scGCN中的归一化处理，对表达矩阵的每一个表达量做一个平均化
+    scGCN中的归一化处理，对表达矩阵的每一个表达量做一个平均加权
     :param data: 矩阵 (cells * genes)
     :return: 返回归一化的矩阵
     '''
@@ -29,7 +28,7 @@ def Normalization(data):
     return data_norm
 
 
-def z_score_Normalization(data):
+def z_score_normalization(data):
     '''
     利用z-score方法做一个batch normalization
     :param data: 矩阵，（样本 * 特征）, 二维数组
@@ -42,12 +41,12 @@ def z_score_Normalization(data):
     return (data - means)/standard
 
 
-def Mask_Data(data, masked_prob):
+def mask_data(data, masked_prob):
     '''
     :param data: 表达矩阵 (cells * genes)
     :param masked_prob: mask概率
     :return:
-        1. X: mask的表达矩阵，
+        1. X: mask后的表达矩阵，
         2. index_pair: 矩阵中不为0的索引，[(行),(列)],
         3. masking_idx: 随机选择index_pair中行列的下标
         X[index_pair[0][masking_idx], index_pair[1][masking_idx]] 就是指被masked的数据
@@ -63,29 +62,28 @@ def Mask_Data(data, masked_prob):
     return X, index_pair, masking_idx
 
 
-def Graph(data, mat_similarity, k):
+def construct_graph(data, similarity_mat, k):
     '''
     :param data: 表达矩阵 (被mask的矩阵)
-    :param mat_similarity: 邻接矩阵 (ndarray)
+    :param similarity_mat: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
-    # k = 4
 
-    # 要对mat_similarity取前K个最大的weight作为neighbors
+    # 要对similarity_mat取前K个最大的weight作为neighbors
     k_idxs = []
     # 现将对角线部分全部设为0, 避免自己做自己的邻居
-    mat_similarity[np.diag_indices_from(mat_similarity)] = 0
+    similarity_mat[np.diag_indices_from(similarity_mat)] = 0
 
-    for i in range(mat_similarity.shape[0]):
-        top_k_idx = mat_similarity[i].argsort()[::-1][0:k]
+    for i in range(similarity_mat.shape[0]):
+        top_k_idx = similarity_mat[i].argsort()[::-1][0:k]
         k_idxs.append(top_k_idx)
 
-    mat_similarity = np.zeros(shape=mat_similarity.shape)
-    for i in range(mat_similarity.shape[0]):
-        mat_similarity[i, k_idxs[i]] = 1
-    mat_similarity = mat_similarity.astype(np.int64)
-    G = nx.from_numpy_matrix(np.matrix(mat_similarity))
-
+    similarity_mat = np.zeros(shape=similarity_mat.shape)
+    similarity_mat[:, k_idxs[i]] = 1
+    # for i in range(similarity_mat.shape[0]):
+    #     similarity_mat[i, k_idxs[i]] = 1
+    similarity_mat = similarity_mat.astype(np.int64)
+    graph = nx.from_numpy_matrix(np.matrix(similarity_mat))
 
     # np.savetxt('./Pathway_similarity.csv', mat_similarity,delimiter=',', fmt='%i')
     # 这里稍微修改下，尝试用原来Huang的Similarity matrix来做
@@ -96,18 +94,18 @@ def Graph(data, mat_similarity, k):
 
     edges = []
     # 把有向图转为无向图
-    for (u, v) in G.edges():
+    for (u, v) in graph.edges():
         edges.append([u, v])
         edges.append([v, u])
     edges = np.array(edges).T
     edges = torch.tensor(edges, dtype=torch.long)
     feat = torch.tensor(data, dtype=torch.float)
     # 将节点信息和边的信息放入特定类中
-    G_data = geoData(x=feat, edge_index=edges)
-    return G_data
+    g_data = geoData(x=feat, edge_index=edges)
+    return g_data
 
 
-def readSCData(dataPath, labelPath):
+def read_data_label(data_path, label_path):
     '''
     读取数据, 数据格式需要满足一定格式
     表达矩阵第一列是cell id, 第一行是名称
@@ -118,19 +116,24 @@ def readSCData(dataPath, labelPath):
     :return: 返回Numpy类型数组（表达矩阵，标签）
     '''
     print('Reading data...')
-    with open(dataPath) as fp:
-        data = list(csv.reader(fp))
-        data = np.array(data[1:])[:, 1:].astype(np.float64)
-        fp.close()
+    data_df = pd.read_csv(data_path, index_col=0)
+    data = data_df.to_numpy()
 
-    with open(labelPath) as fp:
-        labels = list(csv.reader(fp))[1:]
+    label_df = pd.read_csv(label_path)
+    label = label_df.to_numpy()
+    # with open(data_path) as fp:
+    #     data = list(csv.reader(fp))
+    #     data = np.array(data[1:])[:, 1:].astype(np.float64)
+    #     fp.close()
 
-        labels = (np.array(labels)[:,:]).astype(np.int64).reshape(-1)
-        fp.close()
+    # with open(label_path) as fp:
+    #     labels = list(csv.reader(fp))[1:]
+    #
+    #     labels = (np.array(labels)[:,:]).astype(np.int64).reshape(-1)
+    #     fp.close()
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
-    return data.astype(np.float64), labels.astype(np.int64)
+    return data.astype(np.float64), label.astype(np.int64)
 
 
 def setByPathway(data, labels, gene_names, path):
@@ -237,7 +240,7 @@ def showClusters(data, label, title):
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
-    plt.savefig(os.path.join(result_path,title+'.png'), dpi=600, format='svg')
+    plt.savefig(os.path.join(RESULT_PATH, title + '.png'), dpi=600, format='svg')
     # plt.show()
 
 
