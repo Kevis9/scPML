@@ -106,7 +106,7 @@ def transfer_label(data_path: dict,
     # 训练ref data in scGNN
     for i in range(len(ref_graphs)):
         model = scGNN(ref_graphs[i], config['middle_out'])
-        optimizer = torch.optim.Adam(model.parameters(), lr=config['train_scGNN'])
+        optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
         model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
                             ref_norm_data)
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
@@ -236,7 +236,7 @@ config = {
     'query_class_num': 9,  # query data的类别数
     'k': 4,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 1  # classfication loss的权重
+    'w_classify': 5  # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
