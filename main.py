@@ -230,7 +230,7 @@ config = {
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
-    'GNN_lr': 0.005,
+    'GNN_lr': 0.01,
     'CPM_lr': [0.0005, 0.0005],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
