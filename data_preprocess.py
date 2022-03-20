@@ -170,3 +170,42 @@
 # print(mouse_label.shape)
 # print(human_label.shape)
 # exit()
+
+
+
+# data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/counts.read.txt')
+# data = data.todense()
+# print(data.shape)
+# col = np.loadtxt('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/cells.read.new.txt', dtype=str)
+# print(col.shape)
+# row = np.loadtxt('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/genes.read.txt', dtype=str)
+# print(row.shape)
+# data_df = pd.DataFrame(data=data, index=row, columns=col)
+# meta_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/meta_change.txt', sep='\t')
+# data_df = data_df.loc[:, meta_data['NAME'].tolist()]
+#
+#
+# def get_df(method):
+#     idx = (meta_data['Method'] == method).tolist()
+#     df = data_df.iloc[:, idx].T
+#     label = meta_data.iloc[idx, :]['CellType']
+#     return df, label
+#
+#
+# cel_seq2_df, cel_seq2_label = get_df('CEL-Seq2')
+# v3_10x_df, v3_10x_label = get_df('10x Chromium (v3)')
+# indrop_df, in_drop_label = get_df('inDrops')
+# drop_seq_df, drop_seq_label = get_df('Drop-seq')
+# seq_well_df, seq_well_label = get_df('Seq-Well')
+#
+# def save_as_csv(df, label, name):
+#     df.to_csv(name+'_data.csv')
+#     label.to_csv(name+'_label.csv',index=False)
+#
+# save_as_csv(cel_seq2_df, cel_seq2_label, 'CEL_Seq2')
+# save_as_csv(v3_10x_df, v3_10x_label, '10X_v3')
+# save_as_csv(indrop_df, in_drop_label, 'InDrop')
+# save_as_csv(drop_seq_df, drop_seq_label, 'DropSeq')
+# save_as_csv(seq_well_df, seq_well_label, 'Seq_Well')
+#
+# exit()

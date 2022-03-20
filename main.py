@@ -1,6 +1,7 @@
 import os.path
-
+# import pandas as pd
 import pandas as pd
+import sklearn.decomposition
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
@@ -15,6 +16,9 @@ from sklearn import cluster
 # from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
+import scipy.io as spio
+
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data):
@@ -44,19 +48,18 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
             print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
     return model
 
+
 def train_cpm_net(ref_data_embeddings: torch.Tensor,
                   ref_label: torch.Tensor,
                   query_data_embeddings: torch.Tensor,
                   ref_view_num: int,
                   ref_view_feat_len: list,
                   config: dict):
-
     train_len = ref_data_embeddings.shape[0]
     test_len = query_data_embeddings.shape[0]
     # lsd_dim 作为超参数可调
     model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat_len, config['ref_class_num'], config['lsd_dim'],
                     config['w_classify'])
-
 
     # 开始训练
     model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], lr=config['CPM_lr'])
@@ -67,6 +70,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     ref_h = model.get_h_train().detach().numpy()
     query_h = model.get_h_test().detach().numpy()
     return model, ref_h, query_h
+
 
 def transfer_label(data_path: dict,
                    label_path: dict,
@@ -81,12 +85,10 @@ def transfer_label(data_path: dict,
     '''
     ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
 
-
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
-
 
     ref_sm_arr = [read_similarity_mat(sm_path['ref'][0]),
                   read_similarity_mat(sm_path['ref'][1]),
@@ -104,7 +106,7 @@ def transfer_label(data_path: dict,
     # 训练ref data in scGNN
     for i in range(len(ref_graphs)):
         model = scGNN(ref_graphs[i], config['middle_out'])
-        optimizer = torch.optim.Adam(model.parameters())
+        optimizer = torch.optim.Adam(model.parameters(), lr=config['train_scGNN'])
         model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
                             ref_norm_data)
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
@@ -128,12 +130,10 @@ def transfer_label(data_path: dict,
     ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float()
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long()
 
-
     '''
         Query data
     '''
     query_data, query_label = read_data_label(data_path['query'], label_path['query'])
-
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
@@ -172,7 +172,7 @@ def transfer_label(data_path: dict,
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
     ret = {
-        'acc' : acc,
+        'acc': acc,
         'ref_h': ref_h,
         'query_h': query_h,
         'ref_raw_data': ref_data,
@@ -183,7 +183,6 @@ def transfer_label(data_path: dict,
     }
     # print("Prediction Accuracy is {:.3f}".format(acc))
     return ret
-
 
 
 dataset_name = "transfer_across_species_data"
@@ -228,16 +227,16 @@ SMPath = {
 
 config = {
     'epoch_GCN': 4000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 4000,
+    'epoch_CPM_train': 3000,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
-    'GNN_lr': 0.05,
-    'CPM_lr': [0.005, 0.1],  # CPM_ner中train和test的学习率
+    'GNN_lr': 0.005,
+    'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
     'k': 4,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 1  # classfication loss的权重
+    'w_classify': 5  # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -249,11 +248,16 @@ show_cluster(ret['query_raw_data'], ret['query_label'], 'Raw query data')
 show_cluster(ret['ref_h'], ret['ref_label'], 'Reference h')
 show_cluster(ret['query_h'], ret['query_label'], 'Query h')
 show_cluster(ret['query_h'], ret['pred'], 'Query h with prediction label')
+show_cluster(np.concatenate([ret['ref_h'], ret['query_h']], axis=0), np.concatenate([ret['ref_label'], ret['pred']]), 'Mouse-Human H distribution')
+
+
+#这里降维，然后再计算silhouette
+pca = sklearn.decomposition.PCA(n_components=8)
+query_h_8d = pca.fit_transform(ret['query_h'])
 
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
-print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(ret['query_h'], ret['pred'])))
-print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'],ret['pred'])))
+print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(query_h_8d, ret['pred'])))
+print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'], ret['pred'])))
 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
-
