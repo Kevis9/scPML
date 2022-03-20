@@ -230,7 +230,7 @@ config = {
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
-    'GNN_lr': 0.005,
+    'GNN_lr': 0.05,
     'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
@@ -252,11 +252,11 @@ show_cluster(np.concatenate([ret['ref_h'], ret['query_h']], axis=0), np.concaten
 
 
 #这里降维，然后再计算silhouette
-pca = sklearn.decomposition.PCA(n_components=8)
-query_h_8d = pca.fit_transform(ret['query_h'])
+# pca = sklearn.decomposition.PCA(n_components=8)
+# query_h_8d = pca.fit_transform(ret['query_h'])
 
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
-print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(query_h_8d, ret['pred'])))
+print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(ret['query_h'], ret['pred'])))
 print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'], ret['pred'])))
 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
