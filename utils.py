@@ -12,7 +12,7 @@ import pandas as pd
 # from sklearn.manifold import TSNE
 import umap
 import seaborn as sns
-
+import wandb
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
 
 def sc_normalization(data):
@@ -211,6 +211,7 @@ def show_cluster(data, label, title):
     plt.ylabel('UMAP2')
     plt.title(title)
     plt.savefig(os.path.join(RESULT_PATH, title+'.png'))
+    wandb.save(os.path.join(RESULT_PATH, title+'.png'))
     # plt.show()
 
 

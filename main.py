@@ -22,7 +22,7 @@ import wandb
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
-                index_pair, masking_idx, norm_data):
+                index_pair, masking_idx, norm_data, loss_title):
     '''
     :param model: 待训练的模型
     :param n_epochs:
@@ -44,6 +44,9 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
         dropout_true = norm_data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
         loss_fct = nn.MSELoss()
         loss = loss_fct(dropout_pred.view(1, -1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1, -1))
+        wandb.log({
+            loss_title: loss.item()
+        })
         l_arr.append(loss)
         loss.backward()
         optimizer.step()
@@ -116,7 +119,7 @@ def transfer_label(data_path: dict,
         model = scGNN(ref_graphs[i], config['middle_out'])
         optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
         model, l_arr = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
-                                   ref_norm_data)
+                                   ref_norm_data, 'loss view '+str(i))
         GNN_loss_arr.append(l_arr)
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
         # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
@@ -238,9 +241,9 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 10000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 3000,
+    'epoch_GCN': 10,  # Huang model 训练的epoch
+    'epoch_CPM_train': 10,
+    'epoch_CPM_test': 10,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
@@ -250,6 +253,7 @@ config = {
     'middle_out': 256,  # GCN中间层维数
     'w_classify': 5  # classfication loss的权重
 }
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -275,15 +279,16 @@ print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'], 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
 
-gnn_loss = ret['gnn_loss']
-cpm_loss = ret['cpm_loss']
-
-wandb.log({
-    "GNN view1 loss": gnn_loss[0],
-    "GNN view2 loss": gnn_loss[1],
-    "GNN view3 loss": gnn_loss[2],
-    "GNN view4 loss": gnn_loss[3],
-    'CPM Reconstruction loss': cpm_loss[0],
-    'CPM Classification loss': cpm_loss[1],
-    'CPM Test loss': cpm_loss[2]
-})
+# gnn_loss = ret['gnn_loss']
+# cpm_loss = ret['cpm_loss']
+#
+# print(gnn_loss[0])
+# wandb.log({
+#     "GNN view1 loss": gnn_loss[0],
+#     "GNN view2 loss": gnn_loss[1],
+#     "GNN view3 loss": gnn_loss[2],
+#     "GNN view4 loss": gnn_loss[3],
+#     'CPM Reconstruction loss': cpm_loss[0],
+#     'CPM Classification loss': cpm_loss[1],
+#     'CPM Test loss': cpm_loss[2]
+# })

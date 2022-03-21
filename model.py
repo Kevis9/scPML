@@ -1,6 +1,7 @@
 import numpy as np
 import torch.nn as nn
 import torch
+import wandb
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
@@ -138,6 +139,10 @@ class CPMNets():
             if epoch % 1000 == 0:
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item() , c_loss.detach().item()))
+            wandb.log({
+                'CPM train: reconstruction loss': r_loss.detach().item(),
+                'CPM train: classification loss': c_loss.detach().item()
+            })
             r_loss_arr.append(r_loss.detach().item())
             c_loss_arr.append(c_loss.detach().item())
             # r_loss_list.append(r_loss.detach().item() / self.train_len)
@@ -174,6 +179,9 @@ class CPMNets():
             if epoch % 1000 == 0:
                 print('TEST: epoch %d: Reconstruction loss = %.3f '%(
                     epoch, r_loss.detach().item()))
+            wandb.log({
+                'CPM test: reconstruction loss': r_loss.detach().item()
+            })
             test_loss_arr.append(r_loss.detach().item())
             # r_loss_list.append(r_loss.detach().item() / self.train_len)
         # np.save('test_r_loss.npy', np.array(r_loss_list))
