@@ -151,7 +151,7 @@ def transfer_label(data_path: dict,
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
-    
+
 
     # 构造Query data的Graph
     query_sm_arr = [read_similarity_mat(sm_path['query'][0]),
@@ -244,11 +244,11 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 10000,  # Huang model 训练的epoch
+    'epoch_GCN': 6500,  # Huang model 训练的epoch
     'epoch_CPM_train': 4000,
     'epoch_CPM_test': 10000,
     'lsd_dim': 128,  # CPM_net latent space dimension
-    'GNN_lr': 0.001,
+    'GNN_lr': 0.003,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
