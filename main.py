@@ -102,7 +102,7 @@ def transfer_label(data_path: dict,
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
     # 做一个min_max归一化
-    masked_ref_data = preprocess.minmax_scale(masked_ref_data, range=(0, 1), axis=0)
+    masked_ref_data = preprocess.minmax_scale(masked_ref_data, feature_range=(0, 1), axis=0)
     ref_sm_arr = [read_similarity_mat(sm_path['ref'][0]),
                   read_similarity_mat(sm_path['ref'][1]),
                   read_similarity_mat(sm_path['ref'][2]),
@@ -151,7 +151,7 @@ def transfer_label(data_path: dict,
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
-    query_norm_data = preprocess.minmax_scale(query_norm_data, range=(0, 1), axis=0)
+    query_norm_data = preprocess.minmax_scale(query_norm_data, feature_range=(0, 1), axis=0)
 
     # 构造Query data的Graph
     query_sm_arr = [read_similarity_mat(sm_path['query'][0]),
