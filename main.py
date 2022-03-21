@@ -252,6 +252,7 @@ config = {
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 wandb.init(project="Cell_Classification", entity="kevislin")
 wandb.config = config
 
@@ -276,6 +277,7 @@ np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
 
 gnn_loss = ret['gnn_loss']
 cpm_loss = ret['cpm_loss']
+
 wandb.log({
     "GNN view1 loss": gnn_loss[0],
     "GNN view2 loss": gnn_loss[1],

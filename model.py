@@ -139,7 +139,7 @@ class CPMNets():
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item() , c_loss.detach().item()))
             r_loss_arr.append(r_loss.detach().item())
-            c_loss_arr.append(c_loss.detach().iten())
+            c_loss_arr.append(c_loss.detach().item())
             # r_loss_list.append(r_loss.detach().item() / self.train_len)
             # c_loss_list.append(c_loss.detach().item() / self.train_len)
 
