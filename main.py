@@ -255,7 +255,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 wandb.init(project="Cell_Classification", entity="kevislin")
 wandb.config = config
 
-
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
 # 结果打印
