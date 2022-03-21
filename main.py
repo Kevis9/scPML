@@ -18,6 +18,7 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
 import scipy.io as spio
 import wandb
+import sklearn.preprocessing as preprocess
 
 
 # 训练scGNN，得到每个Pathway的embedding
@@ -100,7 +101,8 @@ def transfer_label(data_path: dict,
     ref_norm_data = sc_normalization(ref_data)
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
-
+    # 做一个min_max归一化
+    masked_ref_data = preprocess.minmax_scale(masked_ref_data, range=(0, 1), axis=0)
     ref_sm_arr = [read_similarity_mat(sm_path['ref'][0]),
                   read_similarity_mat(sm_path['ref'][1]),
                   read_similarity_mat(sm_path['ref'][2]),
@@ -149,6 +151,7 @@ def transfer_label(data_path: dict,
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
+    query_norm_data = preprocess.minmax_scale(query_norm_data, range=(0, 1), axis=0)
 
     # 构造Query data的Graph
     query_sm_arr = [read_similarity_mat(sm_path['query'][0]),
@@ -243,7 +246,7 @@ SMPath = {
 config = {
     'epoch_GCN': 10000,  # Huang model 训练的epoch
     'epoch_CPM_train': 4000,
-    'epoch_CPM_test': 4000,
+    'epoch_CPM_test': 10000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
@@ -271,24 +274,18 @@ show_cluster(ret['query_h'], ret['pred'], 'Query h with prediction label')
 show_cluster(np.concatenate([ret['ref_h'], ret['query_h']], axis=0), np.concatenate([ret['ref_label'], ret['pred']]),
              'Mouse-Human H distribution')
 
-
+s_score = silhouette_score(ret['query_h'], ret['pred'])
+ari = adjusted_rand_score(ret['query_label'], ret['pred'])
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
-print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(ret['query_h'], ret['pred'])))
-print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'], ret['pred'])))
+print('Prediction Silhouette score is {:.3f}'.format(s_score))
+print('Prediction ARI is {:.3f}'.format(ari))
+
+# 数据上报
+wandb.log({
+    'Prediction Acc':ret['acc'],
+    'Prediction Silhouette ': s_score,
+    'ARI': ari
+})
 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
-
-# gnn_loss = ret['gnn_loss']
-# cpm_loss = ret['cpm_loss']
-#
-# print(gnn_loss[0])
-# wandb.log({
-#     "GNN view1 loss": gnn_loss[0],
-#     "GNN view2 loss": gnn_loss[1],
-#     "GNN view3 loss": gnn_loss[2],
-#     "GNN view4 loss": gnn_loss[3],
-#     'CPM Reconstruction loss': cpm_loss[0],
-#     'CPM Classification loss': cpm_loss[1],
-#     'CPM Test loss': cpm_loss[2]
-# })

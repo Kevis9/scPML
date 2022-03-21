@@ -202,7 +202,7 @@ def show_cluster(data, label, title):
         'y':data_2d[:,1],
         'label':label
     }
-
+    wandb.Table
     df = pd.DataFrame(data=data)
     plt.figure(figsize=(8,5))
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=8)
@@ -217,4 +217,3 @@ def show_cluster(data, label, title):
 
 def concat_views(views):
     return np.concatenate(views, axis=1).astype(np.float64)
-
