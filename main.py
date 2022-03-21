@@ -17,6 +17,7 @@ from sklearn import cluster
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import umap
 import scipy.io as spio
+import wandb
 
 
 # 训练scGNN，得到每个Pathway的embedding
@@ -33,6 +34,7 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
     :return:
     '''
     model = model.to(device)
+    l_arr = []
     for epoch in range(n_epochs):
         model.train()
         optimizer.zero_grad()
@@ -42,11 +44,12 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
         dropout_true = norm_data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
         loss_fct = nn.MSELoss()
         loss = loss_fct(dropout_pred.view(1, -1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1, -1))
+        l_arr.append(loss)
         loss.backward()
         optimizer.step()
         if epoch % 1000 == 0:
             print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
-    return model
+    return model, l_arr
 
 
 def train_cpm_net(ref_data_embeddings: torch.Tensor,
@@ -62,14 +65,19 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
                     config['w_classify'])
 
     # 开始训练
-    model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], lr=config['CPM_lr'])
+    r_loss_arr = []
+    c_loss_arr = []
+    model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'], r_loss_arr,
+                      c_loss_arr)
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.test(query_data_embeddings, config['epoch_CPM_test'])
+    test_loss_arr = []
+    model.test(query_data_embeddings, config['epoch_CPM_test'], test_loss_arr)
 
     ref_h = model.get_h_train().detach().numpy()
     query_h = model.get_h_test().detach().numpy()
-    return model, ref_h, query_h
+    cpm_loss = [r_loss_arr, c_loss_arr, test_loss_arr]
+    return model, ref_h, query_h, cpm_loss
 
 
 def transfer_label(data_path: dict,
@@ -102,13 +110,14 @@ def transfer_label(data_path: dict,
 
     ref_views = []
     GNN_models = []
-
+    GNN_loss_arr = []
     # 训练ref data in scGNN
     for i in range(len(ref_graphs)):
         model = scGNN(ref_graphs[i], config['middle_out'])
         optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
-        model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
-                            ref_norm_data)
+        model, l_arr = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
+                                   ref_norm_data)
+        GNN_loss_arr.append(l_arr)
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
         # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
         # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
@@ -161,12 +170,12 @@ def transfer_label(data_path: dict,
     '''
         CPM-Net
     '''
-    cpm_model, ref_h, query_h = train_cpm_net(ref_data_embeddings_tensor,
-                                              ref_label_tensor,
-                                              query_data_embeddings_tensor,
-                                              ref_view_num,
-                                              ref_view_feat_len,
-                                              config)
+    cpm_model, ref_h, query_h, cpm_loss_arr = train_cpm_net(ref_data_embeddings_tensor,
+                                                        ref_label_tensor,
+                                                        query_data_embeddings_tensor,
+                                                        ref_view_num,
+                                                        ref_view_feat_len,
+                                                        config)
 
     pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
@@ -179,12 +188,15 @@ def transfer_label(data_path: dict,
         'ref_label': ref_label,
         'query_raw_data': query_data,
         'query_label': query_label,
-        'pred': pred
+        'pred': pred,
+        'gnn_loss': GNN_loss_arr,
+        'cpm_loss': cpm_loss_arr
     }
     # print("Prediction Accuracy is {:.3f}".format(acc))
     return ret
 
 
+# 数据路径
 dataset_name = "transfer_across_species_data"
 data_path_pre = os.path.join(os.getcwd(), "..", dataset_name, "scData")
 label_path_pre = os.path.join(os.getcwd(), "..", dataset_name, "label")
@@ -226,9 +238,9 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 8000,  # Huang model 训练的epoch
+    'epoch_GCN': 10000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 4000,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.005, 0.005],  # CPM_ner中train和test的学习率
@@ -240,20 +252,21 @@ config = {
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+wandb.init(project="Cell_Classification", entity="kevislin")
+wandb.config = config
+
 
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
+# 结果打印
 show_cluster(ret['ref_raw_data'], ret['ref_label'], 'Raw reference data')
 show_cluster(ret['query_raw_data'], ret['query_label'], 'Raw query data')
 show_cluster(ret['ref_h'], ret['ref_label'], 'Reference h')
 show_cluster(ret['query_h'], ret['query_label'], 'Query h')
 show_cluster(ret['query_h'], ret['pred'], 'Query h with prediction label')
-show_cluster(np.concatenate([ret['ref_h'], ret['query_h']], axis=0), np.concatenate([ret['ref_label'], ret['pred']]), 'Mouse-Human H distribution')
+show_cluster(np.concatenate([ret['ref_h'], ret['query_h']], axis=0), np.concatenate([ret['ref_label'], ret['pred']]),
+             'Mouse-Human H distribution')
 
-
-#这里降维，然后再计算silhouette
-# pca = sklearn.decomposition.PCA(n_components=8)
-# query_h_8d = pca.fit_transform(ret['query_h'])
 
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
 print('Prediction Silhouette score is {:.3f}'.format(silhouette_score(ret['query_h'], ret['pred'])))
@@ -261,3 +274,15 @@ print('Prediction ARI is {:.3f}'.format(adjusted_rand_score(ret['query_label'], 
 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
+
+gnn_loss = ret['gnn_loss']
+cpm_loss = ret['cpm_loss']
+wandb.log({
+    "GNN view1 loss": gnn_loss[0],
+    "GNN view2 loss": gnn_loss[1],
+    "GNN view3 loss": gnn_loss[2],
+    "GNN view4 loss": gnn_loss[3],
+    'CPM Reconstruction loss': cpm_loss[0],
+    'CPM Classification loss': cpm_loss[1],
+    'CPM Test loss': cpm_loss[2]
+})
