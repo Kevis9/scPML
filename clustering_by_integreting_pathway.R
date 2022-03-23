@@ -1,8 +1,8 @@
 # install.packages("SNFtool",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-# install.packages("BiocManager",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+install.packages("BiocManager",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 # BiocManager::install("AUCell")
 # BiocManager::install("SingleCellExperiment")
-# BiocManager::install("GSEABase")
+BiocManager::install("GSEABase")
 # install.packages("AUCell")
 # install.packages("SingleCellExperiment",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 library(SNFtool) # SNF;spectralClustering
