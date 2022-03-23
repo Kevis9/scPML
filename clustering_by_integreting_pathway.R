@@ -1,8 +1,6 @@
-install.packages("SNFtool",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-
-
+BiocManager::install("SingleCellExperiment")
 BiocManager::install("GSEABase")
 BiocManager::install("AUCell")
 
