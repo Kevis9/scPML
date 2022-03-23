@@ -1,5 +1,5 @@
 if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+    install.packages("BiocManager", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 BiocManager::install("SingleCellExperiment")
 BiocManager::install("GSEABase")
 BiocManager::install("AUCell")
