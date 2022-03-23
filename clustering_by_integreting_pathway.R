@@ -1,5 +1,5 @@
 # install.packages("SNFtool",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-install.packages("BiocManager",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+install.packages("BiocManager")
 # BiocManager::install("AUCell")
 # BiocManager::install("SingleCellExperiment")
 BiocManager::install("GSEABase")
