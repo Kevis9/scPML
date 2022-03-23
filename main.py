@@ -1,7 +1,7 @@
 import os.path
 # import pandas as pd
-import pandas as pd
-import sklearn.decomposition
+# import pandas as pd
+# import sklearn.decomposition
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
@@ -10,15 +10,15 @@ from model import scGNN, CPMNets
 # from torch.utils.data import Dataset
 import numpy as np
 # import matplotlib.pyplot as plt
-from sklearn import cluster
+# from sklearn import cluster
 # import seaborn as sns
 # import pandas as pd
 # from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
-import umap
-import scipy.io as spio
+# import umap
+# import scipy.io as spio
 import wandb
-import sklearn.preprocessing as preprocess
+# import sklearn.preprocessing as preprocess
 
 
 # 训练scGNN，得到每个Pathway的embedding
