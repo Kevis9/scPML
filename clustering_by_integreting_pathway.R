@@ -2,7 +2,7 @@
 # install.packages("BiocManager")
 # BiocManager::install("AUCell")
 # BiocManager::install("SingleCellExperiment")
-install.packages("GSEABase",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+install.packages("GSEABase")
 # BiocManager::install("GSEABase")
 # install.packages("AUCell")
 # install.packages("SingleCellExperiment",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
