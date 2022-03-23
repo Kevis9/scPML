@@ -208,19 +208,11 @@ clustering_by_integrating_pathway<- function(mat_gene,mat_path,W,cName,k){
 #     KEGG, Wikipathways, Reactome, de novo pathway
 # scName: Name of singel cell dataset
 #     'yan', 'biase'
-cName = 'DBSCAN'
-paName = 'KEGG'
-scName= 'yan'
-labelPath = '../Demo_data/label'
-scPath = '../Demo_data/matrix'
-paPath = "../Demo_data/pathway"
+# labelPath = '../Demo_data/label'
+# scPath = '../Demo_data/matrix'
 
-mat_path = '/home/yuanhuang/kevislin/data/'
-mat_name = 'human_pancreas.csv'
-mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep='')) 
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置 
 
-main<-function(cName, paName, scName,s, paPath, scPath){
+main<-function(paName, scName,s, paPath, scPath, save_path){
   print("start")
   demoDatas = c('yan','biase')
   # load singel cell data
@@ -262,7 +254,7 @@ main<-function(cName, paName, scName,s, paPath, scPath){
   W=integrating_pathway(mat_gene, mat_path)
 
   print("Save the W (integrated) matrix")
-  filepath = paste('./SM_human_pancreas_', original_paName, '.csv',sep='')
+  filepath = paste(save_path, original_paName, '.csv',sep='')
   write.table(W, file=filepath, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
   # write.table(W, file='./W.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
   # write.table(mat_gene, file='./mat_gene.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
@@ -273,9 +265,29 @@ main<-function(cName, paName, scName,s, paPath, scPath){
   # print(clust_results)
 }
 
-main(cName, 'KEGG', scName,'human', labelPath, paPath, scPath)
-main(cName, 'Reactome', scName,'human', labelPath, paPath, scPath)
-main(cName, 'Wikipathways', scName,'human', labelPath, paPath, scPath)
-main(cName, 'de novo pathway', scName,'human', labelPath, paPath, scPath)
+
+
+scName= 'yan'
+paPath = "/home/yuanhuang/kevislin/data/pathway"
+mat_path = '/home/yuanhuang/kevislin/data/transfer_across_platforms/PBMC/cel_seq_10x_v3/'
+
+mat_name = 'cel_seq2_data.csv'
+mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
+mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+save_path = paste(mat_path, 'similarity_mat/SM_cel_seq_', sep='')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
+
+
+mat_name = '10x_v3_data.csv'
+mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
+mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+save_path = paste(mat_path, 'similarity_mat/SM_10x_v3_', sep='')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
 
 
