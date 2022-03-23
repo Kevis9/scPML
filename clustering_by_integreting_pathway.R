@@ -4,7 +4,15 @@
 # BiocManager::install("SingleCellExperiment")
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+
+BiocManager::install("annotate")
+BiocManager::install("AnnotationDbi")
+BiocManager::install("XML")
 BiocManager::install("GSEABase")
+
+
+
+
 # BiocManager::install("GSEABase")
 # install.packages("AUCell")
 # install.packages("SingleCellExperiment",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
