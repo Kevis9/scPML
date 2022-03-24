@@ -1,12 +1,12 @@
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-BiocManager::install("SingleCellExperiment")
+BiocManager::install("SNFtool")
 BiocManager::install("GSEABase")
 BiocManager::install("AUCell")
 
-
+# install.packages("SNFtool",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 # install.packages("AUCell")
-# install.packages("SingleCellExperiment",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
 library(AUCell) # AUCell, pathway scoring method 
