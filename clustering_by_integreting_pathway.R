@@ -245,6 +245,7 @@ main<-function(paName, scName,s, paPath, scPath, save_path){
   W=integrating_pathway(mat_gene, mat_path)
 
   print("Save the W (integrated) matrix")
+  print(save_path)
   filepath = paste(save_path, original_paName, '.csv',sep='')
   print(filepath)
   write.table(W, file=filepath, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
