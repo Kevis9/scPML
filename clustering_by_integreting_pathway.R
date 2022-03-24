@@ -2,9 +2,9 @@ if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 BiocManager::install("SNFtool")
 BiocManager::install("GSEABase")
-BiocManager::install("AUCell")
+# BiocManager::install("AUCell")
 
-# install.packages("SNFtool",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+install.packages("AUCell",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 # install.packages("AUCell")
 
 library(SNFtool) # SNF;spectralClustering
