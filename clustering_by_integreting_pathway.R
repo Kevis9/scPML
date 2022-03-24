@@ -245,6 +245,8 @@ main<-function(paName, scName,s, paPath, save_path){
   W=integrating_pathway(mat_gene, mat_path)
 
   print("Save the W (integrated) matrix")
+  print(s)
+  print(paName)
   if(original_paName=='de novo pathway'){
        if(s=='human'){
         original_paName='yan'
