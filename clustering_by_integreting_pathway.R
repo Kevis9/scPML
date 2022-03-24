@@ -203,7 +203,7 @@ clustering_by_integrating_pathway<- function(mat_gene,mat_path,W,cName,k){
 
 
 
-main<-function(paName, scName,s, paPath, scPath, save_path){
+main<-function(paName, scName,s, paPath, save_path){
   print("start")
   demoDatas = c('yan','biase')
   # load singel cell data
@@ -245,7 +245,6 @@ main<-function(paName, scName,s, paPath, scPath, save_path){
   W=integrating_pathway(mat_gene, mat_path)
 
   print("Save the W (integrated) matrix")
-  print(save_path)
   filepath = paste(save_path, original_paName, '.csv',sep='')
   print(filepath)
   write.table(W, file=filepath, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
