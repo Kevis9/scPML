@@ -1,8 +1,8 @@
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-BiocManager::install("SNFtool")
-BiocManager::install("GSEABase")
-BiocManager::install("AUCell")
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+# BiocManager::install("SNFtool")
+# BiocManager::install("GSEABase")
+# BiocManager::install("AUCell")
 
 # install.packages("AUCell",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 # install.packages("AUCell")
@@ -202,17 +202,6 @@ clustering_by_integrating_pathway<- function(mat_gene,mat_path,W,cName,k){
 }
 
 
-# main function
-# cName: Name of clustering method
-#     'kmeans','hierarchical','spectral','DBSCAN',
-#     'SC3','Seurat','CIDR','pcaReduce','SOUP','SNN-Cliq'
-# paName: Name of pathway database
-#     KEGG, Wikipathways, Reactome, de novo pathway
-# scName: Name of singel cell dataset
-#     'yan', 'biase'
-# labelPath = '../Demo_data/label'
-# scPath = '../Demo_data/matrix'
-
 
 main<-function(paName, scName,s, paPath, scPath, save_path){
   print("start")
@@ -257,6 +246,7 @@ main<-function(paName, scName,s, paPath, scPath, save_path){
 
   print("Save the W (integrated) matrix")
   filepath = paste(save_path, original_paName, '.csv',sep='')
+  print(filepath)
   write.table(W, file=filepath, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
   # write.table(W, file='./W.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
   # write.table(mat_gene, file='./mat_gene.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
@@ -277,6 +267,7 @@ mat_name = 'cel_seq2_data.csv'
 mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(mat_path, 'similarity_mat/SM_cel_seq_', sep='')
+
 main('KEGG', scName,'human', paPath, save_path)
 main('Reactome', scName,'human', paPath, save_path)
 main('Wikipathways', scName,'human', paPath, save_path)
