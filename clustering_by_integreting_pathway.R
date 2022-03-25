@@ -269,8 +269,8 @@ main<-function(paName, scName,s, paPath, save_path){
 
 
 scName= 'yan'
-paPath = "./yuanhuang/kevislin/data/pathway"
-mat_path = './yuanhuang/kevislin/data/transfer_across_species_data/'
+paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
+mat_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_data/'
 
 mat_name = 'human_pancreas.csv'
 mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
