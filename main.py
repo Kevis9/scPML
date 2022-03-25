@@ -21,56 +21,14 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 # import sklearn.preprocessing as preprocess
 
-def get_rid_of_0_gene(df1, df2):
-    gene_idx = list(map(lambda x: x[0] & x[1], zip((df1.std() != 0).tolist(), (df2.std() != 0).tolist())))
-    df1 = df1.iloc[:, gene_idx]
-    df2 = df2.iloc[:, gene_idx]
-    return df1, df2
-
-#
-#
-#
-# cel_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', index_col=0)
-#
-# cel_seq_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
-# data_10x_v3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/10X_V3/10X_v3_data.csv', index_col=0)
-# label_10x_v3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/10X_V3/10X_v3_label.csv')
-#
-# cell_type = ['Natural killer cell', 'Cytotoxic T cell', 'CD4+ T cell', 'B cell', 'CD14+ monocyte', 'Megakaryocyte', 'CD16+ monocyte']
-#
-# idx =label_10x_v3['CellType'].isin(cell_type).tolist()
-# data_10x_v3 = data_10x_v3.iloc[idx, :]
-# label_10x_v3 = label_10x_v3.iloc[idx, :]
-#
-# cel_seq_data, data_10x_v3 = get_rid_of_0_gene(cel_seq_data, data_10x_v3)
-# cel_seq_label = cel_seq_label.replace(cell_type, [1,2,3,4,5,6,7])
-# label_10x_v3 = label_10x_v3.replace(cell_type, [1,2,3,4,5,6,7])
-#
-# # gene_idx = list(map(lambda x: x[0] & x[1], zip((cel_seq_label.std() != 0).tolist(),(data_10x_v3.std()!=0).tolist())))
-# # cel_seq_data = cel_seq_data.iloc[:, gene_idx]
-# # data_10x_v3 = data_10x_v3.iloc[:, gene_idx]
-#
-# gene_names = cel_seq_data.columns.tolist()
-# gene_names = [gene.split('_')[1] for gene in gene_names]
-#
-# cel_seq_data = pd.DataFrame(data=cel_seq_data.values, columns=gene_names, index=cel_seq_data.index.tolist())
-# data_10x_v3 = pd.DataFrame(data=data_10x_v3.values, columns=gene_names, index=data_10x_v3.index.tolist())
-#
-# print(cel_seq_data.shape)
-# print(cel_seq_label.shape)
-# print(data_10x_v3.shape)
-# print(label_10x_v3.shape)
-#
-#
-# cel_seq_data.to_csv('cel_seq2_data.csv')
-# cel_seq_label.to_csv('cel_seq2_label.csv', index=False)
-#
-# data_10x_v3.to_csv('10x_v3_data.csv')
-# label_10x_v3.to_csv('10x_v3_label.csv', index=False)
-#
+# data, _ = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_platforms/PBMC/cel_seq_10x_v3/cel_seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_platforms/PBMC/cel_seq_10x_v3/cel_seq2_label.csv')
+# print(data.max())
+# data = sc_normalization(data)
+# print(data.max())
+# print(data.min())
+# masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.3)
+# print(masked_prob)
 # exit()
-
-
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
