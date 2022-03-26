@@ -17,11 +17,12 @@ import numpy as np
 # from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 # import umap
-# import scipy.io as spio
+import scipy.io as spio
 import wandb
 # import sklearn.preprocessing as preprocess
 
 # data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
+# print(data.max(),data.min())
 # show_cluster(data, label, 'raw')
 # exit()
 # 训练scGNN，得到每个Pathway的embedding

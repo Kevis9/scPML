@@ -9,8 +9,9 @@ import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
-# from sklearn.manifold import TSNE
+from sklearn.manifold import TSNE
 import umap
+
 import seaborn as sns
 import wandb
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
@@ -133,7 +134,7 @@ def read_data_label(data_path, label_path):
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     print('label的shape为 : {}'.format(label.shape))
-    return data.astype(np.float64), label.astype(np.int64)
+    return data.astype(np.float64), label.astype(np.str)
 
 
 
@@ -183,6 +184,13 @@ def cpm_classify(lsd1, lsd2, label):
     return label_pre
 
 
+def reduce_dimension(data):
+    tsne = TSNE()  # TSNE进行降维处理
+    data_2d = tsne.fit_transform(data)
+    # umap_model = umap.UMAP(random_state=0)
+    # data_2d = umap_model.fit_transform(data)
+    return data_2d
+
 def show_cluster(data, label, title):
     '''
     可视化聚类的函数
@@ -192,10 +200,10 @@ def show_cluster(data, label, title):
     '''
     # 这里尝试用UAMP进行降维处理
     # To ensure that results can be reproduced exactly UMAP allows the user to set a random seed state
-    umap_model = umap.UMAP(random_state=0)
-    data_2d = umap_model.fit_transform(data)
-    # tsne = TSNE() # TSNE进行降维处理
-    # data_2d = tsne.fit_transform(data)
+    # umap_model = umap.UMAP(random_state=0)
+    # data_2d = umap_model.fit_transform(data)
+
+    data_2d = reduce_dimension(data)
 
     data = {
         'x':data_2d[:,0],
@@ -210,9 +218,9 @@ def show_cluster(data, label, title):
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
-    plt.savefig(os.path.join(RESULT_PATH, title+'.png'))
-    wandb.save(os.path.join(RESULT_PATH, title+'.png'))
-    # plt.show()
+    # plt.savefig(os.path.join(RESULT_PATH, title+'.png'))
+    # wandb.save(os.path.join(RESULT_PATH, title+'.png'))
+    plt.show()
 
 
 def concat_views(views):
