@@ -21,10 +21,10 @@ import scipy.io as spio
 import wandb
 # import sklearn.preprocessing as preprocess
 
-# data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
-# print(data.max(),data.min())
-# show_cluster(data, label, 'raw')
-# exit()
+data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
+print(data.max(),data.min())
+show_cluster(data, label, 'raw')
+exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -211,24 +211,24 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_platform_d
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'query': os.path.join(data_path, 'cel_seq2_data.csv'),
-    'ref': os.path.join(data_path, '10x_v3_data.csv'),
+    'ref': os.path.join(data_path, 'cel_seq2_data.csv'),
+    'query': os.path.join(data_path, '10x_v3_data.csv'),
 }
 # label所在的路径
 labelPath = {
-    'query': os.path.join(data_path, 'cel_seq2_label.csv'),
-    'ref': os.path.join(data_path, '10x_v3_label.csv'),
+    'ref': os.path.join(data_path, 'cel_seq2_label.csv'),
+    'query': os.path.join(data_path, '10x_v3_label.csv'),
 }
 
 sm_path = os.path.join(data_path, 'similarity_mat')
 SMPath = {
-    'query': [
+    'ref': [
         os.path.join(sm_path, "SM_cel_seq_KEGG.csv"),
         os.path.join(sm_path, "SM_cel_seq_Reactome.csv"),
         os.path.join(sm_path, "SM_cel_seq_Wikipathways.csv"),
         os.path.join(sm_path, "SM_cel_seq_yan.csv"),
     ],
-    'ref': [
+    'query': [
         os.path.join(sm_path, "SM_10x_v3_KEGG.csv"),
         os.path.join(sm_path, "SM_10x_v3_Reactome.csv"),
         os.path.join(sm_path, "SM_10x_v3_Wikipathways.csv"),
@@ -243,11 +243,11 @@ config = {
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
-    'ref_class_num': 9,  # Reference data的类别数
-    'query_class_num': 9,  # query data的类别数
+    'ref_class_num': 7,  # Reference data的类别数
+    'query_class_num': 7,  # query data的类别数
     'k': 4,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 5  # classfication loss的权重
+    'w_classify': 1  # classfication loss的权重
 }
 
 
