@@ -21,10 +21,10 @@ import scipy.io as spio
 import wandb
 # import sklearn.preprocessing as preprocess
 
-data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
-print(data.max(),data.min())
-show_cluster(data, label, 'raw')
-exit()
+# data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
+# print(data.max(),data.min())
+# show_cluster(data, label, 'raw')
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
