@@ -217,9 +217,7 @@ def get_rid_of_0_gene(df1, df2):
     df2 = df2.iloc[:, gene_idx]
     return df1, df2
 
-#
-#
-#
+
 # cel_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', index_col=0)
 #
 # cel_seq_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
@@ -259,4 +257,3 @@ def get_rid_of_0_gene(df1, df2):
 # label_10x_v3.to_csv('10x_v3_label.csv', index=False)
 #
 # exit()
-

@@ -21,13 +21,8 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 # import sklearn.preprocessing as preprocess
 
-# data, _ = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_platforms/PBMC/cel_seq_10x_v3/cel_seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_platforms/PBMC/cel_seq_10x_v3/cel_seq2_label.csv')
-# print(data.max())
-# data = sc_normalization(data)
-# print(data.max())
-# print(data.min())
-# masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.3)
-# print(masked_prob)
+# data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
+# show_cluster(data, label, 'raw')
 # exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
@@ -215,24 +210,24 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_platform_d
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'cel_seq2_data.csv'),
-    'query': os.path.join(data_path, '10x_v3_data.csv'),
+    'query': os.path.join(data_path, 'cel_seq2_data.csv'),
+    'ref': os.path.join(data_path, '10x_v3_data.csv'),
 }
 # label所在的路径
 labelPath = {
-    'ref': os.path.join(data_path, 'cel_seq2_label.csv'),
-    'query': os.path.join(data_path, '10x_v3_label.csv'),
+    'query': os.path.join(data_path, 'cel_seq2_label.csv'),
+    'ref': os.path.join(data_path, '10x_v3_label.csv'),
 }
 
 sm_path = os.path.join(data_path, 'similarity_mat')
 SMPath = {
-    'ref': [
+    'query': [
         os.path.join(sm_path, "SM_cel_seq_KEGG.csv"),
         os.path.join(sm_path, "SM_cel_seq_Reactome.csv"),
         os.path.join(sm_path, "SM_cel_seq_Wikipathways.csv"),
         os.path.join(sm_path, "SM_cel_seq_yan.csv"),
     ],
-    'query': [
+    'ref': [
         os.path.join(sm_path, "SM_10x_v3_KEGG.csv"),
         os.path.join(sm_path, "SM_10x_v3_Reactome.csv"),
         os.path.join(sm_path, "SM_10x_v3_Wikipathways.csv"),
@@ -241,7 +236,7 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 35000,  # Huang model 训练的epoch
+    'epoch_GCN': 4000,  # Huang model 训练的epoch
     'epoch_CPM_train': 4000,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension

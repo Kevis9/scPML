@@ -192,7 +192,7 @@ def show_cluster(data, label, title):
     '''
     # 这里尝试用UAMP进行降维处理
     # To ensure that results can be reproduced exactly UMAP allows the user to set a random seed state
-    umap_model = umap.UMAP(random_state=29)
+    umap_model = umap.UMAP(random_state=0)
     data_2d = umap_model.fit_transform(data)
     # tsne = TSNE() # TSNE进行降维处理
     # data_2d = tsne.fit_transform(data)
@@ -202,7 +202,7 @@ def show_cluster(data, label, title):
         'y':data_2d[:,1],
         'label':label
     }
-    wandb.Table
+
     df = pd.DataFrame(data=data)
     plt.figure(figsize=(8,5))
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=8)
