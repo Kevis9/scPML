@@ -9,7 +9,8 @@ import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.manifold import TSNE
+# from tsne_torch import TorchTSNE as TSNE
+from tsne import bh_sne
 import umap
 
 import seaborn as sns
@@ -134,7 +135,7 @@ def read_data_label(data_path, label_path):
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     print('label的shape为 : {}'.format(label.shape))
-    return data.astype(np.float64), label.astype(np.int64)
+    return data, label
 
 
 
@@ -143,25 +144,7 @@ def read_similarity_mat(path):
 
     mat_df = pd.read_csv(path, index_col=0)
     similarity_mat = mat_df.to_numpy()
-    # with open(path) as fp:
-    #     similarity_mat = np.array(list(csv.reader(fp))[1:])[:,1:]
-    #     similarity_mat = similarity_mat.astype(np.float64) # 记得做个类型转换
-    #     fp.close()
     return similarity_mat.astype(np.float64)
-
-
-
-
-def loss_plot(r_loss, c_loss, n_epoch):
-    fig, ax = plt.subplots()
-    x = [i for i in range(n_epoch)]
-    ax.plot(x, r_loss, label='Reconstruction')
-    ax.plot(x, c_loss, label='Classification')
-    ax.set_xlabel('Epoch')
-    ax.set_ylabel('Loss')
-    ax.set_title('Loss')
-    ax.legend()
-    plt.show()
 
 
 def cpm_classify(lsd1, lsd2, label):
@@ -185,10 +168,9 @@ def cpm_classify(lsd1, lsd2, label):
 
 
 def reduce_dimension(data):
-    tsne = TSNE(random_state=0)  # TSNE进行降维处理
-    data_2d = tsne.fit_transform(data)
-    # umap_model = umap.UMAP(random_state=0)
-    # data_2d = umap_model.fit_transform(data)
+    # data_2d = bh_sne(data)
+    umap_model = umap.UMAP(random_state=0)
+    data_2d = umap_model.fit_transform(data)
     return data_2d
 
 def show_cluster(data, label, title):
@@ -198,16 +180,10 @@ def show_cluster(data, label, title):
     :param label: 样本的标签
     :param title: 可视化窗口的titleplt.scatter
     '''
-    # 这里尝试用UAMP进行降维处理
-    # To ensure that results can be reproduced exactly UMAP allows the user to set a random seed state
-    # umap_model = umap.UMAP(random_state=0)
-    # data_2d = umap_model.fit_transform(data)
-
-    data_2d = reduce_dimension(data)
 
     data = {
-        'x':data_2d[:,0],
-        'y':data_2d[:,1],
+        'x':data[:,0],
+        'y':data[:,1],
         'label':label
     }
 

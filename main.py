@@ -1,30 +1,14 @@
 import os.path
-# import pandas as pd
-# import pandas as pd
-# import sklearn.decomposition
-import pandas as pd
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
-    cpm_classify, z_score_normalization, show_cluster, concat_views
+    cpm_classify, z_score_normalization, show_cluster, concat_views, reduce_dimension
 from model import scGNN, CPMNets
-# from torch.utils.data import Dataset
 import numpy as np
-# import matplotlib.pyplot as plt
-# from sklearn import cluster
-# import seaborn as sns
-# import pandas as pd
-# from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score, adjusted_rand_score
-# import umap
 import scipy.io as spio
 import wandb
-# import sklearn.preprocessing as preprocess
 
-# data, label = read_data_label('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_data.csv', '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/CEL_Seq2/CEL_Seq2_label.csv')
-# print(data.max(),data.min())
-# show_cluster(data, label, 'raw')
-# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -100,6 +84,8 @@ def transfer_label(data_path: dict,
     :return:
     '''
     ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
+    ref_data = ref_data.astype(np.float64)
+    ref_label = ref_label.astype(np.int64)
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
@@ -152,6 +138,8 @@ def transfer_label(data_path: dict,
         Query data
     '''
     query_data, query_label = read_data_label(data_path['query'], label_path['query'])
+    query_data = query_data.astype(np.float64)
+    query_label = query_label.astype(np.int64)
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
@@ -262,13 +250,6 @@ print("Reference: cel_seq", "Query: 10x_v3")
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
 # 结果打印
-show_cluster(ret['ref_raw_data'], ret['ref_label'], 'Raw reference data')
-show_cluster(ret['query_raw_data'], ret['query_label'], 'Raw query data')
-show_cluster(ret['ref_h'], ret['ref_label'], 'Reference h')
-show_cluster(ret['query_h'], ret['query_label'], 'Query h')
-show_cluster(ret['query_h'], ret['pred'], 'Query h with prediction label')
-show_cluster(np.concatenate([ret['ref_h'], ret['query_h']], axis=0), np.concatenate([ret['ref_label'], ret['pred']]),
-             'Mouse-Human H distribution')
 
 s_score = silhouette_score(ret['query_h'], ret['pred'])
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
@@ -282,6 +263,18 @@ wandb.log({
     'Prediction Silhouette ': s_score,
     'ARI': ari
 })
+
+
+raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
+ref_len = ret['ref_raw_data'].shape[0]
+show_cluster(raw_data_2d[:ref_len,:], ret['ref_label'], 'Raw reference data')
+show_cluster(raw_data_2d[ref_len:,:], ret['query_label'], 'Raw query data')
+h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
+show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
+show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
+show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
+             'Ref-Query H with prediction label')
 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
