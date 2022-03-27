@@ -9,8 +9,6 @@ import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
-# from tsne_torch import TorchTSNE as TSNE
-from tsne import bh_sne
 import umap
 
 import seaborn as sns
