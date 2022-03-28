@@ -186,14 +186,14 @@ def show_cluster(data, label, title):
     }
 
     df = pd.DataFrame(data=data)
-    # plt.figure(figsize=(8,5))
+    plt.figure(figsize=(8,5))
 
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=8)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
     plt.title(title)
-    plt.subplots_adjust(right=0.7, top=0.8)
+    # plt.subplots_adjust(right=0.7, top=0.8)
     plt.savefig(os.path.join(RESULT_PATH, title+'.png'))
     wandb.save(os.path.join(RESULT_PATH, title+'.png'))
     # plt.show()

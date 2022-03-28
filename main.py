@@ -8,7 +8,6 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
-
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -225,9 +224,9 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 4000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 4000,
-    'epoch_CPM_test': 4000,
+    'epoch_GCN': 10,  # Huang model 训练的epoch
+    'epoch_CPM_train': 10,
+    'epoch_CPM_test': 10,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
