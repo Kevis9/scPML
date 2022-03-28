@@ -216,18 +216,17 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 6500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1500,
-    'epoch_CPM_test': 4000,
+    'epoch_GCN': 6000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1100,
+    'epoch_CPM_test': 8000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
     'ref_class_num': 9,  # Reference data的类别数
     'query_class_num': 9,  # query data的类别数
-    'k': 4,  # 图构造的时候k_neighbor参数
+    'k': 8,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 20,  # classfication loss的权重
-    'pca_componets': 1000, #pca降维
+    'w_classify': 5,  # classfication loss的权重
 }
 
 
