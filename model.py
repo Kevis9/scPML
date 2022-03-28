@@ -38,8 +38,8 @@ class CPMNets():
         self.train_len = train_len
         self.test_len = test_len
 
-        self.h_train = torch.zeros((self.train_len, self.lsd_dim), requires_grad=True, dtype=torch.float)
-        self.h_test = torch.zeros((self.test_len, self.lsd_dim), requires_grad=True, dtype=torch.float)
+        self.h_train = torch.zeros((self.train_len, self.lsd_dim), requires_grad=True, dtype=torch.float).to(device)
+        self.h_test = torch.zeros((self.test_len, self.lsd_dim), requires_grad=True, dtype=torch.float).to(device)
 
         self.class_num = class_num
 
@@ -93,7 +93,7 @@ class CPMNets():
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_model(self, data, labels, n_epochs, lr, r_loss_arr, c_loss_arr):
+    def train_model(self, data, labels, n_epochs, lr):
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
@@ -103,10 +103,12 @@ class CPMNets():
         :param lr: 学习率，是一个数组，0 for net， 1 for h
         :return:
         '''
+        data = data.to(device)
         # 优化器
         netParams = []
         for v in range(self.view_num):
             for p in self.net[str(v)].parameters():
+                p = p.to(device)
                 netParams.append(p)
 
         optimizer_for_net = optim.Adam(params=netParams, lr=lr[0])
@@ -143,8 +145,8 @@ class CPMNets():
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item()
             })
-            r_loss_arr.append(r_loss.detach().item())
-            c_loss_arr.append(c_loss.detach().item())
+            # r_loss_arr.append(r_loss.detach().item())
+            # c_loss_arr.append(c_loss.detach().item())
             # r_loss_list.append(r_loss.detach().item() / self.train_len)
             # c_loss_list.append(c_loss.detach().item() / self.train_len)
 
@@ -153,13 +155,14 @@ class CPMNets():
         # np.save('r_loss.npy', np.array(r_loss_list))
         # np.save('c_loss.npy', np.array(c_loss_list))
 
-    def test(self, data, n_epochs, test_loss_arr):
+    def test(self, data, n_epochs):
         '''
         对h_test做一个训练调整
         :param data: 测试数据
         :param n_epochs:
         :return:
         '''
+        data = data.to(device)
         optimizer_for_test_h = optim.Adam(params=[self.h_test])
         r_loss_list = []
         for epoch in range(n_epochs):
@@ -182,7 +185,7 @@ class CPMNets():
             wandb.log({
                 'CPM test: reconstruction loss': r_loss.detach().item()
             })
-            test_loss_arr.append(r_loss.detach().item())
+
             # r_loss_list.append(r_loss.detach().item() / self.train_len)
         # np.save('test_r_loss.npy', np.array(r_loss_list))
 

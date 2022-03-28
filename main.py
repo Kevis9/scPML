@@ -23,7 +23,6 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
     :return:
     '''
     model = model.to(device)
-    l_arr = []
     for epoch in range(n_epochs):
         model.train()
         optimizer.zero_grad()
@@ -36,12 +35,11 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
         wandb.log({
             loss_title: loss.item()
         })
-        l_arr.append(loss)
         loss.backward()
         optimizer.step()
         if epoch % 1000 == 0:
             print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
-    return model, l_arr
+    return model
 
 
 def train_cpm_net(ref_data_embeddings: torch.Tensor,
@@ -57,19 +55,15 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
                     config['w_classify'])
 
     # 开始训练
-    r_loss_arr = []
-    c_loss_arr = []
-    model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'], r_loss_arr,
-                      c_loss_arr)
+    model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
     test_loss_arr = []
-    model.test(query_data_embeddings, config['epoch_CPM_test'], test_loss_arr)
+    model.test(query_data_embeddings, config['epoch_CPM_test'])
 
-    ref_h = model.get_h_train().detach().numpy()
-    query_h = model.get_h_test().detach().numpy()
-    cpm_loss = [r_loss_arr, c_loss_arr, test_loss_arr]
-    return model, ref_h, query_h, cpm_loss
+    ref_h = model.get_h_train().detach().cpu().numpy()
+    query_h = model.get_h_test().detach().cpu().numpy()
+    return model, ref_h, query_h
 
 
 def transfer_label(data_path: dict,
@@ -105,14 +99,13 @@ def transfer_label(data_path: dict,
 
     ref_views = []
     GNN_models = []
-    GNN_loss_arr = []
     # 训练ref data in scGNN
     for i in range(len(ref_graphs)):
         model = scGNN(ref_graphs[i], config['middle_out'])
         optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
-        model, l_arr = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
+        model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
                                    ref_norm_data, 'GNN: view'+str(i+1)+' loss')
-        GNN_loss_arr.append(l_arr)
+
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
         # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
         # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
@@ -131,8 +124,8 @@ def transfer_label(data_path: dict,
         ref_view_feat_len.append(ref_views[i].shape[1])
 
     # 把所有的view连接在一起
-    ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float()
-    ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long()
+    ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
+    ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
 
     '''
         Query data
@@ -161,14 +154,14 @@ def transfer_label(data_path: dict,
     for i in range(len(GNN_models)):
         query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
-    query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float()
+    query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
 
-    query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long()
+    query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long().to(device)
 
     '''
         CPM-Net
     '''
-    cpm_model, ref_h, query_h, cpm_loss_arr = train_cpm_net(ref_data_embeddings_tensor,
+    cpm_model, ref_h, query_h = train_cpm_net(ref_data_embeddings_tensor,
                                                         ref_label_tensor,
                                                         query_data_embeddings_tensor,
                                                         ref_view_num,
@@ -186,9 +179,7 @@ def transfer_label(data_path: dict,
         'ref_label': ref_label,
         'query_raw_data': query_data,
         'query_label': query_label,
-        'pred': pred,
-        'gnn_loss': GNN_loss_arr,
-        'cpm_loss': cpm_loss_arr
+        'pred': pred
     }
     # print("Prediction Accuracy is {:.3f}".format(acc))
     return ret
