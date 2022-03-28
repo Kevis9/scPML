@@ -216,7 +216,7 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 6500,  # Huang model 训练的epoch
+    'epoch_GCN': 9000,  # Huang model 训练的epoch
     'epoch_CPM_train': 4000,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
@@ -226,7 +226,7 @@ config = {
     'query_class_num': 7,  # query data的类别数
     'k': 4,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 10  # classfication loss的权重
+    'w_classify': 5  # classfication loss的权重
 }
 
 
