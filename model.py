@@ -52,7 +52,7 @@ class CPMNets():
         self.net = dict()
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
-                nn.Linear(self.lsd_dim, view_d_arr[i]),  # 我对源码的理解就是只有一层全连接
+                nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.ReLU(),
                 # nn.Linear(2 * self.lsd_dim,  view_d_arr[i])
                 # nn.Dropout(0.2)
@@ -108,7 +108,6 @@ class CPMNets():
         netParams = []
         for v in range(self.view_num):
             for p in self.net[str(v)].parameters():
-                p = p.to(device)
                 netParams.append(p)
 
         optimizer_for_net = optim.Adam(params=netParams, lr=lr[0])
