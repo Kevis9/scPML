@@ -232,7 +232,7 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_species", entity="kevislin", config=config, tags=['mouse-human'])
+wandb.init(project="cell_classify_species", entity="kevislin", config=config, tags=['mouse-human','species'])
 
 print("Transfer across platforms")
 print("Reference: mouse_pancreas", "Query: human_pancreas")
