@@ -107,6 +107,7 @@ class CPMNets():
         :return:
         '''
         data = data.to(device)
+        labels = labels.to(device)
         # 优化器
         netParams = []
         for v in range(self.view_num):
