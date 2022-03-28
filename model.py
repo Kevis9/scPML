@@ -38,8 +38,11 @@ class CPMNets():
         self.train_len = train_len
         self.test_len = test_len
 
-        self.h_train = torch.zeros((self.train_len, self.lsd_dim), requires_grad=True, dtype=torch.float).to(device)
-        self.h_test = torch.zeros((self.test_len, self.lsd_dim), requires_grad=True, dtype=torch.float).to(device)
+        self.h_train = torch.zeros((self.train_len, self.lsd_dim), dtype=torch.float).to(device)
+        self.h_train.requires_grad = True # 先放在GPU上再设置requires_grad
+
+        self.h_test = torch.zeros((self.test_len, self.lsd_dim), dtype=torch.float).to(device)
+        self.h_test.requires_grad = True
 
         self.class_num = class_num
 
