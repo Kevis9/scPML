@@ -216,8 +216,8 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 5000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1600,
+    'epoch_GCN': 6500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1500,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
@@ -226,7 +226,7 @@ config = {
     'query_class_num': 9,  # query data的类别数
     'k': 4,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify': 10  # classfication loss的权重
+    'w_classify': 20  # classfication loss的权重
 }
 
 
@@ -260,12 +260,13 @@ raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_r
 ref_len = ret['ref_raw_data'].shape[0]
 show_cluster(raw_data_2d[:ref_len,:], ret['ref_label'], 'Raw reference data')
 show_cluster(raw_data_2d[ref_len:,:], ret['query_label'], 'Raw query data')
+show_cluster(raw_data_2d, np.concatenate(ret['ref_label'], ret['query_label']), 'Reference-Query raw data')
 h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
 show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
 show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
 show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
 show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
-             'Ref-Query H with prediction label')
+             'Reference-Query H with prediction label')
 
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
