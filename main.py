@@ -235,7 +235,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 wandb.init(project="cell_classify_species", entity="kevislin", config=config, tags='mouse-human')
 
 print("Transfer across platforms")
-print("Reference: cel_seq", "Query: 10x_v3")
+print("Reference: mouse_pancreas", "Query: human_pancreas")
 
 
 ret = transfer_label(dataPath, labelPath, SMPath, config)
