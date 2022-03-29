@@ -13,17 +13,21 @@ import wandb
 
 #
 # mouse_df_2 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/scGCN/scGCN/input/Data1.csv', index_col=0)
+# mouse_df_2.drop('MARCH1', axis=1, inplace=True)
+# mouse_df_2.drop('KLRB1', axis=1, inplace=True)
 # gene_names = mouse_df_2.columns.tolist()
+#
 # mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_pancreas.csv', index_col=0)
 # human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_pancreas.csv', index_col=0)
 #
 # mouse_df.columns = human_df.columns
-# print(gene_names)
-# mouse_df = mouse_df.loc[:,gene_names]
-# human_df = human_df[:,gene_names]
 #
-# mouse_df.to_csv('mouse_data2.csv')
-# human_df.to_csv('human_data2.csv')
+# mouse_df = mouse_df[gene_names]
+# human_df = human_df[gene_names]
+#
+#
+# mouse_df.to_csv('mouse_data3.csv')
+# human_df.to_csv('human_data3.csv')
 # exit()
 #
 # mgnames = mouse_df.columns.tolist()
@@ -230,8 +234,8 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_da
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'mouse_data2.csv'),
-    'query': os.path.join(data_path, 'human_data2.csv'),
+    'ref': os.path.join(data_path, 'mouse_data3.csv'),
+    'query': os.path.join(data_path, 'human_data3.csv'),
 }
 # label所在的路径
 labelPath = {
