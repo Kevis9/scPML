@@ -11,7 +11,7 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
 
-#
+
 # mouse_df_2 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/scGCN/scGCN/input/Data1.csv', index_col=0)
 # mouse_df_2.drop('MARCH1', axis=1, inplace=True)
 # mouse_df_2.drop('KLRB1', axis=1, inplace=True)
@@ -270,7 +270,7 @@ config = {
     'query_class_num': 9,  # query data的类别数
     'k':2,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
-    'w_classify':10,  # classfication loss的权重
+    'w_classify':5,  # classfication loss的权重
 }
 
 
