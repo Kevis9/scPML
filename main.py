@@ -234,8 +234,8 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_da
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'mouse_data3.csv'),
-    'query': os.path.join(data_path, 'human_data3.csv'),
+    'ref': os.path.join(data_path, 'mouse_data2.csv'),
+    'query': os.path.join(data_path, 'human_data2.csv'),
 }
 # label所在的路径
 labelPath = {
@@ -261,7 +261,7 @@ SMPath = {
 
 config = {
     'epoch_GCN': 6000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1100,
+    'epoch_CPM_train': 1000,
     'epoch_CPM_test': 5000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
