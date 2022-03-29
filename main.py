@@ -217,7 +217,7 @@ def transfer_label(data_path: dict,
 
 
 # 数据路径
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_ac   ross_species_data'
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_data'
 
 # 给出ref和query data所在的路径
 dataPath = {
