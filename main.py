@@ -1,4 +1,6 @@
 import os.path
+
+import pandas as pd
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
@@ -9,6 +11,44 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
 
+#
+# mouse_df_2 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/scGCN/scGCN/input/Data1.csv', index_col=0)
+# gene_names = mouse_df_2.columns.tolist()
+# mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_pancreas.csv', index_col=0)
+# human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_pancreas.csv', index_col=0)
+#
+# mouse_df.columns = human_df.columns
+# print(gene_names)
+# mouse_df = mouse_df.loc[:,gene_names]
+# human_df = human_df[:,gene_names]
+#
+# mouse_df.to_csv('mouse_data2.csv')
+# human_df.to_csv('human_data2.csv')
+# exit()
+#
+# mgnames = mouse_df.columns.tolist()
+# mgnames = [x.lower() for x in mgnames]
+# hgnames = human_df.columns.tolist()
+# hgnames = [x.lower() for x in hgnames]
+# cgnames = [mgnames[i]==hgnames[i] for i in range(len(mgnames))]
+#
+# mouse_df = mouse_df.iloc[:, cgnames]
+# human_df = human_df.iloc[:, cgnames]
+#
+# mouse_df.to_csv('mouse_data2.csv')
+# human_df.to_csv('human_data2.csv')
+#
+# mouse_data = mouse_df.to_numpy().astype(np.float64)
+# human_data = human_df.to_numpy().astype(np.float64)
+#
+# mouse_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_label.csv').to_numpy().reshape(-1)
+# human_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_label.csv').to_numpy().reshape(-1)
+#
+# print(mouse_data.shape)
+# print(human_data.shape)
+# data = reduce_dimension(np.concatenate([mouse_data, human_data], axis=0))
+# show_cluster(data, np.concatenate([mouse_label, human_label]), 'raw data')
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -190,8 +230,8 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_da
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'mouse_pancreas.csv'),
-    'query': os.path.join(data_path, 'human_pancreas.csv'),
+    'ref': os.path.join(data_path, 'mouse_data2.csv'),
+    'query': os.path.join(data_path, 'human_data2.csv'),
 }
 # label所在的路径
 labelPath = {

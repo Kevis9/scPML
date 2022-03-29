@@ -267,7 +267,6 @@ main<-function(paName, scName,s, paPath, save_path){
 }
 
 
-
 scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 mat_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_data/'
