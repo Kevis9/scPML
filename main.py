@@ -236,7 +236,7 @@ SMPath = {
         os.path.join(sm_path, "SM_cel_seq_KEGG.csv"),
         os.path.join(sm_path, "SM_cel_seq_Reactome.csv"),
         os.path.join(sm_path, "SM_cel_seq_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_cel_seq_biase.csv"),
+        os.path.join(sm_path, "SM_cel_seq_yan.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_10x_v3_KEGG.csv"),
