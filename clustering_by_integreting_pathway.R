@@ -274,7 +274,7 @@ mat_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse
 mat_name = 'mouse_data.csv'
 mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(mat_path, 'similarity_mat/SM_mouse_', sep='')
+save_path = paste(mat_path, 'similarity_mat/SM_mouse_', sep='/')
 
 main('KEGG', scName,'human', paPath, save_path)
 main('Reactome', scName,'human', paPath, save_path)
