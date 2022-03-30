@@ -217,32 +217,32 @@ def transfer_label(data_path: dict,
 
 
 # 数据路径
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_data'
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_platform_data/PBMC/cel_seq_10x_v3'
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'mouse_pancreas.csv'),
-    'query': os.path.join(data_path, 'human_pancreas.csv'),
+    'ref': os.path.join(data_path, 'cel_seq2_data.csv'),
+    'query': os.path.join(data_path, '10x_v3_data.csv'),
 }
 # label所在的路径
 labelPath = {
-    'ref': os.path.join(data_path, 'mouse_label.csv'),
-    'query': os.path.join(data_path, 'human_label.csv'),
+    'ref': os.path.join(data_path, 'cel_seq2_label.csv'),
+    'query': os.path.join(data_path, '10x_v3_label.csv'),
 }
 
 sm_path = os.path.join(data_path, 'similarity_mat')
 SMPath = {
     'ref': [
-        os.path.join(sm_path, "SM_mouse_pancreas_KEGG.csv"),
-        os.path.join(sm_path, "SM_mouse_pancreas_Reactome.csv"),
-        os.path.join(sm_path, "SM_mouse_pancreas_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_mouse_pancreas_biase.csv"),
+        os.path.join(sm_path, "SM_cel_seq_KEGG.csv"),
+        os.path.join(sm_path, "SM_cel_seq_Reactome.csv"),
+        os.path.join(sm_path, "SM_cel_seq_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_cel_seq_biase.csv"),
     ],
     'query': [
-        os.path.join(sm_path, "SM_human_pancreas_KEGG.csv"),
-        os.path.join(sm_path, "SM_human_pancreas_Reactome.csv"),
-        os.path.join(sm_path, "SM_human_pancreas_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_human_pancreas_yan.csv"),
+        os.path.join(sm_path, "SM_10x_v3_KEGG.csv"),
+        os.path.join(sm_path, "SM_10x_v3_Reactome.csv"),
+        os.path.join(sm_path, "SM_10x_v3_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_10x_v3_yan.csv"),
     ]
 }
 
@@ -263,10 +263,10 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_species", entity="kevislin", config=config, tags=['mouse-human','species'])
+wandb.init(project="cell_classify_platform", entity="kevislin", config=config, tags=['cel_seq-10x_v3','platform'])
 
 print("Transfer across platforms")
-print("Reference: mouse_pancreas", "Query: human_pancreas")
+print("Reference: cel_seq", "Query: 10x_v3")
 
 
 ret = transfer_label(dataPath, labelPath, SMPath, config)
