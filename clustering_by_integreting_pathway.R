@@ -269,26 +269,36 @@ main<-function(paName, scName,s, paPath, save_path){
 
 scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
-mat_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_species_data/'
+mat_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
 
-mat_name = 'human_pancreas.csv'
-mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
+mat_name = 'mouse_data.csv'
+mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(mat_path, 'similarity_mat/SM_human_pancreas_', sep='')
+save_path = paste(mat_path, 'similarity_mat/SM_mouse_', sep='')
 
-# main('KEGG', scName,'human', paPath, save_path)
+main('KEGG', scName,'human', paPath, save_path)
 main('Reactome', scName,'human', paPath, save_path)
 main('Wikipathways', scName,'human', paPath, save_path)
 main('de novo pathway', scName,'human', paPath, save_path)
 
-scName= 'biase'
-mat_name = 'mouse_pancreas.csv'
-mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
+mat_name = 'human_data.csv'
+mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(mat_path, 'similarity_mat/SM_mouse_pancreas_', sep='')
-main('KEGG', scName,'mouse', paPath, save_path)
-main('Reactome', scName,'mouse', paPath, save_path)
-main('Wikipathways', scName,'mouse', paPath, save_path)
-main('de novo pathway', scName,'mouse', paPath, save_path)
+save_path = paste(mat_path, 'similarity_mat/SM_human_', sep='')
+
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
+
+# scName= 'biase'
+# mat_name = 'mouse_pancreas.csv'
+# mat_gene = load_matrix_for_GSE(paste(mat_path, mat_name, sep=''))
+# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+# save_path = paste(mat_path, 'similarity_mat/SM_mouse_pancreas_', sep='')
+# main('KEGG', scName,'mouse', paPath, save_path)
+# main('Reactome', scName,'mouse', paPath, save_path)
+# main('Wikipathways', scName,'mouse', paPath, save_path)
+# main('de novo pathway', scName,'mouse', paPath, save_path)
 
 
