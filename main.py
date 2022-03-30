@@ -29,8 +29,8 @@ import wandb
 # human_df = human_df.iloc[human_idx, :]
 # human_label = human_label.iloc[human_idx,:]
 #
-# mouse_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], replace=True)
-# human_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], replace=True)
+# mouse_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], inplace=True)
+# human_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], inplace=True)
 #
 #
 # print(mouse_df.shape)
@@ -254,7 +254,7 @@ SMPath = {
 config = {
     'epoch_GCN': 6000,  # Huang model 训练的epoch
     'epoch_CPM_train': 1000,
-    'epoch_CPM_test': 5000,
+    'epoch_CPM_test': 8000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
