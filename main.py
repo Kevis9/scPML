@@ -10,19 +10,10 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
-
-
+#
+#
 # mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_pancreas.csv', index_col=0)
 # human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_pancreas.csv', index_col=0)
-#
-# mgnames = mouse_df.columns.tolist()
-# mgnames = [x.lower() for x in mgnames]
-# hgnames = human_df.columns.tolist()
-# hgnames = [x.lower() for x in hgnames]
-# cgnames = [mgnames[i]==hgnames[i] for i in range(len(mgnames))]
-# #
-# mouse_df = mouse_df.iloc[:, cgnames]
-# human_df = human_df.iloc[:, cgnames]
 #
 # mouse_df.columns = human_df.columns
 #
@@ -30,16 +21,30 @@ import wandb
 # human_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_label.csv')
 #
 # # 去除掉1，并且对label进行替换
-# mouse_label['class'] ==
+# mouse_idx = (mouse_label['class'] != 1).tolist()
+# mouse_df = mouse_df.iloc[mouse_idx, :]
+# mouse_label = mouse_label.iloc[mouse_idx,:]
+#
+# human_idx = (human_label['class'] != 1).tolist()
+# human_df = human_df.iloc[human_idx, :]
+# human_label = human_label.iloc[human_idx,:]
+#
+# mouse_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], replace=True)
+# human_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], replace=True)
+#
 #
 # print(mouse_df.shape)
 # print(human_df.shape)
+# print(mouse_label.shape)
+# print(human_label.shape)
 #
-# mouse_df.to_csv('mouse_data2.csv')
-# human_df.to_csv('human_data2.csv')
-
-
-
+#
+# mouse_df.to_csv('mouse_data.csv')
+# human_df.to_csv('human_data.csv')
+# mouse_label.to_csv('mouse_label.csv')
+# human_label.to_csv('human_label.csv')
+#
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -253,8 +258,8 @@ config = {
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
-    'ref_class_num': 9,  # Reference data的类别数
-    'query_class_num': 9,  # query data的类别数
+    'ref_class_num': 7,  # Reference data的类别数
+    'query_class_num': 7,  # query data的类别数
     'k':2,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
     'w_classify': 5,  # classfication loss的权重
