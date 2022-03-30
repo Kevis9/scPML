@@ -217,7 +217,7 @@ def transfer_label(data_path: dict,
 
 
 # 数据路径
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/transfer_across_platform_data/PBMC/cel_seq_10x_v3'
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq_10x_v3'
 
 # 给出ref和query data所在的路径
 dataPath = {
