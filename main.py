@@ -10,41 +10,14 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
-#
-#
-# mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_pancreas.csv', index_col=0)
-# human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_pancreas.csv', index_col=0)
-#
-# mouse_df.columns = human_df.columns
-#
-# mouse_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_label.csv')
-# human_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_label.csv')
-#
-# # 去除掉1，并且对label进行替换
-# mouse_idx = (mouse_label['class'] != 1).tolist()
-# mouse_df = mouse_df.iloc[mouse_idx, :]
-# mouse_label = mouse_label.iloc[mouse_idx,:]
-#
-# human_idx = (human_label['class'] != 1).tolist()
-# human_df = human_df.iloc[human_idx, :]
-# human_label = human_label.iloc[human_idx,:]
-#
-# mouse_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], inplace=True)
-# human_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], inplace=True)
-#
-#
-# print(mouse_df.shape)
-# print(human_df.shape)
-# print(mouse_label.shape)
-# print(human_label.shape)
-#
-#
-# mouse_df.to_csv('mouse_data.csv')
-# human_df.to_csv('human_data.csv')
-# mouse_label.to_csv('mouse_label.csv')
-# human_label.to_csv('human_label.csv')
-#
+
+# def get_common_types_df(df1, df2, label1, label2):
+# in_label = pd.read_csv("/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/InDrop/InDrop_label.csv")
+# cel_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/CEL_Seq2/CEL_Seq2_label.csv')
+# print(in_label.value_counts())
+# print(cel_label.value_counts())
 # exit()
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -255,7 +228,7 @@ config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM_train': 4000,
     'epoch_CPM_test': 4000,
-    'lsd_dim': 4,  # CPM_net latent space dimension
+    'lsd_dim': 64,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
     'ref_class_num': 7,  # Reference data的类别数

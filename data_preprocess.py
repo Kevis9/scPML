@@ -257,3 +257,40 @@ def get_rid_of_0_gene(df1, df2):
 # label_10x_v3.to_csv('10x_v3_label.csv', index=False)
 #
 # exit()
+
+
+#
+# 更换mouse的column为human的，并且去掉acti...类型的细胞（此时对应的是1）
+# mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_pancreas.csv', index_col=0)
+# human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_pancreas.csv', index_col=0)
+#
+# mouse_df.columns = human_df.columns
+#
+# mouse_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_label.csv')
+# human_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_label.csv')
+#
+# # 去除掉1，并且对label进行替换
+# mouse_idx = (mouse_label['class'] != 1).tolist()
+# mouse_df = mouse_df.iloc[mouse_idx, :]
+# mouse_label = mouse_label.iloc[mouse_idx,:]
+#
+# human_idx = (human_label['class'] != 1).tolist()
+# human_df = human_df.iloc[human_idx, :]
+# human_label = human_label.iloc[human_idx,:]
+#
+# mouse_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], inplace=True)
+# human_label.replace([2,3,4,5,6,7,8,9], [1,2,3,4,5,6,7,8], inplace=True)
+#
+#
+# print(mouse_df.shape)
+# print(human_df.shape)
+# print(mouse_label.shape)
+# print(human_label.shape)
+#
+#
+# mouse_df.to_csv('mouse_data.csv')
+# human_df.to_csv('human_data.csv')
+# mouse_label.to_csv('mouse_label.csv')
+# human_label.to_csv('human_label.csv')
+#
+# exit()
