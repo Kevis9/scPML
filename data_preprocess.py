@@ -294,3 +294,46 @@ def get_rid_of_0_gene(df1, df2):
 # human_label.to_csv('human_label.csv')
 #
 # exit()
+
+
+def get_common_types_df(df1, df2, label1, label2):
+    col = 'CellType'
+    celltype = list(set(label1[col].tolist()) & set(label2[col].tolist()))
+    idx1 = label1[col].isin(celltype).tolist()
+    idx2 = label2[col].isin(celltype).tolist()
+    df1 = df1.iloc[idx1, :]
+    label1 = label1.iloc[idx1, :]
+    df2 = df2.iloc[idx2, :]
+    label2 = label2.iloc[idx2, :]
+    return df1, df2, label1, label2
+
+
+def process_gene_name(df1, df2):
+    # 处理PBMC基因名称
+    gene_names = df1.columns.tolist()
+    gene_names = [gene.split('_')[1] for gene in gene_names]
+    df1.columns = gene_names
+    df2.columns = gene_names
+    return df1, df2
+
+#
+#
+# smart_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Smart_seq2/smart_seq2_data.csv', index_col=0)
+# smart_seq_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Smart_seq2/smart_seq2_label.csv')
+#
+# seq_well_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Seq_Well/Seq_Well_data.csv', index_col=0)
+# seq_well_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Seq_Well/Seq_Well_label.csv')
+#
+# smart_seq_data, seq_well_data, smart_seq_label, seq_well_label = get_common_types_df(smart_seq_data, seq_well_data, smart_seq_label, seq_well_label)
+# smart_seq_data, seq_well_data = get_rid_of_0_gene(smart_seq_data, seq_well_data)
+# smart_seq_data, seq_well_data = process_gene_name(smart_seq_data, seq_well_data)
+# print(smart_seq_data.shape, smart_seq_label.shape)
+# print(seq_well_data.shape, seq_well_label.shape)
+# smart_seq_data.to_csv('smart_seq_data.csv')
+# smart_seq_label.to_csv('smart_seq_label.csv', index=False)
+#
+# seq_well_data.to_csv('seq_well_data.csv')
+# seq_well_label.to_csv('seq_well_label.csv', index=False)
+#
+#
+# exit()

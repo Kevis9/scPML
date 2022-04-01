@@ -1,5 +1,4 @@
 import os.path
-
 import pandas as pd
 import torch
 from torch import nn
@@ -10,13 +9,10 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
+from data_preprocess import get_rid_of_0_gene
+from sklearn import preprocessing
 
-# def get_common_types_df(df1, df2, label1, label2):
-# in_label = pd.read_csv("/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/InDrop/InDrop_label.csv")
-# cel_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/CEL_Seq2/CEL_Seq2_label.csv')
-# print(in_label.value_counts())
-# print(cel_label.value_counts())
-# exit()
+
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
@@ -88,7 +84,9 @@ def transfer_label(data_path: dict,
     '''
     ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
     ref_data = ref_data.astype(np.float64)
-    ref_label = ref_label.astype(np.int64)
+    ref_enc = preprocessing.LabelEncoder()
+    ref_label = (ref_enc.fit_transform(ref_label) + 1).astpye(np.int64)
+
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
@@ -142,6 +140,8 @@ def transfer_label(data_path: dict,
     query_data, query_label = read_data_label(data_path['query'], label_path['query'])
     query_data = query_data.astype(np.float64)
     query_label = query_label.astype(np.int64)
+    query_enc = preprocessing.LabelEncoder()
+    query_label = (query_enc.fit_transform(query_label) + 1).astpye(np.int64)
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
@@ -180,6 +180,10 @@ def transfer_label(data_path: dict,
     pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
+
+    # 还原label
+    ref_label = ref_enc.inverse_transform(ref_label-1)
+    query_label = query_enc.inverse_transform(query_label-1)
     ret = {
         'acc': acc,
         'ref_h': ref_h,

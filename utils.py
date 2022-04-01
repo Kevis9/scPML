@@ -10,7 +10,6 @@ from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
 import umap
-
 import seaborn as sns
 import wandb
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
@@ -120,7 +119,6 @@ def read_data_label(data_path, label_path):
 
     label_df = pd.read_csv(label_path)
     label = label_df.to_numpy().reshape(-1)
-
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     print('label的shape为 : {}'.format(label.shape))
     return data, label
