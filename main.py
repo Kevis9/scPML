@@ -13,7 +13,11 @@ from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
 
 
-
+indrop_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/indrop_data.csv', index_col=0)
+cel_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/cel_seq_data.csv', index_col=0)
+print(indrop_data.shape)
+print(cel_seq_data.shape)
+exit()
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,

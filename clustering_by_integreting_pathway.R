@@ -94,8 +94,8 @@ create_denovo_pathway <- function(mat_gene){
 
 # pathway scoring: AUCell
 pathway_scoring <- function(gSet, mat_gene){
-  cells_rankings <- AUCell_buildRankings(mat_gene, nCores=1, plotStats=TRUE)
-  cells_AUC <- AUCell_calcAUC(gSet, cells_rankings, nCores=1,aucMaxRank = ceiling(0.05 * nrow(cells_rankings)))
+  cells_rankings <- AUCell_buildRankings(mat_gene, nCores=5, plotStats=TRUE)
+  cells_AUC <- AUCell_calcAUC(gSet, cells_rankings, nCores=5,aucMaxRank = ceiling(0.05 * nrow(cells_rankings)))
   aucMatrix <- getAUC(cells_AUC)
   aucMatrix = aucMatrix[rowSums(aucMatrix)>0.0,]
   return(aucMatrix)
@@ -237,7 +237,7 @@ main<-function(paName, scName,s, paPath, save_path){
   # pathway scoring: AUCell
 
   mat_path = pathway_scoring(gSet, mat_gene)
-
+  print("AUCell finished")
 
   # load cell label
   # label = load_label(labelPath, paste(scName,'label',sep='_'))
