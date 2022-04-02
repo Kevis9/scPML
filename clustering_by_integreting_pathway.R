@@ -6,7 +6,7 @@
 
 # install.packages("AUCell",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 # install.packages("AUCell")
-install.packages('doParallel')
+install.packages('doParallel',repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
 library(AUCell) # AUCell, pathway scoring method 
