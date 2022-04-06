@@ -166,7 +166,7 @@ class CPMNets():
         :return:
         '''
         data = data.to(device)
-        optimizer_for_test_h = optim.Adam(params=[self.h_test])
+        optimizer_for_test_h = optim.Adam(params=[self.h_test], lr=0.01)
         r_loss_list = []
         for epoch in range(n_epochs):
             r_loss = 0
