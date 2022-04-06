@@ -131,7 +131,7 @@ def transfer_label(data_path: dict,
     # 把所有的view连接在一起
     ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
-
+    print(ref_label_tensor.shape)
     '''
         Query data
     '''

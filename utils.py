@@ -118,6 +118,7 @@ def read_data_label(data_path, label_path):
     data = data_df.to_numpy()
 
     label_df = pd.read_csv(label_path)
+    print(label_df.shape)
     label = label_df.to_numpy().reshape(-1)
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     print('label的shape为 : {}'.format(label.shape))
