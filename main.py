@@ -137,7 +137,6 @@ def transfer_label(data_path: dict,
     '''
     query_data, query_label = read_data_label(data_path['query'], label_path['query'])
     query_data = query_data.astype(np.float64)
-    query_label = query_label.astype(np.int64)
     query_enc = preprocessing.LabelEncoder()
     query_label = (query_enc.fit_transform(query_label) + 1).astype(np.int64)
 
