@@ -12,13 +12,6 @@ import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
 
-
-indrop_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/indrop_data.csv', index_col=0)
-cel_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/cel_seq_data.csv', index_col=0)
-print(indrop_data.shape)
-print(cel_seq_data.shape)
-exit()
-
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -204,32 +197,32 @@ def transfer_label(data_path: dict,
 
 
 # 数据路径
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq_10x_v3'
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'cel_seq2_data.csv'),
-    'query': os.path.join(data_path, '10x_v3_data.csv'),
+    'ref': os.path.join(data_path, 'mouse_data.csv'),
+    'query': os.path.join(data_path, 'huamn_data.csv'),
 }
 # label所在的路径
 labelPath = {
-    'ref': os.path.join(data_path, 'cel_seq2_label.csv'),
-    'query': os.path.join(data_path, '10x_v3_label.csv'),
+    'ref': os.path.join(data_path, 'mouse_label.csv'),
+    'query': os.path.join(data_path, 'human_label.csv'),
 }
 
 sm_path = os.path.join(data_path, 'similarity_mat')
 SMPath = {
     'ref': [
-        os.path.join(sm_path, "SM_cel_seq_KEGG.csv"),
-        os.path.join(sm_path, "SM_cel_seq_Reactome.csv"),
-        os.path.join(sm_path, "SM_cel_seq_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_cel_seq_yan.csv"),
+        os.path.join(sm_path, "SM_mouse_KEGG.csv"),
+        os.path.join(sm_path, "SM_mouse_Reactome.csv"),
+        os.path.join(sm_path, "SM_mouse_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_mouse_yan.csv"),
     ],
     'query': [
-        os.path.join(sm_path, "SM_10x_v3_KEGG.csv"),
-        os.path.join(sm_path, "SM_10x_v3_Reactome.csv"),
-        os.path.join(sm_path, "SM_10x_v3_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_10x_v3_yan.csv"),
+        os.path.join(sm_path, "SM_human_KEGG.csv"),
+        os.path.join(sm_path, "SM_human_Reactome.csv"),
+        os.path.join(sm_path, "SM_human_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_human_yan.csv"),
     ]
 }
 
@@ -237,7 +230,7 @@ config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM_train': 4000,
     'epoch_CPM_test': 4000,
-    'lsd_dim': 64,  # CPM_net latent space dimension
+    'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001],  # CPM_ner中train和test的学习率
     'ref_class_num': 7,  # Reference data的类别数
@@ -250,10 +243,10 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_platform", entity="kevislin", config=config, tags=['cel_seq-10x_v3','platform'])
+wandb.init(project="cell_classify_species", entity="kevislin", config=config, tags=['mouse-human','species'])
 
-print("Transfer across platforms")
-print("Reference: cel_seq", "Query: 10x_v3")
+print("Transfer across species")
+print("Reference: mouse", "Query: human")
 
 
 ret = transfer_label(dataPath, labelPath, SMPath, config)
