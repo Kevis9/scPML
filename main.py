@@ -83,7 +83,7 @@ def transfer_label(data_path: dict,
     ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
-    ref_label = (ref_enc.fit_transform(ref_label) + 1).astpye(np.int64)
+    ref_label = (ref_enc.fit_transform(ref_label) + 1).astype(np.int64)
 
 
     # 数据预处理
@@ -139,7 +139,7 @@ def transfer_label(data_path: dict,
     query_data = query_data.astype(np.float64)
     query_label = query_label.astype(np.int64)
     query_enc = preprocessing.LabelEncoder()
-    query_label = (query_enc.fit_transform(query_label) + 1).astpye(np.int64)
+    query_label = (query_enc.fit_transform(query_label) + 1).astype(np.int64)
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
