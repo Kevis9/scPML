@@ -202,7 +202,7 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mous
 # 给出ref和query data所在的路径
 dataPath = {
     'ref': os.path.join(data_path, 'mouse_data.csv'),
-    'query': os.path.join(data_path, 'huamn_data.csv'),
+    'query': os.path.join(data_path, 'human_data.csv'),
 }
 # label所在的路径
 labelPath = {
