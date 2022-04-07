@@ -4,8 +4,21 @@
 # BiocManager::install("GSEABase")
 # BiocManager::install("AUCell")
 
+
+
+
 # install.packages("doMC", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 library(SNFtool) # SNF;spectralClustering
+
+# x = matrix(c(1,1,1,2,2,2,3,3,3,4,4,4),nrow=4,byrow = TRUE)
+# print(x)
+# y = matrix(c(3:14),nrow=4,byrow = TRUE)
+# print(y)
+# print(as.matrix(dist(x)))
+# print(dist2(x,x)^(1/2))
+
+# q()
+
 library(GSEABase) # getGmt, load pathway information
 library(AUCell) # AUCell, pathway scoring method 
 # library(SingleCellExperiment)
@@ -121,7 +134,8 @@ integrating_pathway <- function(mat_gene, mat_path){
   print('1')
   mat_gene = standardNormalization(mat_gene)
   print('2')
-  mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
+  mat_gene = as.matrix(dist(as.matrix(mat_gene)))
+#   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
   print("mat_gene")
   print(ncol(mat_gene))
   mat_gene = affinityMatrix(mat_gene, K, alpha)
