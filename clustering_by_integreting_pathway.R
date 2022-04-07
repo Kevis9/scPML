@@ -5,7 +5,6 @@
 # BiocManager::install("AUCell")
 
 # install.packages("doMC", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-library(doParallel)
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
 library(AUCell) # AUCell, pathway scoring method 
@@ -119,7 +118,9 @@ integrating_pathway <- function(mat_gene, mat_path){
   # mat_gene 预处理
 
   mat_gene = t(mat_gene)
+  print('1')
   mat_gene = standardNormalization(mat_gene)
+  print('2')
   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
   print("mat_gene")
   print(ncol(mat_gene))
