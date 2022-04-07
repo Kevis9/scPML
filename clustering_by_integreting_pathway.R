@@ -4,7 +4,7 @@
 # BiocManager::install("GSEABase")
 # BiocManager::install("AUCell")
 
-# install.packages("doParallel", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+# install.packages("doMC", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 library(doParallel)
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
@@ -93,8 +93,8 @@ create_denovo_pathway <- function(mat_gene){
 
 # pathway scoring: AUCell
 pathway_scoring <- function(gSet, mat_gene){
-  cells_rankings <- AUCell_buildRankings(mat_gene, nCores=50, plotStats=TRUE)
-  cells_AUC <- AUCell_calcAUC(gSet, cells_rankings, nCores=50,aucMaxRank = ceiling(0.05 * nrow(cells_rankings)))
+  cells_rankings <- AUCell_buildRankings(mat_gene, nCores=25, plotStats=TRUE)
+  cells_AUC <- AUCell_calcAUC(gSet, cells_rankings, nCores=25, aucMaxRank = ceiling(0.05 * nrow(cells_rankings)))
   aucMatrix <- getAUC(cells_AUC)
   aucMatrix = aucMatrix[rowSums(aucMatrix)>0.0,]
   return(aucMatrix)
