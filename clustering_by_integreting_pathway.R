@@ -297,16 +297,18 @@ data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq
 
 mat_name = 'cel_seq_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+print(ncol(mat_gene))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_cel_seq_', sep='/')
 main('KEGG', scName,'human', paPath, save_path)
 main('Reactome', scName,'human', paPath, save_path)
 main('Wikipathways', scName,'human', paPath, save_path)
 main('de novo pathway', scName,'human', paPath, save_path)
-q()
+
 
 mat_name = 'indrop_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+print(ncol(mat_gene))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_indrop_', sep='/')
 main('KEGG', scName,'human', paPath, save_path)
