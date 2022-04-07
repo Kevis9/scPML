@@ -134,7 +134,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   print('1')
   mat_gene = standardNormalization(mat_gene)
   print('2:pardist')
-  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=1000))
+  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=400))
 
 #   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
   print("mat_gene")
@@ -143,7 +143,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
-  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=1000)
+  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=400)
 #   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
   print("mat_path")
   print(ncol(mat_path))
@@ -294,15 +294,16 @@ paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 
 # cel_seq_indrop
 data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq_indrop'
-#
-# mat_name = 'cel_seq_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_cel_seq_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
+
+mat_name = 'cel_seq_data.csv'
+mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+save_path = paste(data_path, 'similarity_mat/SM_cel_seq_', sep='/')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
+q()
 
 mat_name = 'indrop_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
