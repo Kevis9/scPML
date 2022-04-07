@@ -133,14 +133,15 @@ integrating_pathway <- function(mat_gene, mat_path){
   mat_gene = standardNormalization(mat_gene)
   mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=400))
 #   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
-  print(ncol(mat_gene))
+  print("integrating")
+  print(dim(mat_gene))
   mat_gene = affinityMatrix(mat_gene, K, alpha)
-  
+
+
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
   mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=400)
 #   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
-  print(ncol(mat_path))
   mat_path = affinityMatrix(mat_path, K, alpha)
   W = SNF(list(mat_path, mat_gene), K, T)
   return(W)
@@ -251,14 +252,17 @@ main<-function(paName, scName,s, paPath, save_path){
   # pathway scoring: AUCell
 
   mat_path = pathway_scoring(gSet, mat_gene)
-  print("AUCell finished")
 
+  print("AUCell finished")
+  print(dim(mat_path))
   # load cell label
   # label = load_label(labelPath, paste(scName,'label',sep='_'))
   # label_int = as.numeric(as.vector(factor(label,levels=unique(label),labels=seq(1:length(unique(label))))))
 
-  # integrating pathway 
+  # integrating pathway
+  print(dim(mat_gene))
   W=integrating_pathway(mat_gene, mat_path)
+
   print("Fusion finished")
 
   print("Save the W (integrated) matrix")
@@ -290,12 +294,11 @@ paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 # cel_seq_indrop
 data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq_indrop'
 
-mat_name = 'cel_seq_data.csv'
-mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-print(ncol(mat_gene))
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_cel_seq_', sep='/')
-main('KEGG', scName,'human', paPath, save_path)
+# mat_name = 'cel_seq_data.csv'
+# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+# save_path = paste(data_path, 'similarity_mat/SM_cel_seq_', sep='/')
+# main('KEGG', scName,'human', paPath, save_path)
 # main('Reactome', scName,'human', paPath, save_path)
 # main('Wikipathways', scName,'human', paPath, save_path)
 # main('de novo pathway', scName,'human', paPath, save_path)
@@ -304,6 +307,7 @@ main('KEGG', scName,'human', paPath, save_path)
 mat_name = 'indrop_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 print(ncol(mat_gene))
+print(nrow(mat_gene)
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_indrop_', sep='/')
 main('KEGG', scName,'human', paPath, save_path)
