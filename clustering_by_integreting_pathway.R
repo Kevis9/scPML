@@ -4,10 +4,7 @@
 # BiocManager::install("GSEABase")
 # BiocManager::install("AUCell")
 
-# install.packages("AUCell",repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-# install.packages("AUCell")
-# install.packages('doParallel',repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-# library(doParallel)
+library(doParallel)
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
 library(AUCell) # AUCell, pathway scoring method 
