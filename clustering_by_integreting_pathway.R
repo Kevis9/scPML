@@ -129,15 +129,10 @@ integrating_pathway <- function(mat_gene, mat_path){
   T = 20; # Number of Iterations, usually (10~20)
 
   # mat_gene 预处理
-
   mat_gene = t(mat_gene)
-  print('1')
   mat_gene = standardNormalization(mat_gene)
-  print('2:pardist')
   mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=400))
-
 #   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
-  print("mat_gene")
   print(ncol(mat_gene))
   mat_gene = affinityMatrix(mat_gene, K, alpha)
   
@@ -145,7 +140,6 @@ integrating_pathway <- function(mat_gene, mat_path){
   mat_path = standardNormalization(mat_path)
   mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=400)
 #   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
-  print("mat_path")
   print(ncol(mat_path))
   mat_path = affinityMatrix(mat_path, K, alpha)
   W = SNF(list(mat_path, mat_gene), K, T)
@@ -265,6 +259,7 @@ main<-function(paName, scName,s, paPath, save_path){
 
   # integrating pathway 
   W=integrating_pathway(mat_gene, mat_path)
+  print("Fusion finished")
 
   print("Save the W (integrated) matrix")
   print(s)
@@ -301,9 +296,9 @@ print(ncol(mat_gene))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_cel_seq_', sep='/')
 main('KEGG', scName,'human', paPath, save_path)
-main('Reactome', scName,'human', paPath, save_path)
-main('Wikipathways', scName,'human', paPath, save_path)
-main('de novo pathway', scName,'human', paPath, save_path)
+# main('Reactome', scName,'human', paPath, save_path)
+# main('Wikipathways', scName,'human', paPath, save_path)
+# main('de novo pathway', scName,'human', paPath, save_path)
 
 
 mat_name = 'indrop_data.csv'
@@ -312,9 +307,9 @@ print(ncol(mat_gene))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_indrop_', sep='/')
 main('KEGG', scName,'human', paPath, save_path)
-main('Reactome', scName,'human', paPath, save_path)
-main('Wikipathways', scName,'human', paPath, save_path)
-main('de novo pathway', scName,'human', paPath, save_path)
+# main('Reactome', scName,'human', paPath, save_path)
+# main('Wikipathways', scName,'human', paPath, save_path)
+# main('de novo pathway', scName,'human', paPath, save_path)
 
 
 # drop_seq_10x_v3
