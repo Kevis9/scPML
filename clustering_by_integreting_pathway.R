@@ -134,7 +134,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   print('1')
   mat_gene = standardNormalization(mat_gene)
   print('2:pardist')
-  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=100))
+  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=200))
 
 #   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
   print("mat_gene")
@@ -143,7 +143,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
-  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=100)
+  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=200)
 #   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
   print("mat_path")
   print(ncol(mat_path))
