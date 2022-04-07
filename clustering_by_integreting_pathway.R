@@ -4,6 +4,7 @@
 # BiocManager::install("GSEABase")
 # BiocManager::install("AUCell")
 
+install.packages("doParallel", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 library(doParallel)
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
