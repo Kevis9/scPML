@@ -7,9 +7,9 @@
 
 
 
-# install.packages("doMC", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+# install.packages("parallelDist", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 library(SNFtool) # SNF;spectralClustering
-
+library(parallelDist)
 # x = matrix(c(1,1,1,2,2,2,3,3,3,4,4,4),nrow=4,byrow = TRUE)
 # print(x)
 # y = matrix(c(3:14),nrow=4,byrow = TRUE)
@@ -134,7 +134,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   print('1')
   mat_gene = standardNormalization(mat_gene)
   print('2')
-  mat_gene = as.matrix(dist(as.matrix(mat_gene)))
+  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean'))
 #   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
   print("mat_gene")
   print(ncol(mat_gene))
@@ -142,7 +142,8 @@ integrating_pathway <- function(mat_gene, mat_path){
   
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
-  mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
+  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'))
+#   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
   print("mat_path")
   print(ncol(mat_path))
   mat_path = affinityMatrix(mat_path, K, alpha)
