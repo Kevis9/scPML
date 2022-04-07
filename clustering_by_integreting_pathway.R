@@ -8,17 +8,17 @@
 
 
 # install.packages("parallelDist", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
-library(SNFtool) # SNF;spectralClustering
+
 library(parallelDist)
 # x = matrix(c(1,1,1,2,2,2,3,3,3,4,4,4),nrow=4,byrow = TRUE)
 # print(x)
-# y = matrix(c(3:14),nrow=4,byrow = TRUE)
+# y = as.matrix(parDist(as.matrix(x), method='euclidean', threads=50))
 # print(y)
-# print(as.matrix(dist(x)))
-# print(dist2(x,x)^(1/2))
 
+# print(dist2(x,x)^(1/2))
 # q()
 
+library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
 library(AUCell) # AUCell, pathway scoring method 
 # library(SingleCellExperiment)
@@ -134,7 +134,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   print('1')
   mat_gene = standardNormalization(mat_gene)
   print('2:pardist')
-  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=8))
+  mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=100))
 
 #   mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
   print("mat_gene")
@@ -143,7 +143,7 @@ integrating_pathway <- function(mat_gene, mat_path){
   
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
-  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'))
+  mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=100)
 #   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
   print("mat_path")
   print(ncol(mat_path))
