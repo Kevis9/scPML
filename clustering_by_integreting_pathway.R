@@ -7,7 +7,7 @@
 
 
 
-# install.packages("parallelDist", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+# install.packages("entropy", repos="https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
 
 library(parallelDist)
 # x = matrix(c(1,1,1,2,2,2,3,3,3,4,4,4),nrow=4,byrow = TRUE)
