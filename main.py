@@ -202,12 +202,12 @@ def transfer_label(data_path: dict,
 
 
 # 数据路径
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/'
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'mouse_pancreas.csv'),
-    'query': os.path.join(data_path, 'human_pancreas.csv'),
+    'ref': os.path.join(data_path, 'mouse_data.csv'),
+    'query': os.path.join(data_path, 'human_data.csv'),
 }
 # label所在的路径
 labelPath = {
@@ -218,16 +218,16 @@ labelPath = {
 sm_path = os.path.join(data_path, 'similarity_mat')
 SMPath = {
     'ref': [
-        os.path.join(sm_path, "SM_mouse_pancreas_KEGG.csv"),
-        os.path.join(sm_path, "SM_mouse_pancreas_Reactome.csv"),
-        os.path.join(sm_path, "SM_mouse_pancreas_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_mouse_pancreas_biase.csv"),
+        os.path.join(sm_path, "SM_mouse_KEGG.csv"),
+        os.path.join(sm_path, "SM_mouse_Reactome.csv"),
+        os.path.join(sm_path, "SM_mouse_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_mouse_yan.csv"),
     ],
     'query': [
-        os.path.join(sm_path, "SM_human_pancreas_KEGG.csv"),
-        os.path.join(sm_path, "SM_human_pancreas_Reactome.csv"),
-        os.path.join(sm_path, "SM_human_pancreas_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_human_pancreas_yan.csv"),
+        os.path.join(sm_path, "SM_human_KEGG.csv"),
+        os.path.join(sm_path, "SM_human_Reactome.csv"),
+        os.path.join(sm_path, "SM_human_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_human_yan.csv"),
     ]
 }
 
@@ -238,10 +238,10 @@ config = {
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
-    'ref_class_num': 9,  # Reference data的类别数
-    'query_class_num': 9,  # query data的类别数
+    'ref_class_num': 8,  # Reference data的类别数
+    'query_class_num': 8,  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 2000,  # GCN中间层维数
+    'middle_out': 4000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
 }
 
