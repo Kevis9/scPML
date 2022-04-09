@@ -153,14 +153,14 @@ def transfer_label(data_path: dict,
     # 构造Query data的Graph
     query_sm_arr = [read_similarity_mat(sm_path['query'][0]),
                     read_similarity_mat(sm_path['query'][1]),
-                    read_similarity_mat(sm_path['query'][2]),
-                    read_similarity_mat(sm_path['query'][3])]
-
+                    # read_similarity_mat(sm_path['query'][2]),
+                    # read_similarity_mat(sm_path['query'][3])]
+                    ]
     query_graphs = [construct_graph(query_norm_data, query_sm_arr[0], config['k']),
                     construct_graph(query_norm_data, query_sm_arr[1], config['k']),
-                    construct_graph(query_norm_data, query_sm_arr[2], config['k']),
-                    construct_graph(query_norm_data, query_sm_arr[3], config['k'])]
-
+                    # construct_graph(query_norm_data, query_sm_arr[2], config['k']),
+                    # construct_graph(query_norm_data, query_sm_arr[3], config['k'])
+                    ]
     # 获得Embedding
     query_views = []
     for i in range(len(GNN_models)):
@@ -224,14 +224,14 @@ SMPath = {
     'ref': [
         os.path.join(sm_path, "SM_"+data_config['ref_name']+"_KEGG.csv"),
         os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Reactome.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_KEGG.csv"),
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_Reactome.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
     ]
 }
 
@@ -246,7 +246,7 @@ config = {
     'query_class_num': 8,  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 1500,  # GCN中间层维数
-    'w_classify': 0.1,  # classfication loss的权重
+    'w_classify': 1,  # classfication loss的权重
 }
 
 
