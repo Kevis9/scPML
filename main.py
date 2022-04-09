@@ -202,10 +202,10 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path' : '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq_10x_v3',
-    'ref_name': 'cel_seq2',
-    'query_name': '10x_v3',
-    'project': 'platform'
+    'data_path' : '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human',
+    'ref_name': 'mouse',
+    'query_name': 'human',
+    'project': 'species'
 }
 
 # 给出ref和query data所在的路径
@@ -224,14 +224,14 @@ SMPath = {
     'ref': [
         os.path.join(sm_path, "SM_"+data_config['ref_name']+"_KEGG.csv"),
         os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Reactome.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_KEGG.csv"),
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_Reactome.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
+        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
     ]
 }
 
@@ -242,10 +242,10 @@ config = {
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
-    'ref_class_num': 7,  # Reference data的类别数
-    'query_class_num': 7,  # query data的类别数
+    'ref_class_num': 8,  # Reference data的类别数
+    'query_class_num': 8,  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 6000,  # GCN中间层维数
+    'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
 }
 
