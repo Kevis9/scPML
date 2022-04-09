@@ -100,14 +100,14 @@ def transfer_label(data_path: dict,
 
     ref_sm_arr = [read_similarity_mat(sm_path['ref'][0]),
                   read_similarity_mat(sm_path['ref'][1]),
-                  read_similarity_mat(sm_path['ref'][2]),
-                  read_similarity_mat(sm_path['ref'][3])]
-
+                  # read_similarity_mat(sm_path['ref'][2]),
+                  # read_similarity_mat(sm_path['ref'][3])]
+                    ]
     ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[0], config['k']),
                   construct_graph(masked_ref_data, ref_sm_arr[1], config['k']),
-                  construct_graph(masked_ref_data, ref_sm_arr[2], config['k']),
-                  construct_graph(masked_ref_data, ref_sm_arr[3], config['k'])]
-
+                  # construct_graph(masked_ref_data, ref_sm_arr[2], config['k']),
+                  # construct_graph(masked_ref_data, ref_sm_arr[3], config['k'])]
+                ]
     ref_views = []
     GNN_models = []
     # 训练ref data in scGNN
