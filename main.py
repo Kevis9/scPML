@@ -144,7 +144,7 @@ def transfer_label(data_path: dict,
 
     # 构造Query data的Graph
 
-    query_sm_arr = [read_similarity_mat(sm_path['query'][i]) for i in range(len(sm_path))]
+    query_sm_arr = [read_similarity_mat(sm_path['query'][i]) for i in range(len(sm_path['query']))]
     query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
 
     # 获得Embedding
