@@ -224,14 +224,14 @@ SMPath = {
     'ref': [
         os.path.join(sm_path, "SM_"+data_config['ref_name']+"_KEGG.csv"),
         os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Reactome.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_KEGG.csv"),
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_Reactome.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
     ]
 }
 
@@ -245,8 +245,8 @@ config = {
     'ref_class_num': 8,  # Reference data的类别数
     'query_class_num': 8,  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 2000,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'middle_out': 1500,  # GCN中间层维数
+    'w_classify': 0.1,  # classfication loss的权重
 }
 
 
