@@ -200,34 +200,38 @@ def transfer_label(data_path: dict,
     # print("Prediction Accuracy is {:.3f}".format(acc))
     return ret
 
-
-# 数据路径
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
+# 数据配置
+data_config = {
+    'data_path' : '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq_10x_v3',
+    'ref_name': 'cel_seq2',
+    'query_name': '10x_v3',
+    'project': 'platform'
+}
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_path, 'mouse_data.csv'),
-    'query': os.path.join(data_path, 'human_data.csv'),
+    'ref': os.path.join(data_config['data_path'], data_config['ref_name']+'_data.csv'),
+    'query': os.path.join(data_config['data_path'], data_config['query_name']+'_data.csv'),
 }
 # label所在的路径
 labelPath = {
-    'ref': os.path.join(data_path, 'mouse_label.csv'),
-    'query': os.path.join(data_path, 'human_label.csv'),
+    'ref': os.path.join(data_config['data_path'], data_config['ref_name']+'_label.csv'),
+    'query': os.path.join(data_config['data_path'], data_config['query_name']+'_label.csv'),
 }
 
-sm_path = os.path.join(data_path, 'similarity_mat')
+sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
 SMPath = {
     'ref': [
-        os.path.join(sm_path, "SM_mouse_KEGG.csv"),
-        os.path.join(sm_path, "SM_mouse_Reactome.csv"),
-        os.path.join(sm_path, "SM_mouse_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_mouse_yan.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_KEGG.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Reactome.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
     ],
     'query': [
-        os.path.join(sm_path, "SM_human_KEGG.csv"),
-        os.path.join(sm_path, "SM_human_Reactome.csv"),
-        os.path.join(sm_path, "SM_human_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_human_yan.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_KEGG.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Reactome.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
     ]
 }
 
@@ -238,20 +242,21 @@ config = {
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
-    'ref_class_num': 8,  # Reference data的类别数
-    'query_class_num': 8,  # query data的类别数
-    'k': 1,  # 图构造的时候k_neighbor参数
-    'middle_out': 1500,  # GCN中间层维数
+    'ref_class_num': 7,  # Reference data的类别数
+    'query_class_num': 7,  # query data的类别数
+    'k': 2,  # 图构造的时候k_neighbor参数
+    'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
 }
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_species", entity="kevislin", config=config, tags=['mouse-human','species'])
+wandb.init(project="cell_classify_"+data_config['project'], entity="kevislin", config=config,
+           tags=[data_config['ref_name']+'-'+data_config['query_name'], data_config['project']])
 
-print("Transfer across species")
-print("Reference: mouse", "Query: human")
+print("Transfer across " + data_config['project'])
+print("Reference: "+data_config['ref_name'], "Query: "+data_config['query_name'])
 
 
 ret = transfer_label(dataPath, labelPath, SMPath, config)
