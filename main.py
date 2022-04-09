@@ -11,6 +11,8 @@ import scipy.io as spio
 import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
+
+
 # df1 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/indrop_data.csv', index_col=0)
 # df2 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/cel_seq_data.csv', index_col=0)
 # df3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/human_pancreas.csv', index_col=0)
@@ -91,23 +93,14 @@ def transfer_label(data_path: dict,
     ref_enc = preprocessing.LabelEncoder()
     ref_label = (ref_enc.fit_transform(ref_label) + 1).astype(np.int64)
 
-
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
 
+    ref_sm_arr = [read_similarity_mat(sm_path['ref'][i]) for i in range(len(sm_path['ref']))]
+    ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[i], config['k']) for i in range(len(ref_sm_arr))]
 
-    ref_sm_arr = [read_similarity_mat(sm_path['ref'][0]),
-                  read_similarity_mat(sm_path['ref'][1]),
-                  # read_similarity_mat(sm_path['ref'][2]),
-                  # read_similarity_mat(sm_path['ref'][3])]
-                    ]
-    ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[0], config['k']),
-                  construct_graph(masked_ref_data, ref_sm_arr[1], config['k']),
-                  # construct_graph(masked_ref_data, ref_sm_arr[2], config['k']),
-                  # construct_graph(masked_ref_data, ref_sm_arr[3], config['k'])]
-                ]
     ref_views = []
     GNN_models = []
     # 训练ref data in scGNN
@@ -115,7 +108,7 @@ def transfer_label(data_path: dict,
         model = scGNN(ref_graphs[i], config['middle_out'])
         optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
         model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
-                                   ref_norm_data, 'GNN: view'+str(i+1)+' loss')
+                            ref_norm_data, 'GNN: view' + str(i + 1) + ' loss')
 
         # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
         # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
@@ -149,18 +142,11 @@ def transfer_label(data_path: dict,
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
 
-
     # 构造Query data的Graph
-    query_sm_arr = [read_similarity_mat(sm_path['query'][0]),
-                    read_similarity_mat(sm_path['query'][1]),
-                    # read_similarity_mat(sm_path['query'][2]),
-                    # read_similarity_mat(sm_path['query'][3])]
-                    ]
-    query_graphs = [construct_graph(query_norm_data, query_sm_arr[0], config['k']),
-                    construct_graph(query_norm_data, query_sm_arr[1], config['k']),
-                    # construct_graph(query_norm_data, query_sm_arr[2], config['k']),
-                    # construct_graph(query_norm_data, query_sm_arr[3], config['k'])
-                    ]
+
+    query_sm_arr = [read_similarity_mat(sm_path['query'][i]) for i in range(len(sm_path))]
+    query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
+
     # 获得Embedding
     query_views = []
     for i in range(len(GNN_models)):
@@ -174,19 +160,19 @@ def transfer_label(data_path: dict,
         CPM-Net
     '''
     cpm_model, ref_h, query_h = train_cpm_net(ref_data_embeddings_tensor,
-                                                        ref_label_tensor,
-                                                        query_data_embeddings_tensor,
-                                                        ref_view_num,
-                                                        ref_view_feat_len,
-                                                        config)
+                                              ref_label_tensor,
+                                              query_data_embeddings_tensor,
+                                              ref_view_num,
+                                              ref_view_feat_len,
+                                              config)
 
     pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
 
     # 还原label
-    ref_label = ref_enc.inverse_transform(ref_label-1)
-    query_label = query_enc.inverse_transform(query_label-1)
+    ref_label = ref_enc.inverse_transform(ref_label - 1)
+    query_label = query_enc.inverse_transform(query_label - 1)
     ret = {
         'acc': acc,
         'ref_h': ref_h,
@@ -200,9 +186,10 @@ def transfer_label(data_path: dict,
     # print("Prediction Accuracy is {:.3f}".format(acc))
     return ret
 
+
 # 数据配置
 data_config = {
-    'data_path' : '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human',
     'ref_name': 'mouse',
     'query_name': 'human',
     'project': 'species'
@@ -210,28 +197,28 @@ data_config = {
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_config['data_path'], data_config['ref_name']+'_data.csv'),
-    'query': os.path.join(data_config['data_path'], data_config['query_name']+'_data.csv'),
+    'ref': os.path.join(data_config['data_path'], data_config['ref_name'] + '_data.csv'),
+    'query': os.path.join(data_config['data_path'], data_config['query_name'] + '_data.csv'),
 }
 # label所在的路径
 labelPath = {
-    'ref': os.path.join(data_config['data_path'], data_config['ref_name']+'_label.csv'),
-    'query': os.path.join(data_config['data_path'], data_config['query_name']+'_label.csv'),
+    'ref': os.path.join(data_config['data_path'], data_config['ref_name'] + '_label.csv'),
+    'query': os.path.join(data_config['data_path'], data_config['query_name'] + '_label.csv'),
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
 SMPath = {
     'ref': [
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_KEGG.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Reactome.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_KEGG.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
     ],
     'query': [
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_KEGG.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Reactome.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
-        # os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
     ]
 }
 
@@ -246,18 +233,16 @@ config = {
     'query_class_num': 8,  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 1500,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'w_classify': 0.05,  # classfication loss的权重
 }
-
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_"+data_config['project'], entity="kevislin", config=config,
-           tags=[data_config['ref_name']+'-'+data_config['query_name'], data_config['project']])
+wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
+           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']])
 
 print("Transfer across " + data_config['project'])
-print("Reference: "+data_config['ref_name'], "Query: "+data_config['query_name'])
-
+print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
@@ -271,16 +256,15 @@ print('Prediction ARI is {:.3f}'.format(ari))
 
 # 数据上报
 wandb.log({
-    'Prediction Acc':ret['acc'],
+    'Prediction Acc': ret['acc'],
     'Prediction Silhouette ': s_score,
     'ARI': ari
 })
 
-
 raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
 ref_len = ret['ref_raw_data'].shape[0]
-show_cluster(raw_data_2d[:ref_len,:], ret['ref_label'], 'Raw reference data')
-show_cluster(raw_data_2d[ref_len:,:], ret['query_label'], 'Raw query data')
+show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
+show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
 show_cluster(raw_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]), 'Reference-Query raw data')
 h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
 show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
