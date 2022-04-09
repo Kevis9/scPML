@@ -241,7 +241,7 @@ config = {
     'ref_class_num': 8,  # Reference data的类别数
     'query_class_num': 8,  # query data的类别数
     'k': 1,  # 图构造的时候k_neighbor参数
-    'middle_out': 4000,  # GCN中间层维数
+    'middle_out': 1500,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
 }
 
