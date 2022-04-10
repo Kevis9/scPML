@@ -267,8 +267,8 @@ wandb.log({
 
 raw_data_2d = reduce_dimension(np.concatenate([ret['query_raw_data'], ret['ref_raw_data']], axis=0))
 ref_len = ret['ref_raw_data'].shape[0]
-show_cluster(raw_data_2d[ref_len:, :], ret['ref_label'], 'Raw reference data')
 show_cluster(raw_data_2d[:ref_len, :], ret['query_label'], 'Raw query data')
+show_cluster(raw_data_2d[ref_len:, :], ret['ref_label'], 'Raw reference data')
 show_cluster(raw_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]), 'Reference-Query raw data')
 h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
 show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
