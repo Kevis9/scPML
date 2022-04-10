@@ -231,8 +231,8 @@ config = {
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': 7,  # Reference data的类别数
     'query_class_num': 7,  # query data的类别数
-    'k': 1,  # 图构造的时候k_neighbor参数
-    'middle_out': 9000,  # GCN中间层维数
+    'k': 2,  # 图构造的时候k_neighbor参数
+    'middle_out': 15000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
 }
 
