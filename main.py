@@ -193,10 +193,11 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data',
     'ref_name': 'human',
     'query_name': 'mouse',
-    'project': 'species'
+    'project': 'species',
+    'class_num': '9'
 }
 
 # 给出ref和query data所在的路径
@@ -243,7 +244,7 @@ config = {
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
-           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']])
+           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'], data_config['class_num']])
 
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
