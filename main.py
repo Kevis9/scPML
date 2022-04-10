@@ -265,7 +265,7 @@ wandb.log({
     'ARI': ari
 })
 
-raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
+raw_data_2d = reduce_dimension(np.concatenate([ret['query_raw_data'], ret['ref_raw_data']], axis=0))
 ref_len = ret['ref_raw_data'].shape[0]
 show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
 show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
