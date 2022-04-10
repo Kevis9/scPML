@@ -244,7 +244,7 @@ config = {
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
-           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'], data_config['class_num']+' class'])
+           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'], str(data_config['class_num'])+' class'])
 
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
