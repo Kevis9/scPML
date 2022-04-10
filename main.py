@@ -197,7 +197,7 @@ data_config = {
     'ref_name': 'human',
     'query_name': 'mouse',
     'project': 'species',
-    'class_num': '9'
+    'class_num': 9
 }
 
 # 给出ref和query data所在的路径
@@ -223,7 +223,7 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_yan.csv"),
+        os.path.join(sm_path, "SM_"+data_config['query_name']+"_biase.csv"),
     ]
 }
 
@@ -234,17 +234,17 @@ config = {
     'lsd_dim': 512,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
-    'ref_class_num': 8,  # Reference data的类别数
-    'query_class_num': 8,  # query data的类别数
+    'ref_class_num': data_config['class_num'],  # Reference data的类别数
+    'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 1500,  # GCN中间层维数
-    'w_classify': 10,  # classfication loss的权重
+    'w_classify': 1,  # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
-           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'], data_config['class_num']])
+           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'], data_config['class_num']+' class'])
 
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
