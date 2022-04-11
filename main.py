@@ -1,3 +1,7 @@
+import numpy as np
+np.random.seed(0)
+print(np.random.rand(1,5))
+exit()
 import os.path
 import pandas as pd
 import torch
@@ -11,6 +15,8 @@ import scipy.io as spio
 import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
+
+
 
 #
 # df1 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/indrop_data.csv')
@@ -216,14 +222,14 @@ SMPath = {
     'ref': [
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['ref_name']+"_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_yan.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_"+data_config['query_name']+"_biase.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_biase.csv"),
     ]
 }
 
@@ -244,7 +250,8 @@ config = {
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
-           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'], str(data_config['class_num'])+' class'])
+           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
+                 str(data_config['class_num']) + ' class'])
 
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
