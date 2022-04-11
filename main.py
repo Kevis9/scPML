@@ -1,7 +1,3 @@
-import numpy as np
-np.random.seed(0)
-print(np.random.rand(1,5))
-exit()
 import os.path
 import pandas as pd
 import torch
@@ -16,20 +12,6 @@ import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
 
-
-
-#
-# df1 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/indrop_data.csv')
-# print(df1.shape)
-# exit()
-# exit()
-
-# df2 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq_indrop/cel_seq_data.csv', index_col=0)
-# df3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/human_pancreas.csv', index_col=0)
-# print(df1.shape)
-# print(df2.shape)
-# print(df3.shape)
-# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -199,11 +181,11 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data',
-    'ref_name': 'human',
-    'query_name': 'mouse',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human',
+    'ref_name': 'mouse',
+    'query_name': 'human',
     'project': 'species',
-    'class_num': 9
+    'class_num': 8
 }
 
 # 给出ref和query data所在的路径
@@ -234,17 +216,17 @@ SMPath = {
 }
 
 config = {
-    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
-    'lsd_dim': 512,  # CPM_net latent space dimension
+    'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 1500,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'w_classify': 0.2,  # classfication loss的权重
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
