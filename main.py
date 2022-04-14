@@ -11,6 +11,9 @@ import scipy.io as spio
 import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
+ld = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq2_indrop/cel_seq2_label.csv')
+print(ld.value_counts())
+exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -180,9 +183,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop',
     'ref_name': 'cel_seq2',
-    'query_name': '10x_v3',
+    'query_name': 'indrop',
     'project': 'species',
     'class_num': 7,
     'dataset_name':'PBMC'
@@ -220,13 +223,13 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_biase.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_yan.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_biase.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_yan.csv"),
     ]
 }
 
