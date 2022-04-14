@@ -9,11 +9,8 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
-from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
-ld = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq2_indrop/cel_seq2_label.csv')
-print(ld.value_counts())
-exit()
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
