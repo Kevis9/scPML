@@ -138,7 +138,7 @@ paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 # main('Wikipathways', scName,'mouse', paPath, save_path)
 # main('de novo pathway', scName,'mouse', paPath, save_path)
 
-# scName= 'yan'
+scName= 'yan'
 # data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3'
 # mat_name = 'cel_seq2_data.csv'
 # mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
