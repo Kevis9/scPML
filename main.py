@@ -180,16 +180,17 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human',
-    'ref_name': 'mouse',
-    'query_name': 'human',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/human_mouse',
+    'ref_name': 'human',
+    'query_name': 'mouse',
     'project': 'species',
-    'class_num': 8
+    'class_num': 8,
+    'dataset_name':'GSE84133'
 }
 config = {
-    'epoch_GCN': 2500,  # Huang model 训练的epoch
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 4000,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
@@ -219,13 +220,13 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_biase.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_biase.csv"),
     ]
 }
 
@@ -233,7 +234,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
            tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
-                 str(data_config['class_num']) + ' class'])
+                 str(data_config['class_num']) + ' class', data_config['dataset_name']])
 
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
