@@ -12,6 +12,18 @@ import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
 
+mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/mouse_pancreas.csv', index_col=0)
+gene_names = mouse_df.columns
+
+m2_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/GSE84133/mouse_human/mouse_data.csv', index_col=0)
+m2_df.columns = gene_names
+human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/GSE84133/mouse_human/human_data.csv', index_col=0)
+human_df.columns = gene_names
+
+m2_df.to_csv('mouse_data.csv', index=False)
+human_df.to_csv('human_data.csv', index=False)
+exit()
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -187,6 +199,21 @@ data_config = {
     'project': 'species',
     'class_num': 8
 }
+config = {
+    'epoch_GCN': 2500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 4000,
+    'lsd_dim': 128,  # CPM_net latent space dimension
+    'GNN_lr': 0.001,
+    'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
+    'ref_class_num': data_config['class_num'],  # Reference data的类别数
+    'query_class_num': data_config['class_num'],  # query data的类别数
+    'k': 2,  # 图构造的时候k_neighbor参数
+    'middle_out': 1500,  # GCN中间层维数
+    'w_classify': 1,  # classfication loss的权重
+    'note':''
+}
+
 
 # 给出ref和query data所在的路径
 dataPath = {
@@ -215,21 +242,6 @@ SMPath = {
     ]
 }
 
-config = {
-    'epoch_GCN': 2500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 4000,
-    'lsd_dim': 128,  # CPM_net latent space dimension
-    'GNN_lr': 0.001,
-    'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
-    'ref_class_num': data_config['class_num'],  # Reference data的类别数
-    'query_class_num': data_config['class_num'],  # query data的类别数
-    'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 1500,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
-    'note':''
-}
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
@@ -242,7 +254,6 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
 # 结果打印
-
 s_score = silhouette_score(ret['query_h'], ret['pred'])
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
