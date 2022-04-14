@@ -174,7 +174,7 @@ def show_cluster(data, label, title):
     }
 
     df = pd.DataFrame(data=data)
-    plt.figure(figsize=(25, 25))
+    plt.figure(figsize=(10, 10))
 
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=8)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置

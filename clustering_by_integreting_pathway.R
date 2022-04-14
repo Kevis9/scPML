@@ -115,7 +115,7 @@ main<-function(paName, scName,s, paPath, save_path){
 
 
 scName= 'biase'
-paPath = "/home/zhianhuang/yuanhuang/kevislin/data"
+paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 
 # human_mouse
 data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/human_mouse'
