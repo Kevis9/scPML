@@ -180,12 +180,12 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/human_mouse',
-    'ref_name': 'human',
-    'query_name': 'mouse',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
+    'ref_name': 'cel_seq2',
+    'query_name': '10x_v3',
     'project': 'species',
-    'class_num': 8,
-    'dataset_name':'GSE84133'
+    'class_num': 7,
+    'dataset_name':'PBMC'
 }
 config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
