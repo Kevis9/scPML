@@ -244,25 +244,25 @@ main('de novo pathway', scName,'human', paPath, save_path)
 #
 # #
 # # # seq_well_smart_seq2
-# data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/seq_well_smart_seq2'
-#
-# mat_name = 'seq_well_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_seq_well_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# mat_name = 'smart_seq2_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_smart_seq2_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/seq_well_smart_seq2'
+
+mat_name = 'seq_well_data.csv'
+mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+save_path = paste(data_path, 'similarity_mat/SM_seq_well_', sep='/')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
+
+mat_name = 'smart_seq2_data.csv'
+mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+save_path = paste(data_path, 'similarity_mat/SM_smart_seq2_', sep='/')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
 
 
 
