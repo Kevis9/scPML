@@ -10,7 +10,9 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
 from sklearn import preprocessing
-
+# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/drop_seq_smart_seq2/drop_seq_label.csv')
+# print(df.value_counts())
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -180,9 +182,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop',
-    'ref_name': 'cel_seq2',
-    'query_name': 'indrop',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_smart_seq2',
+    'ref_name': 'drop_seq',
+    'query_name': 'smart_seq2',
     'project': 'species',
     'class_num': 7,
     'dataset_name':'PBMC'
