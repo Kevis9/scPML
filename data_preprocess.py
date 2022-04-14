@@ -318,22 +318,44 @@ def process_gene_name(df1, df2):
 
 #
 #
-# smart_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Smart_seq2/smart_seq2_data.csv', index_col=0)
-# smart_seq_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Smart_seq2/smart_seq2_label.csv')
-#
-# seq_well_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Seq_Well/Seq_Well_data.csv', index_col=0)
-# seq_well_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Seq_Well/Seq_Well_label.csv')
-#
-# smart_seq_data, seq_well_data, smart_seq_label, seq_well_label = get_common_types_df(smart_seq_data, seq_well_data, smart_seq_label, seq_well_label)
-# smart_seq_data, seq_well_data = get_rid_of_0_gene(smart_seq_data, seq_well_data)
-# smart_seq_data, seq_well_data = process_gene_name(smart_seq_data, seq_well_data)
-# print(smart_seq_data.shape, smart_seq_label.shape)
-# print(seq_well_data.shape, seq_well_label.shape)
-# smart_seq_data.to_csv('smart_seq_data.csv')
-# smart_seq_label.to_csv('smart_seq_label.csv', index=False)
-#
-# seq_well_data.to_csv('seq_well_data.csv')
-# seq_well_label.to_csv('seq_well_label.csv', index=False)
+import pandas as pd
+smart_seq_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Smart_seq2/smart_seq2_data.csv', index_col=0)
+smart_seq_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Smart_seq2/smart_seq2_label.csv')
+
+seq_well_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Seq_Well/Seq_Well_data.csv', index_col=0)
+seq_well_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/PBMC/readcounts/Seq_Well/Seq_Well_label.csv')
+
+smart_seq_data, seq_well_data, smart_seq_label, seq_well_label = get_common_types_df(smart_seq_data, seq_well_data, smart_seq_label, seq_well_label)
+smart_seq_data, seq_well_data = get_rid_of_0_gene(smart_seq_data, seq_well_data)
+smart_seq_data, seq_well_data = process_gene_name(smart_seq_data, seq_well_data)
+print(smart_seq_data.shape, smart_seq_label.shape)
+print(seq_well_data.shape, seq_well_label.shape)
+smart_seq_data.to_csv('smart_seq_data.csv')
+smart_seq_label.to_csv('smart_seq_label.csv', index=False)
+
+seq_well_data.to_csv('seq_well_data.csv')
+seq_well_label.to_csv('seq_well_label.csv', index=False)
+
+
+# 处理掉cel_seq2_10x_v3部分的数据
+cel_seq2_data = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq2_10x_v3/cel_seq2_data.csv', index_col=0)
+data_10x_v3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq2_10x_v3/10x_v3_data.csv', index_col=0)
+
+cel_seq2_data, data_10x_v3 = process_gene_name(cel_seq2_data, data_10x_v3)
+print(cel_seq2_data.shape, data_10x_v3.shape)
+cel_seq2_data.to_csv('cel_seq2_data.csv')
+data_10x_v3.to_csv('10x_v3_data.csv')
+
+# label处理
+cel_seq2_label = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq2_10x_v3/cel_seq2_label.csv')
+label_10x_v3 = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/cel_seq2_10x_v3/10x_v3_label.csv')
+
+cel_seq2_label.replace([1,2,3,4,5,6,7], ['Natural killer cell','Cytotoxic T cell', 'CD4+ T cell', 'B cell', 'CD14+ monocyte','Megakaryocyte','CD16+ monocyte'], inplace=True)
+label_10x_v3.replace([1,2,3,4,5,6,7], ['Natural killer cell','Cytotoxic T cell', 'CD4+ T cell', 'B cell', 'CD14+ monocyte','Megakaryocyte','CD16+ monocyte'], inplace=True)
+cel_seq2_label.to_csv('cel_seq2_label.csv', index=False)
+label_10x_v3.to_csv('10x_v3_label.csv', index=False)
+
+exit()
 #
 #
 # exit()
