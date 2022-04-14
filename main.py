@@ -182,9 +182,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/indrop_cel_seq2',
-    'ref_name': 'indrop',
-    'query_name': 'cel_seq2',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/seq_well_smart_seq2',
+    'ref_name': 'seq_well',
+    'query_name': 'smart_seq2',
     'project': 'species',
     'class_num': 7,
     'dataset_name':'PBMC'
