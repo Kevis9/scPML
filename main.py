@@ -11,7 +11,6 @@ import scipy.io as spio
 import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
-
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
