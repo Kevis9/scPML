@@ -12,18 +12,6 @@ import wandb
 from data_preprocess import get_rid_of_0_gene
 from sklearn import preprocessing
 
-mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/mouse_pancreas.csv', index_col=0)
-gene_names = mouse_df.columns
-
-m2_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/GSE84133/mouse_human/mouse_data.csv', index_col=0)
-m2_df.columns = gene_names
-human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/species_data/GSE84133/mouse_human/human_data.csv', index_col=0)
-human_df.columns = gene_names
-
-m2_df.to_csv('mouse_data.csv', index=False)
-human_df.to_csv('human_data.csv', index=False)
-exit()
-
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
