@@ -131,7 +131,7 @@ def transfer_label(data_path: dict,
     # 把所有的view连接在一起
     ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
-    print(ref_label_tensor.shape)
+
     '''
         Query data
     '''
@@ -199,10 +199,10 @@ data_config = {
     'dataset_name':'PBMC'
 }
 config = {
-    'epoch_GCN': 1,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1,
-    'epoch_CPM_test': 1,
-    'lsd_dim': 2500,  # CPM_net latent space dimension
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 3000,
+    'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
