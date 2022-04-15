@@ -133,7 +133,7 @@ class CPMNets():
         # 簇之间的距离
         dist_loss = u_tensor.sum()
 
-        return variance_loss - dist_loss
+        return F.relu(variance_loss - dist_loss)
 
 
     def train_model(self, data, labels, n_epochs, lr):
@@ -165,8 +165,8 @@ class CPMNets():
             # 每个样本的平均loss
             r_loss = r_loss / self.train_len
 
-            # c_loss = self.classification_loss(labels)
-            c_loss = self.fisher_loss(labels)
+            c_loss = self.classification_loss(labels) + self.fisher_loss(labels)
+
 
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
             all_loss = r_loss + self.w * c_loss
