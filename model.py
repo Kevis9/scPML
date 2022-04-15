@@ -103,7 +103,7 @@ class CPMNets():
         :param gt:
         :return:
         '''
-        label_set = list(set(list(np.array(gt.cpu()).view(1,-1))))
+        label_set = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
         idx = [] # 存储每一个类别所在行数
         for label in label_set:
             idx.append(torch.where(gt==label))
