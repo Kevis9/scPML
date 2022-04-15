@@ -105,15 +105,14 @@ class CPMNets():
         '''
         label_list = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
         idx = [] # 存储每一个类别所在行数
-        print(label_list)
+
         for label in label_list:
-            idx.append(torch.where(gt==label))
+            idx.append(torch.where(gt==label)[1])
 
         v_arr = []
         u_arr = []
         for i in range(len(idx)):
-            print(idx[i])
-            print(self.h_train[[0,1],:])
+            
             data = self.h_train[idx[i], :]
 
             u = torch.mean(data, dim=0, dtype=torch.float64)
