@@ -15,6 +15,11 @@ from sklearn import preprocessing
 # data = torch.tensor([[1.,2.,3.],
 #                      [4,5,6],
 #                      [7,8,9]], dtype=torch.float)
+# print(torch.mean(data, dim=0))
+# x = data-torch.mean(data,dim=0)
+#
+# print(x.T)
+# exit()
 # label = torch.tensor([1,2,3])
 # idx = []
 # idx.append(torch.where(label==1))

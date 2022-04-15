@@ -112,18 +112,19 @@ class CPMNets():
         v_arr = []
         u_arr = []
         for i in range(len(idx)):
-            
+
             data = self.h_train[idx[i], :]
 
             u = torch.mean(data, dim=0, dtype=torch.float64)
-            v_arr.append(torch.diag(torch.mm(data-u, torch.transpose(data-u))).sum()/(data.shape[0]))
+
+            v_arr.append(torch.diag(torch.mm(data-u, (data-u).T)).sum()/(data.shape[0]))
             u_arr.append(u.reshape(1, -1))
 
         variance_loss = torch.cat(v_arr, dim=1).sum()
 
 
         u_tensor = torch.cat(u_arr, dim=0)
-        u_tensor = torch.mm(u_tensor, torch.transpose(u_tensor))
+        u_tensor = torch.mm(u_tensor, u_tensor.T)
 
         # 将对角线置为0
         u_diag = torch.diag(u_tensor)
