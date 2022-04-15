@@ -117,7 +117,7 @@ class CPMNets():
 
             u = torch.mean(data, dim=0, dtype=torch.float64)
 
-            v_arr.append(torch.diag(torch.mm(data-u, (data-u).T)).sum()/(data.shape[0]))
+            v_arr.append((torch.diag(torch.mm(data-u, (data-u).T)).sum()/(data.shape[0])).view(1,-1))
             u_arr.append(u.reshape(1, -1))
 
         variance_loss = torch.cat(v_arr, dim=1).sum()

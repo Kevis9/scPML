@@ -12,13 +12,9 @@ import wandb
 from sklearn import preprocessing
 # seq_well只有五类!!!
 
-# data = torch.tensor([[1.,2.,3.],
-#                      [4,5,6],
-#                      [7,8,9]], dtype=torch.float)
-# print(torch.mean(data, dim=0))
-# x = data-torch.mean(data,dim=0)
+# arr = [torch.tensor(1).view(1,-1),torch.tensor(2).view(1,-1)]
+# print(torch.cat(arr, dim=1))
 #
-# print(x.T)
 # exit()
 # label = torch.tensor([1,2,3])
 # idx = []
