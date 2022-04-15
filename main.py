@@ -181,9 +181,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop',
     'ref_name': 'cel_seq2',
-    'query_name': '10x_v3',
+    'query_name': 'indrop',
     'project': 'platform',
     'class_num': 7,
     'dataset_name':'PBMC'
@@ -192,7 +192,7 @@ config = {
     'epoch_GCN': 5000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 2000,
-    'lsd_dim': 128,  # CPM_net latent space dimension
+    'lsd_dim': 256,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
