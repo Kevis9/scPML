@@ -11,7 +11,27 @@ import scipy.io as spio
 import wandb
 from sklearn import preprocessing
 # seq_well只有五类!!!
+# arr = [torch.tensor([[1,2,3]]), torch.tensor([[4,5,6]])]
+# data = torch.cat(arr, dim=0)
+# print(data)
+# print(data.sum())
+# # print(torch.mean(data, dim=0, dtype=torch.float64).reshape(1,-1))
+# exit()
 
+data = torch.tensor([[1,2,3],
+                     [4,5,6],
+                     [7,8,9]])
+print(data.shape[0], data.shape[1])
+
+exit()
+print(torch.mean(data,dim=0,dtype=torch.float))
+exit()
+# label = torch.tensor(([1,2,3]))
+# label_set = set(np.array(label))
+# print(label_set)
+# print(torch.where(label>=1))
+# print(data[[1],:])
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -190,9 +210,9 @@ data_config = {
     'dataset_name':'PBMC'
 }
 config = {
-    'epoch_GCN': 3000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 3000,
+    'epoch_GCN': 10,  # Huang model 训练的epoch
+    'epoch_CPM_train': 10,
+    'epoch_CPM_test': 10,
     'lsd_dim': 2500,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率

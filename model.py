@@ -97,15 +97,38 @@ class CPMNets():
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
         # return torch.sum(F.relu(F_h_h_mean_max - F_h_hn_mean))
 
-    # def fisher_loss(self, gt):
-    #     '''
-    #     给出LDA中fisher_loss
-    #     :param gt:
-    #     :return:
-    #     '''
+    def fisher_loss(self, gt):
+        '''
+        给出LDA中fisher_loss
+        :param gt:
+        :return:
+        '''
+        label_set = list(set(np.array(gt.cpu())))
+        idx = [] # 存储每一个类别所在行数
+        for label in label_set:
+            idx.append(torch.where(gt==label))
 
+        variance_loss = torch.zeros(1).to(device)
+        variance_loss.requires_grad = True
 
+        u_arr = []
+        for i in range(len(idx)):
+            data = self.h_train[idx[i], :]
+            u = torch.mean(data, dim=0, dtype=torch.float64)
+            variance_loss += (torch.diag(torch.mm(data-u, torch.transpose(data-u))).sum()/(data.shape[0]))
+            u_arr.append(u.reshape(1, -1))
 
+        u_tensor = torch.cat(u_arr, dim=0)
+        u_tensor = torch.mm(u_tensor, torch.transpose(u_tensor))
+
+        # 将对角线置为0
+        u_diag = torch.diag(u_tensor)
+        u_tensor = u_tensor - torch.diag_embed(u_diag)
+
+        # 簇之间的距离
+        dist_loss = u_tensor.sum()
+
+        return variance_loss - dist_loss
 
 
     def train_model(self, data, labels, n_epochs, lr):
@@ -137,7 +160,8 @@ class CPMNets():
             # 每个样本的平均loss
             r_loss = r_loss / self.train_len
 
-            c_loss = self.classification_loss(labels)
+            # c_loss = self.classification_loss(labels)
+            c_loss = self.fisher_loss(labels)
 
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
             all_loss = r_loss + self.w * c_loss
