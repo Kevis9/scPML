@@ -103,21 +103,25 @@ class CPMNets():
         :param gt:
         :return:
         '''
-        label_set = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
+        label_list = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
         idx = [] # 存储每一个类别所在行数
-        for label in label_set:
-            print(torch.where(gt==label))
+        print(label_list)
+        for label in label_list:
             idx.append(torch.where(gt==label))
 
-        variance_loss = torch.zeros(1).to(device)
-        variance_loss.requires_grad = True
-
+        v_arr = []
         u_arr = []
         for i in range(len(idx)):
+            print(idx[i])
+            print(self.h_train[[0,1],:])
             data = self.h_train[idx[i], :]
+
             u = torch.mean(data, dim=0, dtype=torch.float64)
-            variance_loss += (torch.diag(torch.mm(data-u, torch.transpose(data-u))).sum()/(data.shape[0]))
+            v_arr.append(torch.diag(torch.mm(data-u, torch.transpose(data-u))).sum()/(data.shape[0]))
             u_arr.append(u.reshape(1, -1))
+
+        variance_loss = torch.cat(v_arr, dim=1).sum()
+
 
         u_tensor = torch.cat(u_arr, dim=0)
         u_tensor = torch.mm(u_tensor, torch.transpose(u_tensor))
