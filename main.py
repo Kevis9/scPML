@@ -181,9 +181,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop',
-    'ref_name': 'cel_seq2',
-    'query_name': 'indrop',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_10x_v3',
+    'ref_name': 'drop_seq',
+    'query_name': '10x_v3',
     'project': 'platform',
     'class_num': 7,
     'dataset_name':'PBMC'
