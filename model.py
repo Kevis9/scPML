@@ -98,7 +98,7 @@ class CPMNets():
         # return torch.sum(F.relu(F_h_h_mean_max - F_h_hn_mean))
 
     # def fisher_loss(self, gt):
-        
+
     def train_model(self, data, labels, n_epochs, lr):
         '''
         这个函数直接对模型进行训练
