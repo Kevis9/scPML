@@ -106,6 +106,7 @@ class CPMNets():
         label_set = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
         idx = [] # 存储每一个类别所在行数
         for label in label_set:
+            print(torch.where(gt==label))
             idx.append(torch.where(gt==label))
 
         variance_loss = torch.zeros(1).to(device)
