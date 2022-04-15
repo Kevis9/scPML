@@ -94,7 +94,8 @@ class CPMNets():
         F_h_hn_mean_ = torch.mul(F_h_h_mean, label_onehot)
         F_h_hn_mean = torch.sum(F_h_hn_mean_, dim=1)  # 1*n
 
-        return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
+        # return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
+        return torch.sum(F.relu(F_h_h_mean_max - F_h_hn_mean))
 
     def train_model(self, data, labels, n_epochs, lr):
         '''
@@ -166,7 +167,7 @@ class CPMNets():
         :return:
         '''
         data = data.to(device)
-        optimizer_for_test_h = optim.Adam(params=[self.h_test], lr=0.01)
+        optimizer_for_test_h = optim.Adam(params=[self.h_test])
         r_loss_list = []
         for epoch in range(n_epochs):
             r_loss = 0
