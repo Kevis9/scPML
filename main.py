@@ -10,9 +10,8 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
 from sklearn import preprocessing
-# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/indrop_cel_seq2/indrop_label.csv')
-# print(df.value_counts())
-# exit()
+# seq_well只有五类!!!
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -182,15 +181,15 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
     'ref_name': 'cel_seq2',
-    'query_name': 'indrop',
+    'query_name': '10x_v3',
     'project': 'platform',
     'class_num': 7,
     'dataset_name':'PBMC'
 }
 config = {
-    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_GCN': 5000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
@@ -199,7 +198,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 13000,  # GCN中间层维数
+    'middle_out': 10000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
     'note':''
 }
