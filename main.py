@@ -12,14 +12,14 @@ import wandb
 from sklearn import preprocessing
 # seq_well只有五类!!!
 
-data = torch.tensor([[1.,2.,3.],
-                     [4,5,6],
-                     [7,8,9]], dtype=torch.float)
-label = torch.tensor([1,2,3])
-idx = []
-idx.append(torch.where(label==1))
-print(data[idx[0], :])
-exit()
+# data = torch.tensor([[1.,2.,3.],
+#                      [4,5,6],
+#                      [7,8,9]], dtype=torch.float)
+# label = torch.tensor([1,2,3])
+# idx = []
+# idx.append(torch.where(label==1))
+# print(data[idx[0], :])
+# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
