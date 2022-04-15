@@ -11,27 +11,6 @@ import scipy.io as spio
 import wandb
 from sklearn import preprocessing
 # seq_well只有五类!!!
-# arr = [torch.tensor([[1,2,3]]), torch.tensor([[4,5,6]])]
-# data = torch.cat(arr, dim=0)
-# print(data)
-# print(data.sum())
-# # print(torch.mean(data, dim=0, dtype=torch.float64).reshape(1,-1))
-# exit()
-
-data = torch.tensor([[1,2,3],
-                     [4,5,6],
-                     [7,8,9]])
-print(data.shape[0], data.shape[1])
-
-exit()
-print(torch.mean(data,dim=0,dtype=torch.float))
-exit()
-# label = torch.tensor(([1,2,3]))
-# label_set = set(np.array(label))
-# print(label_set)
-# print(torch.where(label>=1))
-# print(data[[1],:])
-# exit()
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
