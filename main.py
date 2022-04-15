@@ -198,7 +198,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 6000,  # GCN中间层维数
+    'middle_out': 3000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
     'note':''
 }
