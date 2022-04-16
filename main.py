@@ -12,6 +12,9 @@ import wandb
 from sklearn import preprocessing
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
+df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/drop_seq_smart_seq2/drop_seq_label.csv')
+print(df.value_counts())
+exit()
 # arr = [torch.tensor(1).view(1,-1),torch.tensor(2).view(1,-1)]
 # print(torch.cat(arr, dim=1))
 #
@@ -200,7 +203,7 @@ data_config = {
 config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 4000,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
@@ -208,7 +211,7 @@ config = {
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 3000,  # GCN中间层维数
-    'w_classify': 1000,  # classfication loss的权重
+    'w_classify': 1,  # classfication loss的权重
     'note':''
 }
 
