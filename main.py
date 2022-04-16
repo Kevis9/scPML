@@ -190,9 +190,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop',
     'ref_name': 'cel_seq2',
-    'query_name': '10x_v3',
+    'query_name': 'indrop',
     'project': 'platform',
     'class_num': 7,
     'dataset_name':'PBMC'
@@ -208,7 +208,7 @@ config = {
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 3000,  # GCN中间层维数
-    'w_classify': 2000,  # classfication loss的权重
+    'w_classify': 10,  # classfication loss的权重
     'note':''
 }
 
