@@ -190,11 +190,11 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_10x_v3',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_smart_seq2',
     'ref_name': 'drop_seq',
-    'query_name': '10x_v3',
+    'query_name': 'smart_seq2',
     'project': 'platform',
-    'class_num': 8,
+    'class_num': 7,
     'dataset_name':'PBMC'
 }
 config = {
