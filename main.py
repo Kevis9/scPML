@@ -10,8 +10,8 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 import scipy.io as spio
 import wandb
 from sklearn import preprocessing
-# seq_well只有五类!!!
-
+# seq_well_smart 只有五类!!!
+# drop_seq_10x_v3有8类
 # arr = [torch.tensor(1).view(1,-1),torch.tensor(2).view(1,-1)]
 # print(torch.cat(arr, dim=1))
 #
@@ -194,7 +194,7 @@ data_config = {
     'ref_name': 'drop_seq',
     'query_name': '10x_v3',
     'project': 'platform',
-    'class_num': 7,
+    'class_num': 8,
     'dataset_name':'PBMC'
 }
 config = {
