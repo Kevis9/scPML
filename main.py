@@ -193,9 +193,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_smart_seq2',
-    'ref_name': 'drop_seq',
-    'query_name': 'smart_seq2',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/indrop_cel_seq2',
+    'ref_name': 'indrop',
+    'query_name': 'cel_seq2',
     'project': 'platform',
     'class_num': 7,
     'dataset_name':'PBMC'
@@ -205,7 +205,7 @@ config = {
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 4000,
     'lsd_dim': 128,  # CPM_net latent space dimension
-    'GNN_lr': 0.0001,
+    'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
