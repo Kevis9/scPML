@@ -193,12 +193,12 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/seq_well_smart_seq2',
-    'ref_name': 'seq_well',
-    'query_name': 'smart_seq2',
-    'project': 'platform',
-    'class_num': 5,
-    'dataset_name':'PBMC'
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human',
+    'ref_name': 'mouse',
+    'query_name': 'human',
+    'project': 'species',
+    'class_num': 8,
+    'dataset_name':'GSE84133'
 }
 config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
@@ -210,7 +210,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 3000,  # GCN中间层维数
+    'middle_out': 1500,  # GCN中间层维数
     'w_classify': 1000,  # classfication loss的权重
     'note':''
 }
