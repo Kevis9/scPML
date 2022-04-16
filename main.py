@@ -12,9 +12,9 @@ import wandb
 from sklearn import preprocessing
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
-df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/drop_seq_smart_seq2/drop_seq_label.csv')
-print(df.value_counts())
-exit()
+# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/drop_seq_smart_seq2/drop_seq_label.csv')
+# print(df.value_counts())
+# exit()
 # arr = [torch.tensor(1).view(1,-1),torch.tensor(2).view(1,-1)]
 # print(torch.cat(arr, dim=1))
 #
