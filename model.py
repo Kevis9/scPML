@@ -133,7 +133,7 @@ class CPMNets():
         # 簇之间的距离
         dist_loss = u_tensor.sum()
 
-        return F.relu(variance_loss - dist_loss)
+        return F.sigmoid(variance_loss - dist_loss)
 
 
     def train_model(self, data, labels, n_epochs, lr):
