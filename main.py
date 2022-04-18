@@ -7,7 +7,6 @@ from utils import sc_normalization, mask_data, construct_graph, read_data_label,
 from model import scGNN, CPMNets
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
-import scipy.io as spio
 import wandb
 from sklearn import preprocessing
 # seq_well_smart 只有五类!!!

@@ -359,3 +359,26 @@ def process_gene_name(df1, df2):
 #
 #
 # exit()
+
+'''
+    A549数据处理
+'''
+# import scipy.io as spio
+# import pandas as pd
+# # 读取Matrix Market格式的矩阵
+# data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
+# data = data.todense()
+# print(data.shape)
+#
+# # 细胞信息
+# cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
+# print(cell.shape)
+# print(cell['treat_time'].value_counts())
+#
+# # 基因信息
+# gene = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
+
+
+
+
+

@@ -138,131 +138,13 @@ paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 # main('Wikipathways', scName,'mouse', paPath, save_path)
 # main('de novo pathway', scName,'mouse', paPath, save_path)
 
-scName= 'yan'
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3'
-mat_name = 'cel_seq2_data.csv'
+# mouse_human
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
+mat_name = 'human_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_cel_seq2_', sep='/')
+save_path = paste(data_path, 'similarity_mat2/SM_human_', sep='/')
 main('KEGG', scName,'human', paPath, save_path)
 main('Reactome', scName,'human', paPath, save_path)
 main('Wikipathways', scName,'human', paPath, save_path)
 main('de novo pathway', scName,'human', paPath, save_path)
-
-mat_name = '10x_v3_data.csv'
-mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_10x_v3_', sep='/')
-main('KEGG', scName,'human', paPath, save_path)
-main('Reactome', scName,'human', paPath, save_path)
-main('Wikipathways', scName,'human', paPath, save_path)
-main('de novo pathway', scName,'human', paPath, save_path)
-
-# data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_indrop'
-# mat_name = 'cel_seq2_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_cel_seq2_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# mat_name = 'indrop_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_indrop_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-#
-# # drop_seq_10x_v3
-# data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_10x_v3'
-#
-# mat_name = 'drop_seq_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_drop_seq_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# mat_name = '10x_v3_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_10x_v3_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-#
-# # # drop_seq_smart_seq2
-# data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_smart_seq2'
-#
-# mat_name = 'drop_seq_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_drop_seq_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# mat_name = 'smart_seq2_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_smart_seq2_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# # # indrop_cel_seq
-# data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/indrop_cel_seq2'
-#
-# mat_name = 'indrop_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_indrop_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# mat_name = 'cel_seq2_data.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# save_path = paste(data_path, 'similarity_mat/SM_cel_seq2_', sep='/')
-# main('KEGG', scName,'human', paPath, save_path)
-# main('Reactome', scName,'human', paPath, save_path)
-# main('Wikipathways', scName,'human', paPath, save_path)
-# main('de novo pathway', scName,'human', paPath, save_path)
-#
-# #
-# # # seq_well_smart_seq2
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/seq_well_smart_seq2'
-
-mat_name = 'seq_well_data.csv'
-mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_seq_well_', sep='/')
-main('KEGG', scName,'human', paPath, save_path)
-main('Reactome', scName,'human', paPath, save_path)
-main('Wikipathways', scName,'human', paPath, save_path)
-main('de novo pathway', scName,'human', paPath, save_path)
-
-mat_name = 'smart_seq2_data.csv'
-mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_smart_seq2_', sep='/')
-main('KEGG', scName,'human', paPath, save_path)
-main('Reactome', scName,'human', paPath, save_path)
-main('Wikipathways', scName,'human', paPath, save_path)
-main('de novo pathway', scName,'human', paPath, save_path)
-
-
-
