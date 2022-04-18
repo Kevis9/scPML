@@ -124,8 +124,6 @@ def read_data_label(data_path, label_path):
     return data, label
 
 
-
-
 def read_similarity_mat(path):
 
     mat_df = pd.read_csv(path, index_col=0)

@@ -114,7 +114,7 @@ main<-function(paName, scName,s, paPath, save_path){
 }
 
 
-# scName= 'biase'
+scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 
 # # human_mouse
