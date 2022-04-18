@@ -238,7 +238,7 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_biase.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_yan.csv"),
     ]
 }
 
