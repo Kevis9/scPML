@@ -11,18 +11,7 @@ import wandb
 from sklearn import preprocessing
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
-# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/platform_data/PBMC/drop_seq_smart_seq2/drop_seq_label.csv')
-# print(df.value_counts())
-# exit()
-# arr = [torch.tensor(1).view(1,-1),torch.tensor(2).view(1,-1)]
-# print(torch.cat(arr, dim=1))
-#
-# exit()
-# label = torch.tensor([1,2,3])
-# idx = []
-# idx.append(torch.where(label==1))
-# print(data[idx[0], :])
-# exit()
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):

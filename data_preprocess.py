@@ -259,7 +259,6 @@ def get_rid_of_0_gene(df1, df2):
 # exit()
 
 
-#
 # 更换mouse的column为human的，并且去掉acti...类型的细胞（此时对应的是1）
 # mouse_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/mouse_pancreas.csv', index_col=0)
 # human_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/transfer_across_species_data/human_pancreas.csv', index_col=0)
