@@ -182,8 +182,8 @@ def transfer_label(data_path: dict,
 # 数据配置
 data_config = {
     'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/no_diff',
-    'ref_name': 'mouse',
-    'query_name': 'human',
+    'ref_name': 'human',
+    'query_name': 'mouse',
     'project': 'species',
     'class_num': 8,
     'dataset_name':'GSE84133'
@@ -199,7 +199,7 @@ config = {
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2000,  # GCN中间层维数
-    'w_classify': 100,  # classfication loss的权重
+    'w_classify': 1,  # classfication loss的权重
     'note':"human use human's pathway, mouse use mouse's"
 }
 
