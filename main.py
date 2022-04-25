@@ -225,6 +225,9 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_yan.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_inoh.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_pid.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_panther.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_humancyc.csv"),
+
     ],
     'query': [
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
@@ -233,6 +236,8 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_yan.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_inoh.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_pid.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_panther.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_humancyc.csv"),
     ]
 }
 
