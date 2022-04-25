@@ -1,4 +1,6 @@
 import os.path
+import random
+
 import numpy as np
 import copy
 # from sklearn.neighbors import kneighbors_graph
@@ -12,6 +14,9 @@ import pandas as pd
 import umap
 import seaborn as sns
 import wandb
+import scipy.spatial as spt
+from random import sample
+
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
 
 def sc_normalization(data):
@@ -187,3 +192,29 @@ def show_cluster(data, label, title):
 
 def concat_views(views):
     return np.concatenate(views, axis=1).astype(np.float64)
+
+def BatchEntropy(ref_data, query_data, L=100, M=300, K=500):
+    '''
+    :param ref_data:
+    :param query_data:
+    :param L: 次数
+    :param M: 随机抽取的细胞数
+    :param k: neibor数
+    :return: 返回一个BatchEntroy数组, 代表进行L次随机取样的结果
+    '''
+    data = np.concatenate([ref_data, query_data], axis=0)
+    nbatchs = 2
+    batch0 = np.concatenate([np.zeros(ref_data.shape[0]), np.ones(query_data.shape[0])])
+    entropy = [0 for i in range(L)]
+    kdtree = spt.KDTree(data)
+    random.seed(0)
+    data_idx = [p for p in range(data.shape[0])]
+    for boot in range(L):
+        rand_samples_idx = sample(data_idx, M)
+        _, neighbor_idx = kdtree.query(data[rand_samples_idx, :], k=K)
+        for i in range(len(rand_samples_idx)):
+            for j in range(nbatchs):
+                xi = max(1, (batch0[neighbor_idx[i]]==j).sum())
+                entropy[boot] += xi
+
+    return (-1)*(entropy/M)

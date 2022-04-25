@@ -114,30 +114,41 @@ main<-function(paName, scName,s, paPath, save_path){
 }
 
 
-scName= 'biase'
+
+
+scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
-# mouse
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/no_diff'
+# cel_seq2
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3'
 
-mat_name = 'mouse_data.csv'
+mat_name = 'cel_seq2_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_mouse_', sep='/')
-main('KEGG', scName,'mouse', paPath, save_path)
-main('Reactome', scName,'mouse', paPath, save_path)
-main('Wikipathways', scName,'mouse', paPath, save_path)
-main('de novo pathway', scName,'mouse', paPath, save_path)
+save_path = paste(data_path, 'similarity_mat/SM_cel_seq2_', sep='/')
+main('pid', scName,'human', paPath, save_path)
+main('inoh', scName,'human', paPath, save_path)
 
-scName = 'yan'
-# human
-mat_name = 'human_data.csv'
+# 10x_v3
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3'
+
+mat_name = '10x_v3_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_human_', sep='/')
-main('KEGG', scName,'human', paPath, save_path)
-main('Reactome', scName,'human', paPath, save_path)
-main('Wikipathways', scName,'human', paPath, save_path)
-main('de novo pathway', scName,'human', paPath, save_path)
+save_path = paste(data_path, 'similarity_mat/SM_10x_v3_', sep='/')
+main('pid', scName,'human', paPath, save_path)
+main('inoh', scName,'human', paPath, save_path)
+
+#
+# scName = 'yan'
+# # human
+# mat_name = 'human_data.csv'
+# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
+# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+# save_path = paste(data_path, 'similarity_mat/SM_human_', sep='/')
+# main('KEGG', scName,'human', paPath, save_path)
+# main('Reactome', scName,'human', paPath, save_path)
+# main('Wikipathways', scName,'human', paPath, save_path)
+# main('de novo pathway', scName,'human', paPath, save_path)
 
 # mouse_human
 # data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'

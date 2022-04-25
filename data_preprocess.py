@@ -209,6 +209,8 @@
 # save_as_csv(seq_well_df, seq_well_label, 'Seq_Well')
 #
 # exit()
+import numpy as np
+import pandas as pd
 
 
 def get_rid_of_0_gene(df1, df2):
@@ -362,22 +364,71 @@ def process_gene_name(df1, df2):
 '''
     A549数据处理
 '''
-# import scipy.io as spio
-# import pandas as pd
-# # 读取Matrix Market格式的矩阵
-# data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
-# data = data.todense()
-# print(data.shape)
+import scipy.io as spio
+import pandas as pd
+
+# 读取Matrix Market格式的矩阵
+# rna_data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
+# rna_data = rna_data.todense()
+# rna_data = rna_data.T
 #
 # # 细胞信息
 # cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
-# print(cell.shape)
-# print(cell['treat_time'].value_counts())
-#
 # # 基因信息
-# gene = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
+# gene = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene.txt')
+# rna_df = pd.DataFrame(data=rna_data,columns=gene['gene_short_name'].tolist(), index=cell['sample'].tolist())
+#
+# rna_label_df = pd.DataFrame(data=cell['treatment_time'].tolist(), columns=['status'])
+# rna_idx = (pd.notnull(rna_label_df['status'])).tolist()
+#
+# rna_df = rna_df.iloc[rna_idx, :]
+# rna_label_df = rna_label_df.iloc[rna_idx, :]
+#
+# rna_df = rna_df.T
+# rna_df = (rna_df.sample(n=15000)).T
+#
+# print("finished")
+# rna_label_df.to_csv('rna_label.csv', index=False)
+# rna_df.to_csv('rna_data.csv')
+#
+# exit()
+
+
+atac_data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
+atac_data = atac_data.todense().T
+
+
+# 细胞信息
+cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
+# 基因信息
+gene = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene.txt')
+atac_df = pd.DataFrame(data=atac_data,columns=gene['gene_short_name'].tolist(), index=cell['sample'].tolist())
+
+label_df = pd.DataFrame(data=cell['treatment_time'].tolist(), columns=['status'])
+idx = (pd.notnull(label_df['status'])).tolist()
+
+rna_df = atac_df.iloc[idx, :]
+rna_label_df = label_df.iloc[idx, :]
+
+rna_df = rna_df.T
+rna_df = (rna_df.sample(n=15000)).T
+
+print("finished")
+rna_label_df.to_csv('rna_label.csv', index=False)
+rna_df.to_csv('rna_data.csv')
+
+exit()
 
 
 
-
-
+'''
+    Kidney data处理
+'''
+# import scipy.io as spio
+# # import pandas as pd
+# # # cell_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/Kidney_data/RNA/GSM3271044_RNA_mouse_kidney_cell.txt')
+# # # gene_df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/Kidney_data/RNA/GSM3271044_RNA_mouse_kidney_gene.txt')
+# # rna_data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/Kidney_data/RNA/GSM3271044_RNA_mouse_kidney_gene_count.txt')
+# # rna_data = rna_data.todense()
+# # rna_data = rna_data.T
+# # print(rna_data.shape)
