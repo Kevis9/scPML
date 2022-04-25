@@ -115,25 +115,31 @@ main<-function(paName, scName,s, paPath, save_path){
 
 scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
-# cel_seq2
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3'
+# mouse
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
 
-mat_name = 'cel_seq2_data.csv'
+mat_name = 'mouse_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_cel_seq2_', sep='/')
+save_path = paste(data_path, 'similarity_mat/SM_mouse_', sep='/')
+
+main('pid', scName,'human', paPath, save_path)
+main('inoh', scName,'human', paPath, save_path)
 main('humancyc', scName,'human', paPath, save_path)
 main('panther', scName,'human', paPath, save_path)
+
 
 # 10x_v3
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3'
-
-mat_name = '10x_v3_data.csv'
+# huamn
+mat_name = 'human_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_10x_v3_', sep='/')
+save_path = paste(data_path, 'similarity_mat/SM_human_', sep='/')
+main('pid', scName,'human', paPath, save_path)
+main('inoh', scName,'human', paPath, save_path)
 main('humancyc', scName,'human', paPath, save_path)
 main('panther', scName,'human', paPath, save_path)
+
 
 #
 # scName = 'yan'
