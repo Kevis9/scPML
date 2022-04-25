@@ -182,7 +182,7 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
     'ref_name': 'cel_seq2',
     'query_name': '10x_v3',
     'project': 'platform',
