@@ -108,12 +108,9 @@ main<-function(paName, scName,s, paPath, save_path){
        }
   }
   filepath = paste(save_path, original_paName, '.csv',sep='')
-
   write.table(W, file=filepath, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
 
 }
-
-
 
 
 scName= 'yan'

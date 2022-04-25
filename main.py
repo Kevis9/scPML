@@ -182,17 +182,17 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/no_diff',
-    'ref_name': 'human',
-    'query_name': 'mouse',
-    'project': 'species',
-    'class_num': 8,
-    'dataset_name':'GSE84133'
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/',
+    'ref_name': 'cel_seq2',
+    'query_name': '10x_v3',
+    'project': 'platform',
+    'class_num': 7,
+    'dataset_name':'PBMC'
 }
 config = {
-    'epoch_GCN': 5000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 5000,
-    'epoch_CPM_test': 2000,
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
@@ -200,7 +200,7 @@ config = {
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 1500,  # GCN中间层维数
-    'w_classify': 100,  # classfication loss的权重
+    'w_classify': 1,  # classfication loss的权重
     'note':"human use human's pathway, mouse use mouse's"
 }
 
@@ -223,12 +223,16 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Wikipathways.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_inoh.csv"),
+        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_pid.csv"),
     ],
     'query': [
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_biase.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_inoh.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_pid.csv"),
     ]
 }
 
@@ -237,6 +241,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
            tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
                  str(data_config['class_num']) + ' class', data_config['dataset_name']])
+
 
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
