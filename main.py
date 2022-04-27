@@ -32,6 +32,7 @@ def train_scGNN(model, n_epochs, G_data, optimizer,
         optimizer.zero_grad()
         pred = model(G_data.to(device))
         print(pred)
+
         # 得到预测的droout
         dropout_pred = pred[index_pair[0][masking_idx], index_pair[1][masking_idx]]
         dropout_true = norm_data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
