@@ -128,7 +128,6 @@ main('Wikipathways', scName,'human', paPath, save_path)
 main('de novo pathway', scName,'human', paPath, save_path)
 
 
-
 # atac
 mat_name = 'atac_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
