@@ -28,8 +28,13 @@ def sc_normalization(data):
     row_sum = np.sum(data, axis=1)
     mean_transcript = np.mean(row_sum)
     # 防止出现除0的问题
+    print(np.where(row_sum==0))
+    print(row_sum.shape)
+    print(row_sum)
     row_sum[np.where(row_sum==0)] = 1
+    print(np.where(row_sum==0))
     data_norm = (data / row_sum.reshape(-1, 1)) * mean_transcript
+
     return data_norm
 
 
