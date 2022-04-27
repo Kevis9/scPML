@@ -191,9 +191,9 @@ data_config = {
     'dataset_name':'A549'
 }
 config = {
-    'epoch_GCN': 1500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1500,
-    'epoch_CPM_test': 1500,
+    'epoch_GCN': 4500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 4500,
+    'epoch_CPM_test': 4500,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
@@ -271,6 +271,9 @@ show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label
 show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
              'Reference-Query H with prediction label')
 show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query')
+             , 'Reference-Query h: RNA - ATAC')
+show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query raw: RNA - ATAC')
+
 np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
 np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
