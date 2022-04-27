@@ -1,4 +1,8 @@
-
+# import pandas as pd
+# df = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/omics_data/A549/atac_data.csv', index_col=0)
+# # print(df.columns)
+# print(df.iloc[:,0].unique())
+# exit()
 # 获得两个表达矩阵的公共基因
 # sharedGeneMatrix(path1, path2)
 #
@@ -477,6 +481,7 @@ def equality_control_for_A549():
 
     # 保存数据
     print(rna_df.shape)
+
     print(atac_df.shape)
     print(label.shape)
     rna_df.to_csv('rna_data.csv')

@@ -62,7 +62,6 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    test_loss_arr = []
     model.test(query_data_embeddings, config['epoch_CPM_test'])
 
     ref_h = model.get_h_train().detach().cpu().numpy()
@@ -183,8 +182,8 @@ def transfer_label(data_path: dict,
 # 数据配置
 data_config = {
     'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
-    'ref_name': 'rna',
-    'query_name': 'atac',
+    'ref_name': 'atac',
+    'query_name': 'rna',
     'project': 'omics',
     'class_num': 3,
     'dataset_name':'A549'
