@@ -426,6 +426,7 @@ def equality_control_for_A549():
         '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak_count.txt')
     atac_data = atac_data.todense().T
 
+
     rna_data = spio.mmread(
         '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
     rna_data = rna_data.todense().T
@@ -470,6 +471,9 @@ def equality_control_for_A549():
 
     # 两者的label 都是一样的
     label = rna_cell['treatment_time']
+
+    # 去掉方差为0的基因
+    rna_df, atac_df = get_rid_of_0_gene(rna_df, atac_df)
 
     # 保存数据
     print(rna_df.shape)
