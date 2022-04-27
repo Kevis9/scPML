@@ -115,30 +115,35 @@ main<-function(paName, scName,s, paPath, save_path){
 
 scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
-# mouse
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/mouse_human'
+# rna
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549'
 
-mat_name = 'mouse_data.csv'
+mat_name = 'rna_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_mouse_', sep='/')
+save_path = paste(data_path, 'similarity_mat/SM_rna_', sep='/')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
 
-main('pid', scName,'human', paPath, save_path)
-main('inoh', scName,'human', paPath, save_path)
-main('humancyc', scName,'human', paPath, save_path)
-main('panther', scName,'human', paPath, save_path)
 
 
-# 10x_v3
-# huamn
-mat_name = 'human_data.csv'
+# atac
+mat_name = 'atac_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-save_path = paste(data_path, 'similarity_mat/SM_human_', sep='/')
-main('pid', scName,'human', paPath, save_path)
-main('inoh', scName,'human', paPath, save_path)
-main('humancyc', scName,'human', paPath, save_path)
-main('panther', scName,'human', paPath, save_path)
+save_path = paste(data_path, 'similarity_mat/SM_atac_', sep='/')
+main('KEGG', scName,'human', paPath, save_path)
+main('Reactome', scName,'human', paPath, save_path)
+main('Wikipathways', scName,'human', paPath, save_path)
+main('de novo pathway', scName,'human', paPath, save_path)
+
+
+# main('pid', scName,'human', paPath, save_path)
+# main('inoh', scName,'human', paPath, save_path)
+# main('humancyc', scName,'human', paPath, save_path)
+# main('panther', scName,'human', paPath, save_path)
 
 
 #

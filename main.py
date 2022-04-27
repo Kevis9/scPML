@@ -9,9 +9,9 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 from sklearn import preprocessing
-
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
+
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
@@ -182,12 +182,12 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
-    'ref_name': 'cel_seq2',
-    'query_name': '10x_v3',
-    'project': 'platform',
-    'class_num': 7,
-    'dataset_name':'PBMC'
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
+    'ref_name': 'rna',
+    'query_name': 'atac',
+    'project': 'omics',
+    'class_num': 3,
+    'dataset_name':'A549'
 }
 config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
@@ -223,21 +223,12 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Wikipathways.csv"),
         os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_yan.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_inoh.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_pid.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_panther.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_humancyc.csv"),
-
     ],
     'query': [
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_yan.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_inoh.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_pid.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_panther.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_humancyc.csv"),
     ]
 }
 
