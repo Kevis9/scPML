@@ -205,7 +205,6 @@ class CPMNets():
         :param n_epochs:
         :return:
         '''
-        print(data.shape)
         data = data.to(device)
         optimizer_for_test_h = optim.Adam(params=[self.h_test])
         r_loss_list = []

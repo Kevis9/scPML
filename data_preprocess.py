@@ -371,139 +371,56 @@ def process_gene_name(df1, df2):
 '''
     A549数据处理
 '''
-import scipy.io as spio
-import pandas as pd
-
-def process_dup_gene_df(df, gene_name):
-
-    # 通过value_counts的方式拿到重复出现的基因名称
-    gene_name = pd.Series(gene_name)
-    dup_gene_names = pd.value_counts(gene_name)[pd.value_counts(gene_name)>1].index.tolist()
-    cell_to_del = set()
-
-
-    for gene in dup_gene_names:
-        tmp_df = df.loc[:, gene]
-        cell_idx = tmp_df.apply(lambda x: len(x.unique()), axis=1)
-        cell_to_del.update(set(cell_idx[cell_idx > 1].index.tolist()))
-        # # 获取那些要删除的细胞（在重复基因中出现表达不一致）
-        # for cell in tmp_df.index.tolist():
-        #     if len(tmp_df.loc[cell, :].unique()) > 1:
-        #         cell_to_del.append(cell)
-
-    cell_to_del = list(cell_to_del)
-    print(len(cell_to_del))
-    df = df.loc[~df.index.isin(cell_to_del), :]
-    # 改变df的columns命名: 如果出现重复的情况，重复的后面跟上次数
-    map = dict()
-    gene_col = []
-    for gene in gene_name:
-        if gene in map.keys():
-            map[gene] += 1
-            gene_col.append(gene+str(map[gene]))
-        else:
-            gene_col.append(gene)
-            map[gene] = 0
-    df.columns = gene_col
-    return df
-
-
-def equality_control_for_A549():
-    atac_gene = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/ATAC/supplementary/atac_gene.csv',
-                            sep='\t')
-
-    rna_gene = pd.read_csv(
-        '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene.txt')
-
-
-
-    atac_cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_cell.txt')
-    rna_cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
-
-    # common_gene = list(set(atac_gene['gene_name']) & set(rna_gene['gene_short_name']))
-    common_gene = list((set(
-        atac_gene['gene_name'].value_counts()[atac_gene['gene_name'].value_counts() == 1].index.tolist())) & (set(rna_gene['gene_short_name'].value_counts()[rna_gene['gene_short_name'].value_counts()==1].index.tolist())))
-
-
-    print(len(common_gene))
-    atac_data = spio.mmread(
-        '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak_count.txt')
-    atac_data = atac_data.todense().T
-
-
-    rna_data = spio.mmread(
-        '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
-    rna_data = rna_data.todense().T
-
-    atac_df = pd.DataFrame(data=atac_data, index=atac_cell['sample'].to_list())
-    atac_df = atac_df.iloc[:, list(np.array(atac_gene['id'].to_list())-1)]
-    atac_df.columns = atac_gene['gene_name'].to_list()
-
-    rna_df = pd.DataFrame(data=rna_data, index=rna_cell['sample'].to_list(), columns=rna_gene['gene_short_name'].to_list())
-
-    common_cell = list(set(atac_df.index.tolist()) & set(rna_df.index.tolist()))
-
-
-    # 取公共基因和公共cell
-    atac_df = atac_df.loc[common_cell, common_gene]
-    rna_df = rna_df.loc[common_cell, common_gene]
-
-    print(atac_df.shape)
-    print(rna_df.shape)
-
-    # 处理重复的gene(去掉部分异常细胞，更改重复gene名称）
-
-    # atac_df = process_dup_gene_df(atac_df, atac_df.columns.to_list())
-    # rna_df = process_dup_gene_df(rna_df, rna_df.columns.to_list())
-    # 这里打算直接去除掉重复的gene
-
-
-    #再取一次公共细胞（因为删除了部分细胞）和公共基因（因为改了重复的名字）
-    #  common_cell = list(set(atac_df.index.tolist()) & set(rna_df.index.tolist()))
-    #
-    # atac_df = atac_df.loc[common_cell, common_gene]
-    # rna_df = rna_df.loc[common_cell, common_gene]
-
-    # 去掉NA的数据
-    rna_cell = pd.DataFrame(data=rna_cell.values, index=rna_cell['sample'].to_list(), columns=rna_cell.columns)
-    rna_cell = rna_cell.loc[common_cell, :]
-    not_null_idx = (pd.notnull(rna_cell['treatment_time'])).to_list()
-
-    rna_cell = rna_cell.iloc[not_null_idx, :]
-    rna_df = rna_df.iloc[not_null_idx, :]
-    atac_df = atac_df.iloc[not_null_idx, :]
-
-    # 两者的label 都是一样的
-    label = rna_cell['treatment_time']
-
-    # 去掉方差为0的基因
-    rna_df, atac_df = get_rid_of_0_gene(rna_df, atac_df)
-
-    # 保存数据
-    print(rna_df.shape)
-
-    print(atac_df.shape)
-    print(label.shape)
-    rna_df.to_csv('rna_data.csv')
-    atac_df.to_csv('atac_data.csv')
-    label.to_csv('label.csv', index=False)
-
-
-# equality_control_for_A549()
-
-
-'''
-    将A549peak数据的三列提取出来
-'''
-# atac_peak = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak.txt')
-# atac_peak = atac_peak[['chr','start','end','id']]
-# arr = ['chr{}'.format(str(i)) for i in atac_peak['chr']]
+# import scipy.io as spio
+# rna_data = spio.mmread(
+#         '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
+# rna_data = rna_data.todense().T
+# rna_gene = pd.read_csv(
+#         '/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene.txt')
+# rna_cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
+# rna_df = pd.DataFrame(data=rna_data, index=rna_cell['sample'].tolist(), columns=rna_gene['gene_short_name'])
+# # 取A549的cell，和人类的gene
+# print(rna_cell['treatment_time'].value_counts())
+# cell_idx = (rna_cell['treatment_time'] != 'NA').tolist()
+# print(sum(cell_idx))
+# exit()
+# gene_idx = (rna_gene['gene_id'].str.startswith('ENSG')).tolist()
+# rna_df = rna_df.iloc[cell_idx, gene_idx]
+# rna_cell = rna_cell['treatment_time'].iloc[cell_idx]
 #
-# atac_peak['chr'] = arr
-# atac_peak.to_csv('chr_data.csv', sep='\t', index=False)
+# rna_df.to_csv('rna_data.csv')
+# rna_cell.to_csv('label.csv')
+# exit()
+# 取ATAC和RNA的交集
+# label_df = pd.read_csv('label.csv', index_col=0)
+
+# atac_df = pd.read_csv('/Users/kevislin/Desktop/peak_annotation/activity_mat.csv', index_col=0)
+# atac_df.columns = atac_df.columns.str.replace('.','-',3)
+# atac_df = atac_df.T
+# # atac_df.to_csv('atac_data.csv')
+#
+# rna_df = pd.read_csv('rna_data.csv', index_col=0)
+#
+# c_gene_name = set(atac_df.columns.tolist()) & set(rna_df.columns.tolist())
+# c_cell_name = set(atac_df.index.tolist()) & set(rna_df.index.tolist())
+#
+# atac_df = atac_df.loc[c_cell_name, c_gene_name]
+# rna_df = rna_df.loc[c_cell_name, c_gene_name]
+#
+# atac_df.to_csv('final_atac_data.csv')
+# rna_df.to_csv('final_rna_data.csv')
+#
+# print(atac_df.shape)
+# print(rna_df.shape)
 # exit()
 
-
+# label
+df = pd.read_csv('final_rna_data.csv', index_col=0)
+cell_name = df.index.tolist()
+print(cell_name)
+rna_cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt', index_col=0)
+rna_cell = rna_cell.loc[cell_name, ["treatment_time"]]
+rna_cell.to_csv('label.csv', index=False)
 
 
 '''
@@ -517,3 +434,4 @@ def equality_control_for_A549():
 # rna_data = rna_data.todense()
 # rna_data = rna_data.T
 # print(rna_data.shape)
+
