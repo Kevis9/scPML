@@ -89,6 +89,9 @@ def transfer_label(data_path: dict,
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
+    ref_norm_data = preprocessing.minmax_scale(ref_norm_data, axis=0)
+
+
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
 
@@ -135,6 +138,7 @@ def transfer_label(data_path: dict,
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
+    query_norm_data = preprocessing.minmax_scale(query_norm_data, axis=0)
 
     # 构造Query data的Graph
     query_sm_arr = [read_similarity_mat(sm_path['query'][i]) for i in range(len(sm_path['query']))]
