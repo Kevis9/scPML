@@ -183,8 +183,8 @@ def transfer_label(data_path: dict,
 # 数据配置
 data_config = {
     'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
-    'ref_name': 'rna',
-    'query_name': 'atac',
+    'ref_name': 'atac',
+    'query_name': 'rna',
     'project': 'omics',
     'class_num': 3,
     'dataset_name':'A549'
@@ -199,8 +199,8 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 3000,  # GCN中间层维数
-    'w_classify': 10,  # classfication loss的权重
+    'middle_out': 2000,  # GCN中间层维数
+    'w_classify': 1,  # classfication loss的权重
     'note':""
 }
 
