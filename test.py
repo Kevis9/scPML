@@ -1,6 +1,6 @@
 import pandas as pd
 
-atac_df = pd.read_csv('/Users/kevislin/Desktop/peak_annotation/10x/data/10x_atac_activity_mat.csv', index_col=0).T
+atac_df = pd.read_csv('/Users/kevislin/Desktop/peak_annotation/10x/data/.csv', index_col=0).T
 data = atac_df.to_numpy()
 from utils import reduce_dimension
 data_2d = reduce_dimension(data)
