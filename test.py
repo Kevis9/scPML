@@ -1,6 +1,8 @@
+import scipy.io as spio
 import pandas as pd
 
-df = pd.DataFrame(data=[[1,2,3,4],[4,5,6,7],[7,8,8,8],[10,11,12,14]], columns=['X','X','Y','Z'])
-df = df.T
-print(df)
-print(df.groupby(df.index).sum())
+
+atac_data = spio.mmread('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak_count.txt')
+print(type(atac_data))
+exit()
+
