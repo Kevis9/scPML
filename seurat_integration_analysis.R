@@ -10,7 +10,7 @@ atac_data = t(as.matrix(atac_data))
 atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
 
-
+print(c(atac_chr['peak']))
 rownames(atac_data) = c(atac_chr['peak'])
 colnames(atac_data) = c(atac_cell['sample'])
 
