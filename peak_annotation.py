@@ -15,6 +15,8 @@ atac_cell = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics
 atac_peak = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak.txt')
 
 atac_df = pd.DataFrame(data=atac_data)
+print(atac_df.shape)
+print(atac_cell.shape)
 # 取A549 Cell
 cell_idx = atac_cell['group'].str.startswith('A549').tolist()
 atac_cell = atac_cell.iloc[cell_idx, :]
