@@ -41,7 +41,7 @@ def save_to_mm(df, str1, str2):
     return rownames, colnames, data
 
 
-atac_chr, atac_cell, atac_data = save_to_mm(atac_df, 'peak', 'sample')
+atac_cell, atac_chr, atac_data = save_to_mm(atac_df, 'peak', 'sample')
 atac_chr.to_csv('atac_rna_to_R/atac_chr.csv', index=False)
 atac_cell.to_csv('atac_rna_to_R/atac_cell.csv', index=False)
 spio.mmwrite('atac_rna_to_R/atac_data.txt', atac_data)
@@ -69,7 +69,7 @@ rna_df = rna_df.T
 rna_df = rna_df.groupby(rna_df.index).sum()
 rna_df = rna_df.T
 
-gene_df, cell_df, gene_data = save_to_mm(rna_df, 'gene_name', 'sample')
+cell_df, gene_df, gene_data = save_to_mm(rna_df, 'gene_name', 'sample')
 
 gene_df.to_csv('atac_rna_to_R/rna_gene.csv', index=False)
 cell_df.to_csv('atac_rna_to_R/rna_cell.csv', index=False)
