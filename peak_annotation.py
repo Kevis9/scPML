@@ -32,7 +32,7 @@ atac_df = atac_df.iloc[:, chr_idx]
 
 # 设置index和columns, 注意columns的格式
 atac_df.index = atac_cell['sample'].tolist()
-atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('-', ':', 1))).tolist()
+atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('.', ':', 1))).tolist()
 
 print(atac_df.shape)
 # 保存
