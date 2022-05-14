@@ -30,7 +30,7 @@ chr_idx = atac_chr['chr'].isin(chr_arr).tolist()
 
 
 atac_chr = atac_chr.iloc[chr_idx, :]
-print(set(atac_chr['chr'].tolist()))
+
 atac_df = atac_df.iloc[:, chr_idx]
 
 # 设置index和columns, 注意columns的格式

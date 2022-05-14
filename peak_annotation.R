@@ -29,5 +29,5 @@ activity.matrix <- CreateGeneActivityMatrix(peak.matrix = atac_data,
  	verbose = TRUE)
 
 
-write.table(t(activity.matrix), file='atac_activity_mat.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE);
+write.table(activity.matrix, file='atac_activity_mat.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
 # write.table(rna_data, file='rna_norm_data', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE);
