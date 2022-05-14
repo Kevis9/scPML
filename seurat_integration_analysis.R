@@ -27,7 +27,7 @@ rownames(rna_data) = c(rna_gene$gene_name)
 colnames(rna_data) = c(rna_cell$sample)
 
 
-
+print("重头戏")
 # 重头戏
 activity.matrix <- CreateGeneActivityMatrix(peak.matrix = atac_data, annotation.file = "Homo_sapiens.GRCh37.82.gtf",
     seq.levels = c(1:22, "X", "Y"), upstream = 2000, verbose = TRUE)
