@@ -11,9 +11,9 @@ atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
 
 print(dim(atac_data))
-print(length(c(atac_chr['peak'])))
+print(length(list(atac_chr['peak'])))
 
-print(length(rownames(atac_data)))
+print(length(list(rownames(atac_data))))
 q()
 dimnames(atac_data) = list(c(atac_chr['peak']), c(atac_cell['sample']))
 
