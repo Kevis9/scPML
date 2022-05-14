@@ -46,6 +46,9 @@ rna_df = rna_df.T
 rna_df = rna_df.groupby(rna_df.index).sum()
 rna_df = rna_df.T
 
+# 再次将gene顺序调整好
+rna_df = rna_df[atac_df.columns.tolist()]
+
 
 # 最后获取label
 label_idx = (rna_cell['sample'].isin(rna_df.index.tolist())).tolist()
