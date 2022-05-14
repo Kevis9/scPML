@@ -211,8 +211,8 @@ config = {
 
 # 给出ref和query data所在的路径
 dataPath = {
-    'ref': os.path.join(data_config['data_path'], data_config['ref_name'] + '_norm_data.csv'),
-    'query': os.path.join(data_config['data_path'], data_config['query_name'] + '_norm_data.csv'),
+    'ref': os.path.join(data_config['data_path'], data_config['ref_name'] + '_data.csv'),
+    'query': os.path.join(data_config['data_path'], data_config['query_name'] + '_data.csv'),
 }
 # label所在的路径
 labelPath = {
