@@ -9,10 +9,10 @@ atac_data = t(as.matrix(atac_data))
 
 atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
-print(class(atac_chr))
 
-rownames(atac_data) = apply(atac_chr['peak'],1,as.list)
-colnames(atac_data) = apply(atac_cell['sample'],1,as.list)
+
+rownames(atac_data) = list(atac_chr$peak)
+colnames(atac_data) = list(atac_cell$sample)
 
 
 # rna_data
@@ -23,14 +23,12 @@ rna_gene = read.csv('atac_rna_to_R/rna_gene.csv')
 rna_cell = read.csv('atac_rna_to_R/rna_cell.csv')
 
 
-rownames(rna_data) = apply(rna_gene['gene_name'],1,as.list)
-colnames(rna_data) = apply(rna_cell['sample'],1,as.list)
+rownames(rna_data) = list(rna_gene$gene_name)
+colnames(rna_data) = list(rna_cell$sample)
 
 
 
 # 重头戏
-print(rownames(atac_data))
-print(atac_data)
 activity.matrix <- CreateGeneActivityMatrix(peak.matrix = atac_data, annotation.file = "Homo_sapiens.GRCh37.82.gtf",
     seq.levels = c(1:22, "X", "Y"), upstream = 2000, verbose = TRUE)
 
