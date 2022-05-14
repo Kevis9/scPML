@@ -20,7 +20,7 @@ library(hdf5r)
 
 
 
-atac_data = t(read.csv('atac_middle_out.csv', row.names=1))
+atac_data = read.csv('atac_middle_out.csv', row.names=1)
 print(rownames(atac_data))
 activity.matrix <- CreateGeneActivityMatrix(peak.matrix = atac_data,
  	annotation.file = "Homo_sapiens.GRCh37.82.gtf",
