@@ -24,9 +24,10 @@ atac_df = atac_df.iloc[cell_idx, :]
 
 # 保留1~22, X, Y染色体
 chr_arr = [str(x) for x in range(1, 23)]
+
 chr_arr += ['X', 'Y']
 chr_idx = atac_chr['chr'].isin(chr_arr).tolist()
-
+print(set(chr_arr))
 atac_chr = atac_chr.iloc[chr_idx, :]
 atac_df = atac_df.iloc[:, chr_idx]
 
