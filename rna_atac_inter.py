@@ -43,7 +43,9 @@ print(atac_activity_df.shape)
 atac_df = atac_activity_df.loc[common_cell, commom_gene]
 rna_df = rna_df.loc[common_cell, commom_gene]
 
-print(rna_df.columns.tolist())
+print(len(set(rna_df.columns.tolist())))
+print(len(set(atac_df.columns.tolist())))
+
 
 # 最后获取label
 label_idx = (rna_cell['sample'].isin(rna_df.index.tolist())).tolist()
