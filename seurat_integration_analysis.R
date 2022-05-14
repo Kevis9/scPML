@@ -7,12 +7,12 @@ atac_data = Matrix::readMM('atac_rna_to_R/atac_data.txt')
 atac_data = t(as.matrix(atac_data))
 
 
-atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
-atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
+atac_chr = as.matrix(read.csv('atac_rna_to_R/atac_chr.csv'))
+atac_cell = as.matrix(read.csv('atac_rna_to_R/atac_cell.csv'))
 
 
-
-
+print(length(list(atac_chr['peak'])))
+q()
 rownames(atac_data) = apply(atac_chr['peak'],1,as.list)
 colnames(atac_data) = apply(atac_cell['sample'],1,as.list)
 
