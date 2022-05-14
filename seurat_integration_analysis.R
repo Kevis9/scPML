@@ -12,9 +12,9 @@ atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
 
 print(dim(atac_data))
 
-print(dim(atac_chr['peak']))
-print("xxx")
-print(dim(atac_cell['sample']))
+print(dim(atac_chr))
+
+print(dim(atac_cell))
 
 
 rownames(atac_data) = atac_chr['peak']
