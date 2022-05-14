@@ -10,11 +10,9 @@ atac_data = t(as.matrix(atac_data))
 atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
 
-print(dim(atac_data))
-print(length(apply(atac_chr['peak'],1,as.list)))
 
-q()
-dimnames(atac_data) = list(c(atac_chr['peak']), c(atac_cell['sample']))
+
+dimnames(atac_data) = list(apply(atac_chr['peak'],1,as.list)), apply(atac_cell['sample'],1,as.list)))
 
 # rna_data
 rna_data = Matrix::readMM('atac_rna_to_R/rna_data.txt')
@@ -23,8 +21,9 @@ rna_data = t(as.matrix(rna_data))
 rna_gene = read.csv('atac_rna_to_R/rna_gene.csv')
 rna_cell = read.csv('atac_rna_to_R/rna_cell.csv')
 
-rownames(rna_data) = list(rna_gene['gene_name'])
-colnames(rna_data) = list(rna_cell['sample'])
+
+dimnames(rna_data) = list(apply(rna_gene['gene_name'],1,as.list)), apply(rna_cell['sample'],1,as.list)))
+
 
 # 重头戏
 
