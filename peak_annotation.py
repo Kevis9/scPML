@@ -36,4 +36,4 @@ atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('-', ':', 
 
 print(atac_df.shape)
 # 保存
-atac_df.to_csv('atac_middle_out.csv')
+(atac_df.T).to_csv('atac_middle_out.csv')
