@@ -12,27 +12,27 @@ atac_data = atac_data.todense().T
 
 
 atac_cell = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_cell.txt')
-atac_peak = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak.txt')
+atac_chr = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak.txt')
 
 atac_df = pd.DataFrame(data=atac_data)
-print(atac_df.shape)
-print(atac_cell.shape)
+
 # 取A549 Cell
 cell_idx = atac_cell['group'].str.startswith('A549').tolist()
+
 atac_cell = atac_cell.iloc[cell_idx, :]
-atac_peak = atac_peak.iloc[cell_idx, :]
+atac_df = atac_df.iloc[cell_idx, :]
 
 # 保留1~22, X, Y染色体
 chr_arr = [str(x) for x in range(1, 23)]
 chr_arr += ['X', 'Y']
-chr_idx = atac_peak['chr'].isin(chr_arr).tolist()
+chr_idx = atac_chr['chr'].isin(chr_arr).tolist()
 
-atac_peak = atac_peak.iloc[chr_idx, :]
+atac_chr = atac_chr.iloc[chr_idx, :]
 atac_df = atac_df.iloc[:, chr_idx]
 
 # 设置index和columns, 注意columns的格式
 atac_df.index = atac_cell['sample'].tolist()
-atac_df.columns = (atac_peak['peak'].map(lambda x: ('chr'+x).replace('-', ':', 1))).tolist()
+atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('-', ':', 1))).tolist()
 
 print(atac_df.shape)
 # 保存
