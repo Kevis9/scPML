@@ -31,6 +31,8 @@ atac_activity_df = pd.read_csv('atac_activity_mat.csv', index_col=0).T
 commom_gene = list(set(atac_activity_df.columns.tolist()) & set(rna_df.columns.tolist()))
 
 atac_cell_name = atac_activity_df.index.str.replace(".", "-", 3).tolist()
+atac_activity_df.index = atac_cell_name
+
 common_cell = list(set(atac_cell_name) & set(rna_df.index.tolist()))
 
 atac_df = atac_activity_df.loc[common_cell, commom_gene]
