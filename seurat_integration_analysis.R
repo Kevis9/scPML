@@ -32,7 +32,8 @@ print("重头戏")
 activity.matrix <- CreateGeneActivityMatrix(peak.matrix = atac_data, annotation.file = "Homo_sapiens.GRCh37.82.gtf",
     seq.levels = c(1:22, "X", "Y"), upstream = 2000, verbose = TRUE)
 
-pbmc.atac <- CreateSeuratObject(counts = peaks, assay = "ATAC", project = "10x_ATAC")
+
+pbmc.atac <- CreateSeuratObject(counts = atac_data, assay = "ATAC", project = "10x_ATAC")
 pbmc.atac[["ACTIVITY"]] <- CreateAssayObject(counts = activity.matrix)
 pbmc.atac$tech <- "atac"
 
