@@ -36,15 +36,15 @@ atac_cell_name = atac_activity_df.index.str.replace(".", "-", 3).tolist()
 atac_activity_df.index = atac_cell_name
 common_cell = list(set(atac_cell_name) & set(rna_df.index.tolist()))
 
-print(rna_df.shape)
-print(atac_activity_df.shape)
 
 
 atac_df = atac_activity_df.loc[common_cell, commom_gene]
 rna_df = rna_df.loc[common_cell, commom_gene]
 
-print(len(set(rna_df.columns.tolist())))
-print(len(set(atac_df.columns.tolist())))
+# 将rna中重复的gene加起来
+rna_df = rna_df.T
+rna_df = rna_df.groupby(rna_df.index).sum()
+rna_df = rna_df.T
 
 
 # 最后获取label
