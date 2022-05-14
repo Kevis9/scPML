@@ -9,10 +9,8 @@ atac_data = t(as.matrix(atac_data))
 
 atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
-x = list(atac_chr$peak)
-print(length(x))
-print(x)
-q()
+print(class(atac_chr))
+
 rownames(atac_data) = apply(atac_chr['peak'],1,as.list)
 colnames(atac_data) = apply(atac_cell['sample'],1,as.list)
 
