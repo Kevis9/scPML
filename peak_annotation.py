@@ -12,7 +12,7 @@ atac_data = atac_data.todense().T
 
 
 atac_cell = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_cell.txt')
-atac_chr = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak.txt')
+atac_chr = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271041_ATAC_sciCAR_A549_peak.txt', dtype={'chr':object})
 
 atac_df = pd.DataFrame(data=atac_data)
 
@@ -28,7 +28,6 @@ print(chr_arr)
 chr_arr += ['X', 'Y']
 chr_idx = atac_chr['chr'].isin(chr_arr).tolist()
 atac_chr = atac_chr.iloc[chr_idx, :]
-
 print(atac_chr['chr'].value_counts)
 atac_df = atac_df.iloc[:, chr_idx]
 
