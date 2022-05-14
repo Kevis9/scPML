@@ -49,11 +49,11 @@ spio.mmwrite('atac_rna_to_R/atac_data.txt', atac_data)
 
 
 # RNA
-rna_data = spio.mmread('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
+rna_data = spio.mmread('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
 rna_data = rna_data.todense().T
 
-rna_cell = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271040_RNA_sciCAR_A549_cell.txt')
-rna_gene = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/ATAC/GSM3271040_RNA_sciCAR_A549_gene.txt')
+rna_cell = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt')
+rna_gene = pd.read_csv('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene.txt')
 
 rna_df = pd.DataFrame(data=rna_data)
 # 取A549 cell
