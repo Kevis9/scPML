@@ -37,6 +37,6 @@ atac_df = atac_df.iloc[:, chr_idx]
 atac_df.index = atac_cell['sample'].tolist()
 atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('-', ':', 1))).tolist()
 
-print(atac_df.shape)
+
 # 保存
 (atac_df.T).to_csv('atac_middle_out.csv')

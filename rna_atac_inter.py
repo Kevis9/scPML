@@ -26,8 +26,8 @@ rna_df = rna_df.iloc[cell_idx, :]
 rna_df.index = rna_cell['sample'].tolist()
 rna_df.columns = rna_gene['gene_short_name'].tolist()
 
-# 取ATAC和rna的交集
-atac_activity_df = pd.read_csv('atac_activity_mat.csv', index_col=0)
+# 取ATAC和rna的交集 , atac这里读入是 gene * cell
+atac_activity_df = pd.read_csv('atac_activity_mat.csv', index_col=0).T
 commom_gene = list(set(atac_activity_df.columns.tolist()) & set(rna_df.columns.tolist()))
 
 atac_cell_name = atac_activity_df.index.str.replace(".", "-", 3).tolist()
