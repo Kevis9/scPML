@@ -11,8 +11,8 @@ atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
 
 
-rownames(atac_data) = list(atac_chr$peak)
-colnames(atac_data) = list(atac_cell$sample)
+rownames(atac_data) = c(atac_chr$peak)
+colnames(atac_data) = c(atac_cell$sample)
 
 
 # rna_data
@@ -23,8 +23,8 @@ rna_gene = read.csv('atac_rna_to_R/rna_gene.csv')
 rna_cell = read.csv('atac_rna_to_R/rna_cell.csv')
 
 
-rownames(rna_data) = list(rna_gene$gene_name)
-colnames(rna_data) = list(rna_cell$sample)
+rownames(rna_data) = c(rna_gene$gene_name)
+colnames(rna_data) = c(rna_cell$sample)
 
 
 
