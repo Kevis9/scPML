@@ -2,7 +2,7 @@
    Python处理得到ATAC的中间数据:
    1. 取A549 cell
    2. 只保留1~22 , X, Y染色体, 并且更改染色体的名称的样式 : chrX:12-123
-   3. 保存这样的矩阵 ( cell * chr )
+   3. 保存这样的矩阵 ( chr * cell )
 '''
 import scipy.io as spio
 import pandas as pd
@@ -27,8 +27,9 @@ chr_arr = [str(x) for x in range(1, 23)]
 
 chr_arr += ['X', 'Y']
 chr_idx = atac_chr['chr'].isin(chr_arr).tolist()
-print(set(chr_arr))
 atac_chr = atac_chr.iloc[chr_idx, :]
+
+print(atac_chr['chr'].value_counts)
 atac_df = atac_df.iloc[:, chr_idx]
 
 # 设置index和columns, 注意columns的格式
