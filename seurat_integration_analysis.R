@@ -11,8 +11,7 @@ atac_chr = read.csv('atac_rna_to_R/atac_chr.csv')
 atac_cell = read.csv('atac_rna_to_R/atac_cell.csv')
 
 print(c(atac_chr['peak']))
-rownames(atac_data) = c(atac_chr['peak'])
-colnames(atac_data) = c(atac_cell['sample'])
+dimnames(atac_data) = list(c(atac_chr['peak']), c(atac_cell['sample']))
 
 # rna_data
 rna_data = Matrix::readMM('atac_rna_to_R/rna_data.txt')
