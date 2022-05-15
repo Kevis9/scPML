@@ -44,6 +44,7 @@ pbmc.atac <- NormalizeData(pbmc.atac)
 pbmc.atac <- ScaleData(pbmc.atac)
 
 pbmc.rna <- CreateSeuratObject(counts = rna_data, assay = "RNA", project = "10x_RNA")
+pbmc.rna <- FindVariableFeatures(pbmc.rna)
 pbmc.rna$tech <- "rna"
 
 transfer.anchors <- FindTransferAnchors(reference = pbmc.rna, query = pbmc.atac, features = VariableFeatures(object = pbmc.rna), 
