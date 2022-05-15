@@ -219,5 +219,5 @@ def BatchEntropy(ref_data, query_data, L=100, M=300, K=500):
             for j in range(nbatchs):
                 xi = max(1, (batch0[neighbor_idx[i]]==j).sum())
                 entropy[boot] += xi
-
-    return (-1)*(entropy/M)
+    entropy = [-(x / M) for x in entropy]
+    return entropy
