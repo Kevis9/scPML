@@ -39,5 +39,5 @@ atac_df.index = atac_cell['sample'].tolist()
 atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('-', ':', 1))).tolist()
 
 
-# 保存
+# 保存 gene*cell
 (atac_df.T).to_csv('atac_middle_out.csv')
