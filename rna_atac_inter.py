@@ -50,14 +50,14 @@ label_df = rna_cell.iloc[label_idx, :]['treatment_time']
 # 对RNA做gene selection
 # Create and fit selector
 
-selector = SelectKBest(f_classif, k=15000)
+selector = SelectKBest(f_classif, k=8000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
 
-selector.fit(atac_df.to_numpy(), label_df.to_numpy())
-cols = selector.get_support(indices=True)
-atac_df = atac_df.iloc[:, cols]
+# selector.fit(atac_df.to_numpy(), label_df.to_numpy())
+# cols = selector.get_support(indices=True)
+# atac_df = atac_df.iloc[:, cols]
 
 # 基因的交集
 commom_gene = list(set(atac_df.columns.tolist()) & set(rna_df.columns.tolist()))

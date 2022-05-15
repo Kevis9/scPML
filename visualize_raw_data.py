@@ -66,6 +66,6 @@ data_2d = reduce_dimension(rna_df.to_numpy())
 
 # label = ['rna' for i in range(rna_data.shape[0])]
 # label += ['atac' for i in range(rna_data.shape[0])]
-show_cluster(data_2d, label_df.to_numpy(), 'rna_10000')
+show_cluster(data_2d, label_df.to_numpy(), 'rna_8000')
 
 
