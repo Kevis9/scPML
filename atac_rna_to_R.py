@@ -35,7 +35,7 @@ atac_df.columns = (atac_chr['peak'].map(lambda x: ('chr' + x).replace('-', ':', 
 def save_to_mm(df, str1, str2):
     # 然后转成稀疏矩阵，进行存储
     colnames = pd.DataFrame(data=df.columns.tolist(), columns=[str1])
-    rownames = pd.DataFrame(data=df.index.tolist(), columns=[str1])
+    rownames = pd.DataFrame(data=df.index.tolist(), columns=[str2])
     data = df.to_numpy()
     data = sparse.coo_matrix(df)
     return rownames, colnames, data
