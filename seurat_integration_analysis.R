@@ -43,6 +43,12 @@ pbmc.atac <- FindVariableFeatures(pbmc.atac)
 pbmc.atac <- NormalizeData(pbmc.atac)
 pbmc.atac <- ScaleData(pbmc.atac)
 
+DefaultAssay(pbmc.atac) <- "ATAC"
+VariableFeatures(pbmc.atac) <- names(which(Matrix::rowSums(pbmc.atac) > 100))
+pbmc.atac <- RunLSI(pbmc.atac, n = 50, scale.max = NULL)
+pbmc.atac <- RunUMAP(pbmc.atac, reduction = "lsi", dims = 1:50)
+
+
 pbmc.rna <- CreateSeuratObject(counts = rna_data, assay = "RNA", project = "10x_RNA")
 pbmc.rna <- FindVariableFeatures(pbmc.rna)
 pbmc.rna$tech <- "rna"
