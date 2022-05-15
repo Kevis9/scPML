@@ -35,6 +35,7 @@ atac_activity_df = pd.read_csv('atac_activity_mat.csv', index_col=0).T
 atac_cell_name = atac_activity_df.index.str.replace(".", "-", 3).tolist()
 atac_activity_df.index = atac_cell_name
 common_cell = list(set(atac_cell_name) & set(rna_df.index.tolist()))
+
 atac_df = atac_activity_df.loc[common_cell, :]
 rna_df = rna_df.loc[common_cell, :]
 
@@ -54,9 +55,12 @@ selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
 
+selector.fit(atac_df.to_numpy(), label_df.to_numpy())
+cols = selector.get_support(indices=True)
+atac_df = atac_df.iloc[:, cols]
 
 # 基因的交集
-commom_gene = list(set(atac_activity_df.columns.tolist()) & set(rna_df.columns.tolist()))
+commom_gene = list(set(atac_df.columns.tolist()) & set(rna_df.columns.tolist()))
 
 atac_df = atac_df.loc[:, commom_gene]
 rna_df = rna_df.loc[:, commom_gene]
