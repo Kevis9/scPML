@@ -43,7 +43,7 @@ pbmc.atac <- FindVariableFeatures(pbmc.atac)
 pbmc.atac <- NormalizeData(pbmc.atac)
 pbmc.atac <- ScaleData(pbmc.atac)
 
-pbmc.rna <- rna_data
+pbmc.rna <- CreateSeuratObject(counts = rna_data, assay = "RNA", project = "10x_RNA")
 pbmc.rna$tech <- "rna"
 
 
