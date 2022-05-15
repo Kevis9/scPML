@@ -46,6 +46,8 @@ pbmc.atac <- ScaleData(pbmc.atac)
 pbmc.rna <- CreateSeuratObject(counts = rna_data, assay = "RNA", project = "10x_RNA")
 pbmc.rna$tech <- "rna"
 
+transfer.anchors <- FindTransferAnchors(reference = pbmc.rna, query = pbmc.atac, features = VariableFeatures(object = pbmc.rna), 
+    reference.assay = "RNA", query.assay = "ACTIVITY", reduction = "cca")
 
 genes.use <- VariableFeatures(pbmc.rna)
 refdata <- GetAssayData(pbmc.rna, assay = "RNA", slot = "data")[genes.use, ]
