@@ -56,6 +56,7 @@ cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
 print(rna_df.shape)
 rna_df.to_csv('rna_data.csv')
+label_df.to_csv('label.csv', index=False)
 exit()
 # selector.fit(atac_df.to_numpy(), label_df.to_numpy())
 # cols = selector.get_support(indices=True)
