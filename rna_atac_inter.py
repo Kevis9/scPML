@@ -46,10 +46,11 @@ label_df = rna_cell.iloc[label_idx, :]['treatment_time']
 
 # 对RNA做gene selection
 # Create and fit selector
+print(rna_df.shape)
 selector = SelectKBest(f_classif, k=8000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
-rna_df = rna_df.ilc[:, cols]
+rna_df = rna_df.iloc[:, cols]
 
 
 # 基因的交集
