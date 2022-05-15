@@ -54,7 +54,9 @@ selector = SelectKBest(f_classif, k=6000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
-
+print(rna_df.shape)
+rna_df.to_csv('rna_data.csv')
+exit()
 # selector.fit(atac_df.to_numpy(), label_df.to_numpy())
 # cols = selector.get_support(indices=True)
 # atac_df = atac_df.iloc[:, cols]
@@ -80,7 +82,6 @@ print(atac_df.shape)
 print(label_df.shape)
 
 
-rna_df.to_csv('rna_data.csv')
 atac_df.to_csv('atac_data.csv')
 label_df.to_csv('label.csv', index=False)
 
