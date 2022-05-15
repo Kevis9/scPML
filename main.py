@@ -3,7 +3,7 @@ import pandas as pd
 import torch
 from torch import nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
-    cpm_classify, z_score_normalization, show_cluster, concat_views, reduce_dimension
+    cpm_classify, z_score_normalization, show_cluster, concat_views, reduce_dimension, BatchEntropy
 from model import scGNN, CPMNets
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
@@ -251,6 +251,9 @@ ret = transfer_label(dataPath, labelPath, SMPath, config)
 # 结果打印
 s_score = silhouette_score(ret['query_h'], ret['pred'])
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
+bme = BatchEntropy(ret['ref_h'], ret['query_h'])
+bme = sum(bme) / len(bme)
+
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
 print('Prediction Silhouette score is {:.3f}'.format(s_score))
 print('Prediction ARI is {:.3f}'.format(ari))
@@ -259,7 +262,8 @@ print('Prediction ARI is {:.3f}'.format(ari))
 wandb.log({
     'Prediction Acc': ret['acc'],
     'Prediction Silhouette ': s_score,
-    'ARI': ari
+    'ARI': ari,
+    'Batch Mixing Entropy Mean' :  bme
 })
 
 raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))

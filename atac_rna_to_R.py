@@ -42,6 +42,8 @@ def save_to_mm(df, str1, str2):
 
 
 atac_cell, atac_chr, atac_data = save_to_mm(atac_df, 'peak', 'sample')
+
+
 atac_chr.to_csv('atac_rna_to_R/atac_chr.csv', index=False)
 atac_cell.to_csv('atac_rna_to_R/atac_cell.csv', index=False)
 spio.mmwrite('atac_rna_to_R/atac_data.txt', atac_data)
