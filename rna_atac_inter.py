@@ -58,7 +58,7 @@ rna_df = rna_df.iloc[:, cols]
 # 基因的交集
 commom_gene = list(set(atac_activity_df.columns.tolist()) & set(rna_df.columns.tolist()))
 
-atac_df = atac_activity_df.loc[:, commom_gene]
+atac_df = atac_df.loc[:, commom_gene]
 rna_df = rna_df.loc[:, commom_gene]
 
 # 将rna中重复的gene加起来
