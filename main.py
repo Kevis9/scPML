@@ -188,7 +188,7 @@ def transfer_label(data_path: dict,
 data_config = {
     'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v2',
     'ref_name': 'rna',
-    'query_name': 'atac',
+    'query_name': 'rna',
     'project': 'omics',
     'class_num': 3,
     'dataset_name':'A549'
