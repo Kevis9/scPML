@@ -50,7 +50,7 @@ label_df = rna_cell.iloc[label_idx, :]['treatment_time']
 # 对RNA做gene selection
 # Create and fit selector
 
-selector = SelectKBest(f_classif, k=15000)
+selector = SelectKBest(f_classif, k=3000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
