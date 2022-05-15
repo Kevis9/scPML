@@ -54,7 +54,7 @@ label_df = rna_cell.iloc[idx, :]['treatment_time']
 # atac_data = sc.pp.scale(atac_data)
 
 
-selector = SelectKBest(f_classif, k=6000)
+selector = SelectKBest(f_classif, k=15000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
@@ -66,6 +66,6 @@ data_2d = reduce_dimension(rna_df.to_numpy())
 
 # label = ['rna' for i in range(rna_data.shape[0])]
 # label += ['atac' for i in range(rna_data.shape[0])]
-show_cluster(data_2d, label_df.to_numpy(), 'rna_8000')
+show_cluster(data_2d, label_df.to_numpy(), 'rna_15000')
 
 
