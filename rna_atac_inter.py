@@ -38,6 +38,8 @@ common_cell = list(set(atac_cell_name) & set(rna_df.index.tolist()))
 atac_df = atac_activity_df.loc[common_cell, :]
 rna_df = rna_df.loc[common_cell, :]
 
+print(rna_df.shape)
+print(atac_df.shape)
 
 # label
 label_idx = (rna_cell['sample'].isin(rna_df.index.tolist())).tolist()
@@ -46,7 +48,7 @@ label_df = rna_cell.iloc[label_idx, :]['treatment_time']
 
 # 对RNA做gene selection
 # Create and fit selector
-print(rna_df.shape)
+
 selector = SelectKBest(f_classif, k=8000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
