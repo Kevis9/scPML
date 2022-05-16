@@ -267,20 +267,42 @@ wandb.log({
 })
 
 raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
-ref_len = ret['ref_raw_data'].shape[0]
-show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
-show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
-show_cluster(raw_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]), 'Reference-Query raw data')
-h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
-show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
-show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
-show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
-show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
+
+# ref_len = ret['ref_raw_data'].shape[0]
+# show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
+# show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
+# h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
+# show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
+# show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
+# show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+# show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
+#              'Reference-Query H with prediction label')
+# show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+#              , 'Reference-Query h: RNA - ATAC')
+# show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+#              , 'Reference-Query raw: RNA - ATAC')
+
+
+raw_ref_2d = reduce_dimension(ret['ref_raw_data'])
+raw_query_2d = reduce_dimension(ret['query_raw_data'])
+show_cluster(raw_ref_2d, ret['ref_label'], 'Raw reference data')
+show_cluster(raw_query_2d, ret['query_label'], 'Raw query data')
+ref_h_2d = reduce_dimension(ret['ref_h'])
+query_h_2d = reduce_dimension(ret['query_h'])
+show_cluster(ref_h_2d, ret['ref_label'], 'Reference h')
+show_cluster(query_h_2d, ret['query_label'], 'Query h')
+show_cluster(query_h_2d, ret['pred'], 'Query h with prediction label')
+
+show_cluster(np.concatenate([ref_h_2d, query_h_2d], axis=0), np.concatenate([ret['ref_label'], ret['query_label']]),
              'Reference-Query H with prediction label')
-show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query h: RNA - ATAC')
-show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+show_cluster(np.concatenate([ref_h_2d, query_h_2d], axis=0), np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query H: RNA - ATAC')
+show_cluster(np.concatenate([raw_ref_2d, raw_query_2d], axis=0), np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
              , 'Reference-Query raw: RNA - ATAC')
 
-np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
-np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
+
+
+
+
+# np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
+# np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
