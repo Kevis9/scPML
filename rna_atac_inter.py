@@ -10,7 +10,7 @@ import scipy.io as spio
 import pandas as pd
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_classif
-
+from utils import show_cluster, reduce_dimension
 rna_data = spio.mmread('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
 rna_data = rna_data.todense().T
 
@@ -50,13 +50,15 @@ label_df = rna_cell.iloc[label_idx, :]['treatment_time']
 # 对RNA做gene selection
 # Create and fit selector
 
-selector = SelectKBest(f_classif, k=6000)
+selector = SelectKBest(f_classif, k=8000)
 selector.fit(rna_df.to_numpy(), label_df.to_numpy())
 cols = selector.get_support(indices=True)
 rna_df = rna_df.iloc[:, cols]
 print(rna_df.shape)
 rna_df.to_csv('rna_data.csv')
 label_df.to_csv('label.csv', index=False)
+data = reduce_dimension(rna_df)
+show_cluster(data, label_df.to_numpy().reshape(-1), 'rna_8000_v2')
 exit()
 # selector.fit(atac_df.to_numpy(), label_df.to_numpy())
 # cols = selector.get_support(indices=True)
