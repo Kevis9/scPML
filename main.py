@@ -191,7 +191,7 @@ data_config = {
     'ref_name': 'rna',
     'query_name': 'atac',
     'project': 'omics',
-    'class_num': 13,
+    'class_num': 12,
     'dataset_name':'PBMC'
 }
 
