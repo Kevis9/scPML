@@ -7,8 +7,8 @@ atac_label = pd.read_csv('atac_label.csv')
 
 c_type = list(set(rna_label['V1'].tolist()) & set(atac_label['V1'].tolist()))
 
-rna_idx = rna_label['V1'].isin(c_type)
-atac_idx = atac_label['V1'].isin(c_type)
+rna_idx = rna_label['V1'].isin(c_type).tolist()
+atac_idx = atac_label['V1'].isin(c_type).tolist()
 
 rna_df = pd.read_csv('rna_data.csv', index_col=0)
 atac_df = pd.read_csv('atac_data.csv', index_col=0)
