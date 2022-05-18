@@ -1,7 +1,8 @@
 import os.path
 import pandas as pd
+import sklearn
 import torch
-from torch import nn
+from torch import embedding, nn
 from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
     cpm_classify, z_score_normalization, show_cluster, concat_views, reduce_dimension, BatchEntropy
 from model import scGNN, CPMNets
@@ -9,7 +10,7 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 from sklearn import preprocessing
-
+from sklearn.decomposition import PCA
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
 
@@ -249,9 +250,15 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
 # 结果打印
-s_score = silhouette_score(ret['query_h'], ret['pred'])
+embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
+pca = PCA(n_components=30)
+embedding_h_pca = pca.fit_transform(embedding_h)
+ref_h = embedding_h_pca[:ret['ref_h'].shape[0], :]
+query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
+
+s_score = silhouette_score(query_h, ret['pred'])
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
-bme = BatchEntropy(ret['ref_h'], ret['query_h'])
+bme = BatchEntropy(ref_h, query_h)
 bme = sum(bme) / len(bme)
 
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
@@ -263,46 +270,23 @@ wandb.log({
     'Prediction Acc': ret['acc'],
     'Prediction Silhouette ': s_score,
     'ARI': ari,
-    'Batch Mixing Entropy Mean' :  bme
+    'Batch Mixing Entropy Mean' : bme
 })
 
-raw_data_2d = reduce_dimension(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
-
-# ref_len = ret['ref_raw_data'].shape[0]
-# show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
-# show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
-# h_data_2d = reduce_dimension(np.concatenate([ret['ref_h'], ret['query_h']], axis=0))
-# show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
-# show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
-# show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
-# show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
-#              'Reference-Query H with prediction label')
-# show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-#              , 'Reference-Query h: RNA - ATAC')
-# show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-#              , 'Reference-Query raw: RNA - ATAC')
-
-
-raw_ref_2d = reduce_dimension(ret['ref_raw_data'])
-raw_query_2d = reduce_dimension(ret['query_raw_data'])
-show_cluster(raw_ref_2d, ret['ref_label'], 'Raw reference data')
-show_cluster(raw_query_2d, ret['query_label'], 'Raw query data')
-ref_h_2d = reduce_dimension(ret['ref_h'])
-query_h_2d = reduce_dimension(ret['query_h'])
-show_cluster(ref_h_2d, ret['ref_label'], 'Reference h')
-show_cluster(query_h_2d, ret['query_label'], 'Query h')
-show_cluster(query_h_2d, ret['pred'], 'Query h with prediction label')
-
-show_cluster(np.concatenate([ref_h_2d, query_h_2d], axis=0), np.concatenate([ret['ref_label'], ret['query_label']]),
+raw_data_pca = pca.fit_transform(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
+raw_data_2d = reduce_dimension(raw_data_pca, axis=0) #对PCA之后的数据进行UMAP可视化
+ref_len = ret['ref_raw_data'].shape[0]
+show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
+show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
+h_data_2d = reduce_dimension(embedding_h)
+show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
+show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
+show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
              'Reference-Query H with prediction label')
-show_cluster(np.concatenate([ref_h_2d, query_h_2d], axis=0), np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+
+show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
              , 'Reference-Query H: RNA - ATAC')
-show_cluster(np.concatenate([raw_ref_2d, raw_query_2d], axis=0), np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query raw: RNA - ATAC')
+show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query Raw: RNA - ATAC')
 
-
-
-
-
-# np.save(os.path.join(os.getcwd(), 'result'), ret['ref_h'])
-# np.save(os.path.join(os.getcwd(), 'result'), ret['query_h'])
