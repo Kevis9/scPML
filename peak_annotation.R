@@ -31,5 +31,23 @@ pbmc.atac <- RunUMAP(pbmc.atac, reduction = "lsi", dims = 1:50)
 pbmc.rna <- readRDS("pbmc_10k_v3.rds")
 pbmc.rna$tech <- "rna"
 
+transfer.anchors <- FindTransferAnchors(reference = pbmc.rna, query = pbmc.atac, features = VariableFeatures(object = pbmc.rna), 
+    reference.assay = "RNA", query.assay = "ACTIVITY", reduction = "cca")
+
+celltype.predictions <- TransferData(anchorset = transfer.anchors, refdata = pbmc.rna$celltype, 
+    weight.reduction = pbmc.atac[["lsi"]])
+pbmc.atac <- AddMetaData(pbmc.atac, metadata = celltype.predictions)
+
+pbmc.atac.filtered <- subset(pbmc.atac, subset = prediction.score.max > 0.5)
+pbmc.atac.filtered$predicted.id <- factor(pbmc.atac.filtered$predicted.id, levels = levels(pbmc.rna))  # to make the colors match
+
+DefaultAssay(pbmc.atac.filtered)  = 'ACTIVITY'
+
+atac_data = GetAssayData(pbmc.atac.filtered)
+atac_label = as.matrix(pbmc.atac.filtered$predicted.id)
+
 
 # p1 <- DimPlot(pbmc.atac, reduction = "umap") + NoLegend() + ggtitle("scATAC-seq")
+
+write.table(atac_data, file='atac_data.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
+write.table(atac_label, file='atac_label.csv', sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
