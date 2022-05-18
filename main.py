@@ -187,12 +187,12 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/PBMC/processed_data',
     'ref_name': 'rna',
-    'query_name': 'rna',
+    'query_name': 'atac',
     'project': 'omics',
-    'class_num': 3,
-    'dataset_name':'A549'
+    'class_num': 13,
+    'dataset_name':'PBMC'
 }
 
 config = {
@@ -292,7 +292,7 @@ show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label
 #              'Reference-Query H with prediction label')
 
 # For multi omics part
-show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query H: RNA - ATAC')
-show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query Raw: RNA - ATAC')
+show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query H')
+show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query Raw')
