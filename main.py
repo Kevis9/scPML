@@ -1,10 +1,10 @@
 import os.path
-import pandas as pd
-import sklearn
 import torch
 from torch import embedding, nn
-from utils import sc_normalization, mask_data, construct_graph, read_data_label, read_similarity_mat, \
-    cpm_classify, z_score_normalization, show_cluster, concat_views, reduce_dimension, BatchEntropy
+from utils import sc_normalization, mask_data, construct_graph, \
+    read_data_label, read_similarity_mat, \
+    cpm_classify, z_score_normalization, show_cluster, \
+    concat_views, BatchEntropy, runPCA, runUMAP
 from model import scGNN, CPMNets
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
@@ -84,6 +84,7 @@ def transfer_label(data_path: dict,
     :return:
     '''
     ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
+    
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
     ref_label = (ref_enc.fit_transform(ref_label) + 1).astype(np.int64)
@@ -91,7 +92,6 @@ def transfer_label(data_path: dict,
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
     # ref_norm_data = preprocessing.minmax_scale(ref_norm_data, axis=0)
-
 
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
@@ -194,6 +194,7 @@ data_config = {
     'class_num': 3,
     'dataset_name':'A549'
 }
+
 config = {
     'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
@@ -247,15 +248,16 @@ wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin",
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
+# 获取结果
 ret = transfer_label(dataPath, labelPath, SMPath, config)
 
-# 结果打印
+
 embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
-pca = PCA(n_components=30)
-embedding_h_pca = pca.fit_transform(embedding_h)
+embedding_h_pca = runPCA(embedding_h)
 ref_h = embedding_h_pca[:ret['ref_h'].shape[0], :]
 query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
 
+# evaluation metrics
 s_score = silhouette_score(query_h, ret['pred'])
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
 bme = BatchEntropy(ref_h, query_h)
@@ -273,18 +275,23 @@ wandb.log({
     'Batch Mixing Entropy Mean' : bme
 })
 
-raw_data_pca = pca.fit_transform(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
-raw_data_2d = reduce_dimension(raw_data_pca) #对PCA之后的数据进行UMAP可视化
+raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
+raw_data_pca = runPCA(raw_data)
+raw_data_2d = runUMAP(raw_data_pca) #对PCA之后的数据进行UMAP可视化
 ref_len = ret['ref_raw_data'].shape[0]
+
+h_data_2d = runUMAP(embedding_h_pca)
+
 show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
 show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
-h_data_2d = reduce_dimension(embedding_h)
 show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
 show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
 show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
-show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
-             'Reference-Query H with prediction label')
 
+# show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
+#              'Reference-Query H with prediction label')
+
+# For multi omics part
 show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
              , 'Reference-Query H: RNA - ATAC')
 show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])

@@ -1,13 +1,11 @@
 import os.path
 import random
-
 import numpy as np
 import copy
 # from sklearn.neighbors import kneighbors_graph
 import torch
 from torch_geometric.data import Data as geoData
 import networkx as nx
-import csv
 from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,6 +14,7 @@ import seaborn as sns
 import wandb
 import scipy.spatial as spt
 from random import sample
+from sklearn.decomposition import PCA
 
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
 
@@ -116,6 +115,7 @@ def read_data_label(data_path, label_path):
     读取数据, 数据格式需要满足一定格式
     表达矩阵第一列是cell id, 第一行是名称
     label矩阵只有一列
+    
 
     :param Single cell的表达矩阵Path
     :param 标签Path
@@ -132,8 +132,7 @@ def read_data_label(data_path, label_path):
     return data, label
 
 
-def read_similarity_mat(path):
-
+def read_similarity_mat(path):    
     mat_df = pd.read_csv(path, index_col=0)
     similarity_mat = mat_df.to_numpy()
     return similarity_mat.astype(np.float64)
@@ -158,27 +157,31 @@ def cpm_classify(lsd1, lsd2, label):
     label_pre = np.argmax(F_h_h_mean, axis=1) + 1
     return label_pre
 
-
-def reduce_dimension(data):
-    # data_2d = bh_sne(data)
+    
+def runUMAP(data):
     umap_model = umap.UMAP(random_state=0)
     data_2d = umap_model.fit_transform(data)
     return data_2d
 
+def runPCA(data, n_components):
+    pca = PCA(n_components=n_components)
+    return pca.fit_transform(data)
+
 def show_cluster(data, label, title):
     '''
     可视化聚类的函数
-    :param data: 表达矩阵
+    :param data: 降维之后的数据
     :param label: 样本的标签
     :param title: 可视化窗口的titleplt.scatter
     '''
-
+    
+    
     data = {
         'x':data[:,0],
         'y':data[:,1],
         'label':label
     }
-
+    
     df = pd.DataFrame(data=data)
     plt.figure(figsize=(8, 6))
 
@@ -186,9 +189,10 @@ def show_cluster(data, label, title):
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
-    plt.title(title)
-    # plt.subplots_adjust(right=0.7, top=0.8)
+    plt.title(title)    
     plt.savefig(os.path.join(RESULT_PATH, title+'.png'), bbox_inches='tight')
+    
+    # 数据上报
     wandb.save(os.path.join(RESULT_PATH, title+'.png'))
     # plt.show()
 
