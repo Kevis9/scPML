@@ -274,7 +274,7 @@ wandb.log({
 })
 
 raw_data_pca = pca.fit_transform(np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0))
-raw_data_2d = reduce_dimension(raw_data_pca, axis=0) #对PCA之后的数据进行UMAP可视化
+raw_data_2d = reduce_dimension(raw_data_pca) #对PCA之后的数据进行UMAP可视化
 ref_len = ret['ref_raw_data'].shape[0]
 show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
 show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
