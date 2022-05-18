@@ -187,9 +187,9 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v2',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
     'ref_name': 'rna',
-    'query_name': 'rna',
+    'query_name': 'atac',
     'project': 'omics',
     'class_num': 3,
     'dataset_name':'A549'
@@ -204,7 +204,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 512,  # GCN中间层维数
+    'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
     'note':""
 }
@@ -289,4 +289,3 @@ show_cluster(h_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label
              , 'Reference-Query H: RNA - ATAC')
 show_cluster(raw_data_2d, np.concatenate([['RNA' for i in range(len(ret['ref_label']))], ['ATAC' for i in range(len(ret['query_label']))]])
              , 'Reference-Query Raw: RNA - ATAC')
-
