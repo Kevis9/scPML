@@ -23,7 +23,10 @@ print(rna_label.shape)
 print(atac_df.shape)
 print(atac_label.shape)
 
+
 rna_df.to_csv('rna_data2.csv')
 atac_df.to_csv('atac_data2.csv')
 rna_label.to_csv('rna_label2.csv', index=False)
 atac_label.to_csv('atac_label2.csv', index=False)
+
+print('types num: {:}'.format(len(set(c_type))))
