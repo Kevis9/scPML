@@ -415,12 +415,12 @@ def process_gene_name(df1, df2):
 # exit()
 
 # label
-df = pd.read_csv('final_rna_data.csv', index_col=0)
-cell_name = df.index.tolist()
-print(cell_name)
-rna_cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt', index_col=0)
-rna_cell = rna_cell.loc[cell_name, ["treatment_time"]]
-rna_cell.to_csv('label.csv', index=False)
+# df = pd.read_csv('final_rna_data.csv', index_col=0)
+# cell_name = df.index.tolist()
+# print(cell_name)
+# rna_cell = pd.read_csv('/Users/kevislin/Desktop/单细胞/资料汇总/data/RAW_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_cell.txt', index_col=0)
+# rna_cell = rna_cell.loc[cell_name, ["treatment_time"]]
+# rna_cell.to_csv('label.csv', index=False)
 
 
 '''
@@ -435,3 +435,22 @@ rna_cell.to_csv('label.csv', index=False)
 # rna_data = rna_data.T
 # print(rna_data.shape)
 
+'''
+   处理多组学部分的utils 
+'''
+def process_common_gene(rna_df, atac_df):
+    '''
+        cell * gene的格式
+        对两者取相同的gene名称
+    '''
+    c_gene = list(set(rna_df.columns.tolist()) & set(atac_df.columns.tolist()))
+    rna_df = rna_df[c_gene]
+    atac_df = atac_df[c_gene]
+    return rna_df, atac_df
+
+# def process_common_cell(rna_df, atac_df):
+#     c_cell = list(set(rna_df.index.tolist()) & set(atac_df.index.tolist()))
+#     rna_df = rna_df.loc[c_gene, :]
+#     atac_df = atac_df.loc[c_gene, :]
+#     return rna_df, atac_df
+    
