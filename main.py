@@ -82,6 +82,8 @@ class QueryDataSet(Dataset):
         self.label = y
     
     def __getitem__(self, index):
+        print("xxx")
+        print(self.data[index])
         return self.data[index][0], self.label[index]
     
     def __len__(self):
@@ -95,11 +97,11 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
     '''
     batch_size = config['batch_size_classify']
     query_data_tensor.to(device)
-    query_dataset = TensorDataset(query_data_tensor, torch.zeros(query_data_tensor.shape[0]))
+    query_dataset = TensorDataset(query_data_tensor, torch.zeros(query_data_tensor.shape[0]).view(-1))
     query_dataloader = DataLoader(query_dataset, batch_size=batch_size, shuffle=False)        
     
     softmax_layer = nn.Softmax(dim=1)
-    cell = []
+    cell_idx = []
     label = []
     i = 0
     model.eval()
@@ -115,13 +117,18 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
         probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
         for idx, p in enumerate(probs_max):
             if p > th:
-                cell.append(idx+i*batch_size)
+                cell_idx.append(idx+i*batch_size)
                 label.append(probs_argmax[idx])
             
         i += 1
     
-    query_data = Subset(query_dataset, cell)
-    return QueryDataSet(query_data, label)
+    query_dataset = Subset(query_dataset, cell_idx)
+    print("yyy")
+    print(query_dataset[0])
+    query_dataset = QueryDataSet(query_dataset, label)
+    print(query_dataset.__len__())
+
+    return query_dataset
                 
             
     
@@ -142,14 +149,16 @@ def train_classifier(ref_data_tensor,
     criterion = nn.CrossEntropyLoss()
     n_epochs = config['epoch_classify']
     batch_size = config['batch_size_classify']
+
     model.to(device)
     ref_data_tensor.to(device)
     query_data_tensor.to(device)
     ref_label_tensor.to(device)
-    
+
+    print(ref_data_tensor.shape)
+    print(query_data_tensor.shape)
+
     # 数据准备
-    # print(ref_data_tensor.shape)
-    # print(ref_label_tensor.view(-1).shape)
     ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))
     ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
 
@@ -158,8 +167,6 @@ def train_classifier(ref_data_tensor,
         train_loss = []
         train_acc = []
         for data, labels in ref_dataloader:
-            # print(data.shape)
-            # print(labels.shape)
             logits = model(data)
             loss = criterion(logits, labels)
             
@@ -181,10 +188,8 @@ def train_classifier(ref_data_tensor,
         print('Epoch: {:} Train loss {:.3f}, Train acc {:.3f}'.format(epoch, train_loss, train_acc))
         # 加入半监督学习
         query_dataset = semi_eval(model, query_data_tensor, config)
-
         concat_dataset = ConcatDataset([ref_dataset, query_dataset])
         ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
-        print(len(ref_dataloader))
     return model
 
 def transfer_label(data_path: dict,
@@ -323,10 +328,10 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 10,  # Huang model 训练的epoch
-    'epoch_CPM_train': 10,
-    'epoch_CPM_test': 10,
-    'epoch_classify': 10,    
+    'epoch_GCN': 1,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1,
+    'epoch_CPM_test': 1,
+    'epoch_classify': 1,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
