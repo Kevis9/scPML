@@ -314,9 +314,9 @@ def transfer_label(data_path: dict,
                                               config)
 
     # 对之前的embedding进行复制
-    ref_h = ref_h.detach().copy()
-    query_h = query_h.detach().copy()
-    ref_label_tensor = ref_label_tensor.detach().copy()
+    ref_h = ref_h.detach().clone()
+    query_h = query_h.detach().clone()
+    ref_label_tensor = ref_label_tensor.detach().clone()
     classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
 
     classifier.eval()
