@@ -166,6 +166,12 @@ def train_classifier(ref_data_tensor,
     ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
 
     for epoch in range(n_epochs):
+        # 加入半监督学习
+        query_dataset = semi_eval(model, query_data_tensor, config)
+        concat_dataset = ConcatDataset([ref_dataset, query_dataset])
+        ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
+        print(ref_dataloader.dataset.__len__())
+        exit()
         model.train()
         train_loss = []
         train_acc = []
@@ -189,10 +195,7 @@ def train_classifier(ref_data_tensor,
         train_acc = sum(train_acc) / len(train_acc)
         
         print('Epoch: {:} Train loss {:.3f}, Train acc {:.3f}'.format(epoch, train_loss, train_acc))
-        # 加入半监督学习
-        query_dataset = semi_eval(model, query_data_tensor, config)
-        concat_dataset = ConcatDataset([ref_dataset, query_dataset])
-        ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
+
     return model
 
 def transfer_label(data_path: dict,
