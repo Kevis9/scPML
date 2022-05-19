@@ -110,7 +110,7 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
             logits = model(data)
         
         probs = softmax_layer(logits)
-        probs_argmax = probs_max.argmax(dim=1).detach().cpu().numpy().list()
+        probs_argmax = probs.argmax(dim=1).detach().cpu().numpy().list()
         # 获取最大的概率
         probs_max = probs.max(dim=1).detach().cpu().numpy().tolist()
         for idx, p in enumerate(probs_max):
