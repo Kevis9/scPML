@@ -355,28 +355,28 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
-    'ref_name': 'cel_seq2',
-    'query_name': '10x_v3',
-    'project': 'platform',
-    'class_num': 7,
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/PBMC/processed_data',
+    'ref_name': 'rna',
+    'query_name': 'atac',
+    'project': 'omics',
+    'class_num': 12,
     'dataset_name':'PBMC'
 }
 
 config = {
-    'epoch_GCN': 10,  # Huang model 训练的epoch
-    'epoch_CPM_train': 10,
-    'epoch_CPM_test': 10,
-    'epoch_classify': 10,
+    'epoch_GCN': 1500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 5000,
+    'epoch_classify': 120,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 256,  # GCN中间层维数
+    'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
-    'batch_size_classify' : 256,    
+    'batch_size_classify' : 128,
     'note':""
 }
 
@@ -457,6 +457,7 @@ show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
 show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
 show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
 show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+
 # For multi omics part
 show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
              , 'Reference-Query H')
