@@ -336,6 +336,9 @@ def transfer_label(data_path: dict,
     ref_label = ref_enc.inverse_transform(ref_label)
     query_label = query_enc.inverse_transform(query_label)
     pred = query_enc.inverse_transform(pred)
+    print(pred.shape)
+    print(query_label.shape)
+    print(query_h.shape)
     ret = {
         'acc': acc,
         'ref_h': ref_h,
@@ -443,7 +446,7 @@ wandb.log({
 
 raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
 raw_data_pca = runPCA(raw_data)
-raw_data_2d = runUMAP(raw_data_pca) #对PCA之后的数据进行UMAP可视化
+raw_data_2d = runUMAP(raw_data_pca) # 对PCA之后的数据进行UMAP可视化
 ref_len = ret['ref_raw_data'].shape[0]
 
 h_data_2d = runUMAP(embedding_h_pca)
