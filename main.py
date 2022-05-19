@@ -77,11 +77,13 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     return model, ref_h, query_h
 
 class QueryDataSet(Dataset):
-    def __init__(self,x, y):
+    def __init__(self, x, y):
         self.data = x
         self.label = y
     
     def __getitem__(self, index):
+        print("xxx")
+        print(self.data[index])
         return self.data[index][0], self.label[index]
     
     def __len__(self):
@@ -181,6 +183,7 @@ def train_classifier(ref_data_tensor,
         print('Epoch: {:} Train loss {:.3f}, Train acc {:.3f}'.format(epoch, train_loss, train_acc))
         # 加入半监督学习
         query_dataset = semi_eval(model, query_data_tensor, config)
+
         concat_dataset = ConcatDataset([ref_dataset, query_dataset])
         ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
         print(len(ref_dataloader))
