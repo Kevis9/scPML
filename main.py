@@ -5,7 +5,7 @@ from utils import sc_normalization, mask_data, construct_graph, \
     read_data_label, read_similarity_mat, \
     cpm_classify, z_score_normalization, show_cluster, \
     concat_views, BatchEntropy, runPCA, runUMAP
-from model import scGNN, CPMNets, Classifer
+from model import scGNN, CPMNets, Classifier
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
@@ -137,7 +137,7 @@ def train_classifier(ref_data_tensor,
         query_data: 一般传入query_h : tensor
     '''
     
-    model = Classifer(config['lsd_dim'], config['ref_class_num'])
+    model = Classifier(config['lsd_dim'], config['ref_class_num'])
     optimizer = torch.optim.Adam(model.parameters())
     criterion = nn.CrossEntropyLoss()
     n_epochs = config['epoch_classify']

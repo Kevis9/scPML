@@ -265,18 +265,18 @@ class scGNN(torch.nn.Module):
         return self.conv1(x.to(device), edge_index.to(device))
 
 
-class Classifer(nn.Module):
+class Classifier(nn.Module):
     def __init__(self, lsd, class_num):
         '''
             lsd: latent space dimentionlity            
         '''
         super().__init__()
         self.embedding_layer = nn.Sequential(
-            nn.Linear(lsd, lsd/2),
+            nn.Linear(lsd, int(lsd/2)),
             nn.ReLU()
         )
         self.prediction_layer = nn.Sequential(            
-            nn.Linear(lsd/2, class_num)
+            nn.Linear(int(lsd/2), class_num)
         )
             
     def forward(self, x):
