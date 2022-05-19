@@ -76,16 +76,16 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     
     return model, ref_h, query_h
 
-class QueryDataSet(Dataset):
-    def __init__(self, x, y):
-        self.data = x
-        self.label = y
-    
-    def __getitem__(self, index):
-        return self.data[index][0], self.label[index]
-    
-    def __len__(self):
-        return len(self.label)
+# class QueryDataSet(Dataset):
+#     def __init__(self, x, y):
+#         self.data = x
+#         self.label = y
+#
+#     def __getitem__(self, index):
+#         return self.data[index][0], self.label[index]
+#
+#     def __len__(self):
+#         return len(self.label)
         
     
         
@@ -95,43 +95,61 @@ def semi_eval(model, query_data_tensor, config, th=0.1):
     '''
     batch_size = config['batch_size_classify']
     query_data_tensor.to(device)
-    query_dataset = TensorDataset(query_data_tensor, torch.zeros(query_data_tensor.shape[0]).view(-1))
-    query_dataloader = DataLoader(query_dataset, batch_size=batch_size, shuffle=False)        
-    
+    model.eval()
     softmax_layer = nn.Softmax(dim=1)
+    with torch.no_grad():
+        probs = softmax_layer(model(query_data_tensor))
+    probs_argmax = probs.argmax(dim=1).cpu().numpy().tolist()
+    # 获取最大的概率
     cell_idx = []
     label = []
-    i = 0
-    model.eval()
-    
-    for batch in query_dataloader:
-        data, _ = batch
-        with torch.no_grad():
-            logits = model(data)
-        
-        probs = softmax_layer(logits)
-        probs_argmax = probs.argmax(dim=1).cpu().numpy().tolist()
-        # 获取最大的概率
-        probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
-        for idx, p in enumerate(probs_max):
-            if p > th:
-                cell_idx.append(idx+i*batch_size)
-                label.append(probs_argmax[idx])
-            
-        i += 1
-    
-    query_dataset = Subset(query_dataset, cell_idx)
+    probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
+    for idx, p in enumerate(probs_max):
+        if p > th:
+            cell_idx.append(idx)
+            label.append(probs_argmax[idx])
+    label_tensor = torch.from_numpy(np.array(label)).view(-1).long()
+    query_data_tensor = query_data_tensor[cell_idx, :]
+    return TensorDataset(query_data_tensor, label_tensor)
 
+
+    # query_dataset = TensorDataset(query_data_tensor, torch.zeros(query_data_tensor.shape[0]).view(-1))
+    # query_dataloader = DataLoader(query_dataset, batch_size=batch_size, shuffle=False)
+    #
+    # softmax_layer = nn.Softmax(dim=1)
+    # cell_idx = []
+    # label = []
+    # i = 0
+    # model.eval()
+    #
+    # for batch in query_dataloader:
+    #     data, _ = batch
+    #     with torch.no_grad():
+    #         logits = model(data)
+    #
+    #     probs = softmax_layer(logits)
+    #     probs_argmax = probs.argmax(dim=1).cpu().numpy().tolist()
+    #     # 获取最大的概率
+    #     probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
+    #     for idx, p in enumerate(probs_max):
+    #         if p > th:
+    #             cell_idx.append(idx+i*batch_size)
+    #             label.append(probs_argmax[idx])
+    #
+    #     i += 1
+    #
+    # query_dataset = Subset(query_dataset, cell_idx)
+    #
+    # # if len(label) > 0:
+    # #     print("yyy")
+    # #     print(query_dataset[0])
+    # query_dataset = QueryDataSet(query_dataset, label)
     # if len(label) > 0:
-    #     print("yyy")
-    #     print(query_dataset[0])
-    query_dataset = QueryDataSet(query_dataset, label)
-    if len(label) > 0:
-        print("query dataset len:")
-        print(query_dataset.__len__())
-        # print(query_dataset[0])
-
-    return query_dataset
+    #     print("query dataset len:")
+    #     print(query_dataset.__len__())
+    #     # print(query_dataset[0])
+    #
+    # return query_dataset
                 
             
     
@@ -158,13 +176,11 @@ def train_classifier(ref_data_tensor,
     query_data_tensor.to(device)
     ref_label_tensor.to(device)
 
-    # print(ref_data_tensor.shape)
-    # print(query_data_tensor.shape)
 
     # 数据准备
     ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))
-    ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
-    print(ref_dataloader.dataset.__len__())
+    # ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
+
     for epoch in range(n_epochs):
         # 加入半监督学习
         query_dataset = semi_eval(model, query_data_tensor, config)
