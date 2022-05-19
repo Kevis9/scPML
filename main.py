@@ -82,8 +82,6 @@ class QueryDataSet(Dataset):
         self.label = y
     
     def __getitem__(self, index):
-        print("xxx")
-        print(self.data[index])
         return self.data[index][0], self.label[index]
     
     def __len__(self):
