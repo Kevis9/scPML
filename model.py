@@ -1,5 +1,3 @@
-from turtle import forward
-from matplotlib.pyplot import xcorr
 import numpy as np
 import torch.nn as nn
 import torch
@@ -84,13 +82,15 @@ class CPMNets():
         F_h_h = F_h_h - torch.diag_embed(F_hn_hn)  # 将F_h_h对角线部分置0
         # classes = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
         label_onehot = torch.zeros((self.train_len, self.class_num)).to(device)
-        gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
+        # gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
         label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
         label_num = torch.sum(label_onehot, dim=0)  # 得到每个label的样本数
         F_h_h_sum = torch.mm(F_h_h, label_onehot)
-        label_num[torch.where(label_num==0)] = 1 # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
+        
+        # label_num[torch.where(label_num==0)] = 1 # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
+        
         F_h_h_mean = F_h_h_sum / label_num  # 自动广播
-        gt_ = torch.argmax(F_h_h_mean, dim=1) + 1  # 获得每个样本预测的类别
+        gt_ = torch.argmax(F_h_h_mean, dim=1)  # 获得每个样本预测的类别
         F_h_h_mean_max = torch.max(F_h_h_mean, dim=1)[0]  # 取到每个样本的最大值 1*n
         theta = torch.not_equal(gt, gt_).view(1, -1)
         F_h_hn_mean_ = torch.mul(F_h_h_mean, label_onehot)
