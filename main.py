@@ -337,8 +337,7 @@ def transfer_label(data_path: dict,
     query_label = query_enc.inverse_transform(query_label)
     pred = query_enc.inverse_transform(pred)
     print(pred.shape)
-    print(query_label.shape)
-    print(query_h.shape)
+    print(set(list(pred)))
     ret = {
         'acc': acc,
         'ref_h': ref_h,
