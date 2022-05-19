@@ -148,6 +148,8 @@ def train_classifier(ref_data_tensor,
     ref_label_tensor.to(device)
     
     # 数据准备
+    print(ref_data_tensor.shape)
+    pritn(ref_label_tensor.shape)
     ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor)        
     ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
         
@@ -318,8 +320,8 @@ data_config = {
 
 config = {
     'epoch_GCN': 10,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1000,
-    'epoch_CPM_test': 3000,
+    'epoch_CPM_train': 10,
+    'epoch_CPM_test': 10,
     'epoch_classify': 10,    
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
