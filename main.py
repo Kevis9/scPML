@@ -91,7 +91,7 @@ class QueryDataSet(Dataset):
         
     
         
-def semi_eval(model, query_data_tensor, config, th=0.3):
+def semi_eval(model, query_data_tensor, config, th=0.1):
     '''
         th: threshold
     '''
