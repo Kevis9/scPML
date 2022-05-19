@@ -171,7 +171,6 @@ def train_classifier(ref_data_tensor,
         concat_dataset = ConcatDataset([ref_dataset, query_dataset])
         ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
         print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
-        exit()
         model.train()
         train_loss = []
         train_acc = []
