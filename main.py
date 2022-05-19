@@ -110,9 +110,9 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
             logits = model(data)
         
         probs = softmax_layer(logits)
-        probs_argmax = probs.argmax(dim=1).detach().cpu().numpy().tolist()
+        probs_argmax = probs.argmax(dim=1).cpu().numpy().tolist()
         # 获取最大的概率
-        probs_max = probs.max(dim=1).detach().cpu().numpy().tolist()
+        probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
         for idx, p in enumerate(probs_max):
             if p > th:
                 cell.append(idx+i*batch_size)
