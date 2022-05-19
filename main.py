@@ -92,7 +92,7 @@ class QueryDataSet(Dataset):
         
     
         
-def semi_eval(model, query_data_tensor, config, th=0):
+def semi_eval(model, query_data_tensor, config, th=0.3):
     '''
         th: threshold
     '''
@@ -170,11 +170,15 @@ def train_classifier(ref_data_tensor,
         query_dataset = semi_eval(model, query_data_tensor, config)
         concat_dataset = ConcatDataset([ref_dataset, query_dataset])
         ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
+
         print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
         model.train()
         train_loss = []
         train_acc = []
         for data, labels in ref_dataloader:
+            data = data.to(device)
+            labels = labels.to(device)
+
             logits = model(data)
             loss = criterion(logits, labels)
             
