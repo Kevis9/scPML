@@ -82,8 +82,6 @@ class QueryDataSet(Dataset):
         self.label = y
     
     def __getitem__(self, index):
-        print("xxx")
-        print(self.data[index])
         return self.data[index][0], self.label[index]
     
     def __len__(self):
@@ -120,7 +118,7 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
                 cell.append(idx+i*batch_size)
                 label.append(probs_argmax[idx])
             
-            i += 1
+        i += 1
     
     query_data = Subset(query_data_tensor, cell)
     return QueryDataSet(query_data, label)
