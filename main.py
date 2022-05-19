@@ -82,9 +82,8 @@ class QueryDataSet(Dataset):
         self.label = y
     
     def __getitem__(self, index):
-        # print("xxx")
-        # print(self.data[index])
-
+        print("xxx")
+        print(self.data[index])
         return self.data[index][0], self.label[index]
     
     def __len__(self):
@@ -129,7 +128,10 @@ def semi_eval(model, query_data_tensor, config, th=0.3):
     #     print("yyy")
     #     print(query_dataset[0])
     query_dataset = QueryDataSet(query_dataset, label)
-    print(query_dataset.__len__())
+    if len(label) > 0:
+        print("query dataset len:")
+        print(query_dataset.__len__())
+        print(query_dataset[0])
 
     return query_dataset
                 
@@ -328,11 +330,11 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/PBMC/processed_data',
-    'ref_name': 'rna',
-    'query_name': 'atac',
-    'project': 'omics',
-    'class_num': 12,
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
+    'ref_name': 'cel_seq2',
+    'query_name': '10x_v3',
+    'project': 'platform',
+    'class_num': 7,
     'dataset_name':'PBMC'
 }
 
