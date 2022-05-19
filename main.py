@@ -82,8 +82,9 @@ class QueryDataSet(Dataset):
         self.label = y
     
     def __getitem__(self, index):
-        print("xxx")
-        print(self.data[index])
+        # print("xxx")
+        # print(self.data[index])
+
         return self.data[index][0], self.label[index]
     
     def __len__(self):
@@ -91,7 +92,7 @@ class QueryDataSet(Dataset):
         
     
         
-def semi_eval(model, query_data_tensor, config, th=0):
+def semi_eval(model, query_data_tensor, config, th=0.5):
     '''
         th: threshold
     '''
@@ -124,9 +125,9 @@ def semi_eval(model, query_data_tensor, config, th=0):
     
     query_dataset = Subset(query_dataset, cell_idx)
 
-    if len(label) > 0:
-        print("yyy")
-        print(query_dataset[0])
+    # if len(label) > 0:
+    #     print("yyy")
+    #     print(query_dataset[0])
     query_dataset = QueryDataSet(query_dataset, label)
     print(query_dataset.__len__())
 
@@ -157,8 +158,8 @@ def train_classifier(ref_data_tensor,
     query_data_tensor.to(device)
     ref_label_tensor.to(device)
 
-    print(ref_data_tensor.shape)
-    print(query_data_tensor.shape)
+    # print(ref_data_tensor.shape)
+    # print(query_data_tensor.shape)
 
     # 数据准备
     ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))
@@ -330,10 +331,10 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 1,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1,
-    'epoch_CPM_test': 1,
-    'epoch_classify': 1,
+    'epoch_GCN': 10,  # Huang model 训练的epoch
+    'epoch_CPM_train': 10,
+    'epoch_CPM_test': 10,
+    'epoch_classify': 10,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
