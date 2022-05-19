@@ -109,7 +109,9 @@ def semi_eval(model, query_data_tensor, config, th=0.1):
             cell_idx.append(idx)
             label.append(probs_argmax[idx])
     label_tensor = torch.from_numpy(np.array(label)).view(-1).long()
+    label_tensor = label_tensor.to(device)
     query_data_tensor = query_data_tensor[cell_idx, :]
+
     return TensorDataset(query_data_tensor, label_tensor)
 
 
@@ -192,9 +194,9 @@ def train_classifier(ref_data_tensor,
         train_loss = []
         train_acc = []
         for data, labels in ref_dataloader:
-            print(data.shape)
-            data = data.to(device)
-            labels = labels.to(device)
+            # print(data.shape)
+            # data = data.to(device)
+            # labels = labels.to(device)
 
             logits = model(data)
             loss = criterion(logits, labels)
