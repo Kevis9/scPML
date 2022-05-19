@@ -181,13 +181,13 @@ def train_classifier(ref_data_tensor,
 
     # 数据准备
     ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))
-    # ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
+    ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
 
     for epoch in range(n_epochs):
         # 加入半监督学习
-        query_dataset = semi_eval(model, query_data_tensor, config)
-        concat_dataset = ConcatDataset([ref_dataset, query_dataset])
-        ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
+        # query_dataset = semi_eval(model, query_data_tensor, config)
+        # concat_dataset = ConcatDataset([ref_dataset, query_dataset])
+        # ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
 
         print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
         model.train()
