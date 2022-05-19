@@ -1,16 +1,24 @@
+from ast import Sub
+from hashlib import new
 import os.path
+from re import M
+from statistics import mode
+from attr import asdict
+from cv2 import log
+from matplotlib import rc_file_defaults
 import torch
 from torch import embedding, nn
 from utils import sc_normalization, mask_data, construct_graph, \
     read_data_label, read_similarity_mat, \
     cpm_classify, z_score_normalization, show_cluster, \
     concat_views, BatchEntropy, runPCA, runUMAP
-from model import scGNN, CPMNets
+from model import scGNN, CPMNets, Classifer
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
+from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset, ConcatDataset
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
 
@@ -67,10 +75,118 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     # 对test_h进行adjust（按照论文的想法，保证consistency）
     model.test(query_data_embeddings, config['epoch_CPM_test'])
 
-    ref_h = model.get_h_train().detach().cpu().numpy()
-    query_h = model.get_h_test().detach().cpu().numpy()
+    # ref_h = model.get_h_train().detach().cpu().numpy()
+    # query_h = model.get_h_test().detach().cpu().numpy()
+    
+    ref_h = model.get_h_train()
+    query_h = model.get_h_test()
+    
     return model, ref_h, query_h
 
+class QueryDataSet(Dataset):
+    def __init__(self,x, y):
+        self.data = x
+        self.label = y
+    
+    def __getitem__(self, index):
+        return self.data[index][0], self.label[index]
+    
+    def __len__(self):
+        return len(self.label)
+        
+    
+        
+def semi_eval(model, query_data_tensor, config, th=0.6):
+    '''
+        th: threshold
+    '''
+    batch_size = config['batch_size_classify']
+    query_data_tensor.to(device)
+    query_dataset = TensorDataset(query_data_tensor, torch.zeros(query_data_tensor.shape[0]))
+    query_dataloader = DataLoader(query_dataset, batch_size=batch_size, shuffle=False)        
+    
+    softmax_layer = nn.Softmax(dim=1)
+    cell = []
+    label = []
+    i = 0
+    model.eval()
+    
+    for batch in query_dataloader:
+        data, _ = batch
+        with torch.no_grad():
+            logits = model(data)
+        
+        probs = softmax_layer(logits)
+        probs_argmax = probs_max.argmax(dim=1).detach().cpu().numpy().list()
+        # 获取最大的概率
+        probs_max = probs.max(dim=1).detach().cpu().numpy().tolist()
+        for idx, p in enumerate(probs_max):
+            if p > th:
+                cell.append(idx+i*batch_size)
+                label.append(probs_argmax[idx])
+            
+            i += 1
+    
+    query_data = Subset(query_data, cell)
+    return QueryDataSet(query_data, label)
+                
+            
+    
+    
+    
+
+def train_classifier(ref_data_tensor, 
+                    query_data_tensor, 
+                    ref_label_tensor,
+                    config):    
+    '''    
+        ref_data: 一般传入ref_h : tensor
+        query_data: 一般传入query_h : tensor
+    '''
+    
+    model = Classifer(config['lsd_dim'], config['ref_class_num'])
+    optimizer = torch.optim.Adam(model.parameters())
+    criterion = nn.CrossEntropyLoss()
+    n_epochs = config['epoch_classify']
+    batch_size = config['batch_size_classify']
+    model.to(device)
+    ref_data_tensor.to(device)
+    query_data_tensor.to(device)
+    ref_label_tensor.to(device)
+    
+    # 数据准备
+    ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor)        
+    ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
+        
+    for epoch in range(n_epochs):
+        model.train()
+        train_loss = []
+        train_acc = []
+        for data, labels in ref_dataloader:
+            logits = model(data)
+            loss = criterion(logits, labels)
+            
+            optimizer.zero_grad()
+            loss.backward()
+            # '''
+            #     梯度爆炸剪枝
+            # '''
+            # grad_norm = nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)        
+            optimizer.step()            
+            acc = (logits.argmax(dim=1) == labels).float().mean().item()
+            
+            train_loss.append(loss.item())
+            train_acc.append(acc)
+        
+        train_loss = sum(train_loss) / len(train_loss)
+        train_acc = sum(train_acc) / len(train_acc)
+        
+        print('Epoch {:} Train loss {:.3f}, Train acc {:.3f}'.format(epoch, train_loss, train_acc))
+        # 加入半监督学习
+        query_dataset = semi_eval(model, query_data_tensor, config)
+        concat_dataset = ConcatDataset([ref_dataset, query_dataset])
+        ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)        
+    return model
 
 def transfer_label(data_path: dict,
                    label_path: dict,
@@ -87,7 +203,8 @@ def transfer_label(data_path: dict,
     
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
-    ref_label = (ref_enc.fit_transform(ref_label) + 1).astype(np.int64)
+    # label从1开始
+    ref_label = (ref_enc.fit_transform(ref_label)).astype(np.int64)
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
@@ -135,7 +252,7 @@ def transfer_label(data_path: dict,
     query_data, query_label = read_data_label(data_path['query'], label_path['query'])
     query_data = query_data.astype(np.float64)
     query_enc = preprocessing.LabelEncoder()
-    query_label = (query_enc.fit_transform(query_label) + 1).astype(np.int64)
+    query_label = (query_enc.fit_transform(query_label)).astype(np.int64)
 
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
@@ -164,14 +281,25 @@ def transfer_label(data_path: dict,
                                               ref_view_feat_len,
                                               config)
 
-    pred = cpm_classify(ref_h, query_h, ref_label)
-    acc = (pred == query_label).sum()
-    acc = acc / pred.shape[0]
+    
+    classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
+    classifier.eval()
+    with torch.no_grad():
+        pred = classifier(query_h)
+        ref_h = classifier.get_embedding(ref_h)
+        query_h = classifier.get_embedding(query_h)
+    
+    pred = pred.argmax(dim=1).detach().cpu().numpy()
+    acc = (pred == query_label).sum() / pred.shape[0]
+        
+    # pred = cpm_classify(ref_h, query_h, ref_label)
+    # acc = (pred == query_label).sum()
+    # acc = acc / pred.shape[0]
 
     # 还原label
-    ref_label = ref_enc.inverse_transform(ref_label - 1)
-    query_label = query_enc.inverse_transform(query_label - 1)
-    pred = query_enc.inverse_transform(pred - 1)
+    ref_label = ref_enc.inverse_transform(ref_label)
+    query_label = query_enc.inverse_transform(query_label)
+    pred = query_enc.inverse_transform(pred)
     ret = {
         'acc': acc,
         'ref_h': ref_h,
@@ -196,9 +324,10 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 800,  # Huang model 训练的epoch
+    'epoch_GCN': 10,  # Huang model 训练的epoch
     'epoch_CPM_train': 1000,
     'epoch_CPM_test': 3000,
+    'epoch_classify': 10,    
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
@@ -207,6 +336,7 @@ config = {
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 256,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
+    'batch_size_classify' : 256,    
     'note':""
 }
 

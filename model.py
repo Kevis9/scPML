@@ -1,3 +1,5 @@
+from turtle import forward
+from matplotlib.pyplot import xcorr
 import numpy as np
 import torch.nn as nn
 import torch
@@ -261,3 +263,27 @@ class scGNN(torch.nn.Module):
     def get_embedding(self, G_data):
         x, edge_index = G_data.x, G_data.edge_index
         return self.conv1(x.to(device), edge_index.to(device))
+
+
+class Classifer(nn.Module):
+    def __init__(self, lsd, class_num):
+        '''
+            lsd: latent space dimentionlity            
+        '''
+        super().__init__()
+        self.embedding_layer = nn.Sequential(
+            nn.Linear(lsd, lsd/2),
+            nn.ReLU()
+        )
+        self.prediction_layer = nn.Sequential(            
+            nn.Linear(lsd/2, class_num)
+        )
+            
+    def forward(self, x):
+        x = self.embedding_layer(x)
+        logits = self.prediction_layer(x)
+        return logits
+    
+    def get_embedding(self, x):
+        return self.embedding_layer(x)
+    
