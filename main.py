@@ -89,7 +89,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
         
     
         
-def semi_eval(model, query_data_tensor, config, th=0.1):
+def semi_eval(model, query_data_tensor, config):
     '''
         th: threshold
     '''
@@ -105,7 +105,7 @@ def semi_eval(model, query_data_tensor, config, th=0.1):
     label = []
     probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
     for idx, p in enumerate(probs_max):
-        if p > th:
+        if p > config['th']:
             cell_idx.append(idx)
             label.append(probs_argmax[idx])
     label_tensor = torch.from_numpy(np.array(label)).view(-1).long()
@@ -374,6 +374,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
+    'th': 0.7, # 第二个数据预测的阈值
     'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
     'batch_size_classify' : 128,
