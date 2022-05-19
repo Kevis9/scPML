@@ -120,7 +120,7 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
             
         i += 1
     
-    query_data = Subset(query_data_tensor, cell)
+    query_data = Subset(query_dataset, cell)
     return QueryDataSet(query_data, label)
                 
             
