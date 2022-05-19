@@ -149,7 +149,7 @@ def train_classifier(ref_data_tensor,
     
     # 数据准备
     print(ref_data_tensor.shape)
-    pritn(ref_label_tensor.shape)
+    print(ref_label_tensor.shape)
     ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor)        
     ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
         
