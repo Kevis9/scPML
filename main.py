@@ -91,7 +91,7 @@ class QueryDataSet(Dataset):
         
     
         
-def semi_eval(model, query_data_tensor, config, th=0.6):
+def semi_eval(model, query_data_tensor, config, th=0):
     '''
         th: threshold
     '''
@@ -123,8 +123,9 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
         i += 1
     
     query_dataset = Subset(query_dataset, cell_idx)
-    print("yyy")
+
     if len(label) > 0:
+        print("yyy")
         print(query_dataset[0])
     query_dataset = QueryDataSet(query_dataset, label)
     print(query_dataset.__len__())
@@ -291,8 +292,8 @@ def transfer_label(data_path: dict,
     classifier.eval()
     with torch.no_grad():
         pred = classifier(query_h)
-        ref_h = classifier.get_embedding(ref_h)
-        query_h = classifier.get_embedding(query_h)
+        ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
+        query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
     
     pred = pred.argmax(dim=1).detach().cpu().numpy()
     acc = (pred == query_label).sum() / pred.shape[0]
