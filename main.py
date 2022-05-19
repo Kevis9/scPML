@@ -93,7 +93,7 @@ def semi_eval(model, query_data_tensor, config, th=0.1):
     '''
         th: threshold
     '''
-    batch_size = config['batch_size_classify']
+    # batch_size = config['batch_size_classify']
     query_data_tensor.to(device)
     model.eval()
     softmax_layer = nn.Softmax(dim=1)
@@ -185,11 +185,11 @@ def train_classifier(ref_data_tensor,
 
     for epoch in range(n_epochs):
         # 加入半监督学习
-        # query_dataset = semi_eval(model, query_data_tensor, config)
-        # concat_dataset = ConcatDataset([ref_dataset, query_dataset])
-        # ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
+        query_dataset = semi_eval(model, query_data_tensor, config)
+        concat_dataset = ConcatDataset([ref_dataset, query_dataset])
+        ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
 
-        print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
+        # print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
         model.train()
         train_loss = []
         train_acc = []
@@ -313,8 +313,12 @@ def transfer_label(data_path: dict,
                                               ref_view_feat_len,
                                               config)
 
-    
+    # 对之前的embedding进行复制
+    ref_h = ref_h.detach().copy()
+    query_h = query_h.detach().copy()
+    ref_label_tensor = ref_label_tensor.detach().copy()
     classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
+
     classifier.eval()
     with torch.no_grad():
         pred = classifier(query_h)
@@ -449,10 +453,6 @@ show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
 show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
 show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
 show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
-
-# show_cluster(h_data_2d, np.concatenate([ret['ref_label'], ret['query_label']]),
-#              'Reference-Query H with prediction label')
-
 # For multi omics part
 show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
              , 'Reference-Query H')
