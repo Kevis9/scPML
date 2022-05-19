@@ -129,7 +129,7 @@ def semi_eval(model, query_data_tensor, config, th=0.1):
     if len(label) > 0:
         print("query dataset len:")
         print(query_dataset.__len__())
-        print(query_dataset[0])
+        # print(query_dataset[0])
 
     return query_dataset
                 
@@ -176,6 +176,7 @@ def train_classifier(ref_data_tensor,
         train_loss = []
         train_acc = []
         for data, labels in ref_dataloader:
+            print(data.shape)
             data = data.to(device)
             labels = labels.to(device)
 
