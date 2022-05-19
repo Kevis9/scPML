@@ -128,10 +128,10 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
     
     
 
-def train_classifier(ref_data_tensor, 
-                    query_data_tensor, 
-                    ref_label_tensor,
-                    config):    
+def train_classifier(ref_data_tensor,
+                     query_data_tensor,
+                     ref_label_tensor,
+                     config):
     '''    
         ref_data: 一般传入ref_h : tensor
         query_data: 一般传入query_h : tensor
@@ -148,15 +148,18 @@ def train_classifier(ref_data_tensor,
     ref_label_tensor.to(device)
     
     # 数据准备
-    
-    ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))        
+    print(ref_data_tensor.shape)
+    print(ref_label_tensor.view(-1).shape)
+    ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))
     ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
-        
+
     for epoch in range(n_epochs):
         model.train()
         train_loss = []
         train_acc = []
         for data, labels in ref_dataloader:
+            print(data.shape)
+            print(labels.shape)
             logits = model(data)
             loss = criterion(logits, labels)
             
