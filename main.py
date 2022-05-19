@@ -124,7 +124,8 @@ def semi_eval(model, query_data_tensor, config, th=0.6):
     
     query_dataset = Subset(query_dataset, cell_idx)
     print("yyy")
-    print(query_dataset[0])
+    if len(label) > 0:
+        print(query_dataset[0])
     query_dataset = QueryDataSet(query_dataset, label)
     print(query_dataset.__len__())
 
