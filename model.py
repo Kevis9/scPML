@@ -193,15 +193,6 @@ class CPMNets():
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item()
             })
-            # r_loss_arr.append(r_loss.detach().item())
-            # c_loss_arr.append(c_loss.detach().item())
-            # r_loss_list.append(r_loss.detach().item() / self.train_len)
-            # c_loss_list.append(c_loss.detach().item() / self.train_len)
-
-        # 绘制loss训练图像
-        # lossPolt(r_loss_list, c_loss_list, n_epochs)
-        # np.save('r_loss.npy', np.array(r_loss_list))
-        # np.save('c_loss.npy', np.array(c_loss_list))
 
     def test(self, data, n_epochs):
         '''

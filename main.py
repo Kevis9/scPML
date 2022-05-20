@@ -70,8 +70,8 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     # ref_h = model.get_h_train().detach().cpu().numpy()
     # query_h = model.get_h_test().detach().cpu().numpy()
     
-    ref_h = model.get_h_train().cpu().numpy()
-    query_h = model.get_h_test().cpu().numpy()
+    ref_h = model.get_h_train().detach().cpu().numpy()
+    query_h = model.get_h_test().detach().cpu().numpy()
     
     return model, ref_h, query_h
 
