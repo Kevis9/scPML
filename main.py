@@ -288,7 +288,7 @@ def transfer_label(data_path: dict,
 
     classifier.eval()
     with torch.no_grad():
-        pred = classifier(query_h)
+        pred = classifier(query_h.to(device))
         ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
         query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
 
