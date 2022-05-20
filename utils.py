@@ -193,7 +193,7 @@ def show_cluster(data, label, title):
     plt.savefig(os.path.join(RESULT_PATH, title+'.png'), bbox_inches='tight') # dpi可以设置
     
     # 数据上报
-    wandb.save(os.path.join(RESULT_PATH, title+'.png'))
+    wandb.save(os.path.join(RESULT_PATH, "_".join(title.split())+'.png'))
     # plt.show()
 
 
