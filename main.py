@@ -115,49 +115,6 @@ def semi_eval(model, query_data_tensor, config):
     return TensorDataset(query_data_tensor, label_tensor)
 
 
-    # query_dataset = TensorDataset(query_data_tensor, torch.zeros(query_data_tensor.shape[0]).view(-1))
-    # query_dataloader = DataLoader(query_dataset, batch_size=batch_size, shuffle=False)
-    #
-    # softmax_layer = nn.Softmax(dim=1)
-    # cell_idx = []
-    # label = []
-    # i = 0
-    # model.eval()
-    #
-    # for batch in query_dataloader:
-    #     data, _ = batch
-    #     with torch.no_grad():
-    #         logits = model(data)
-    #
-    #     probs = softmax_layer(logits)
-    #     probs_argmax = probs.argmax(dim=1).cpu().numpy().tolist()
-    #     # 获取最大的概率
-    #     probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
-    #     for idx, p in enumerate(probs_max):
-    #         if p > th:
-    #             cell_idx.append(idx+i*batch_size)
-    #             label.append(probs_argmax[idx])
-    #
-    #     i += 1
-    #
-    # query_dataset = Subset(query_dataset, cell_idx)
-    #
-    # # if len(label) > 0:
-    # #     print("yyy")
-    # #     print(query_dataset[0])
-    # query_dataset = QueryDataSet(query_dataset, label)
-    # if len(label) > 0:
-    #     print("query dataset len:")
-    #     print(query_dataset.__len__())
-    #     # print(query_dataset[0])
-    #
-    # return query_dataset
-                
-            
-    
-    
-    
-
 def train_classifier(ref_data_tensor,
                      query_data_tensor,
                      ref_label_tensor,
@@ -185,9 +142,9 @@ def train_classifier(ref_data_tensor,
 
     for epoch in range(n_epochs):
         # 加入半监督学习
-        query_dataset = semi_eval(model, query_data_tensor, config)
-        concat_dataset = ConcatDataset([ref_dataset, query_dataset])
-        ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
+        # query_dataset = semi_eval(model, query_data_tensor, config)
+        # concat_dataset = ConcatDataset([ref_dataset, query_dataset])
+        # ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
 
         # print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
         model.train()
@@ -374,7 +331,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'th': 0.7, # 第二个数据预测的阈值
+    'th': 0.8, # 第二个数据预测的阈值
     'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
     'batch_size_classify' : 128,
