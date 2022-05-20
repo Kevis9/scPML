@@ -70,8 +70,8 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     # ref_h = model.get_h_train().detach().cpu().numpy()
     # query_h = model.get_h_test().detach().cpu().numpy()
     
-    ref_h = model.get_h_train()
-    query_h = model.get_h_test()
+    ref_h = model.get_h_train().cpu().numpy()
+    query_h = model.get_h_test().cpu().numpy()
     
     return model, ref_h, query_h
 
@@ -85,7 +85,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
 #
 #     def __len__(self):
 #         return len(self.label)
-        
+
     
         
 def semi_eval(model, query_data_tensor, config):
@@ -192,7 +192,7 @@ def transfer_label(data_path: dict,
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
     # label从1开始
-    ref_label = (ref_enc.fit_transform(ref_label)).astype(np.int64)
+    ref_label = (ref_enc.fit_transform(ref_label)).astype(np.int64) + 1
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
@@ -298,11 +298,11 @@ def transfer_label(data_path: dict,
     acc = acc / pred.shape[0]
 
     # 还原label
-    ref_label = ref_enc.inverse_transform(ref_label)
+    ref_label = ref_enc.inverse_transform(ref_label-1)
 
-    query_label = query_enc.inverse_transform(query_label)
+    query_label = query_enc.inverse_transform(query_label-1)
 
-    pred = query_enc.inverse_transform(pred)
+    pred = query_enc.inverse_transform(pred-1)
 
     ret = {
         'acc': acc,

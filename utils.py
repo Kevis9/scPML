@@ -154,7 +154,7 @@ def cpm_classify(lsd1, lsd2, label):
     label_num = np.sum(label_onehot, axis=0)
     F_h_h_sum = np.dot(F_h_h, label_onehot)
     F_h_h_mean = F_h_h_sum / label_num
-    label_pre = np.argmax(F_h_h_mean, axis=1)
+    label_pre = np.argmax(F_h_h_mean, axis=1) + 1
     return label_pre
 
     
