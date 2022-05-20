@@ -10,7 +10,6 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 from sklearn import preprocessing
-from sklearn.decomposition import PCA
 from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset, ConcatDataset
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
@@ -270,31 +269,33 @@ def transfer_label(data_path: dict,
                                               ref_view_feat_len,
                                               config)
 
+
     # 对之前的embedding进行复制
-    ref_h = ref_h.detach().clone()
-    query_h = query_h.detach().clone()
-    ref_label_tensor = ref_label_tensor.detach().clone()
+    # ref_h = ref_h.detach().clone()
+    # query_h = query_h.detach().clone()
+    # ref_label_tensor = ref_label_tensor.detach().clone()
+    #
+    # # 这里试验下把两者连起来进行类别的训练
+    # all_h = torch.cat([ref_h, query_h], dim=0)
+    # all_label_tensor = torch.cat([ref_label_tensor.view(-1), query_label_tensor.view(-1)])
+    #
+    # # 进行co-train
+    # # classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
+    # classifier = train_classifier(all_h, query_h, all_label_tensor, config)
+    #
+    # classifier.eval()
+    # with torch.no_grad():
+    #     pred = classifier(query_h)
+    #     ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
+    #     query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
+    #
+    # pred = pred.argmax(dim=1).detach().cpu().numpy()
+    # acc = (pred == query_label).sum() / pred.shape[0]
 
-    # 这里试验下把两者连起来进行类别的训练
-    all_h = torch.cat([ref_h, query_h], dim=0)
-    all_label_tensor = torch.cat([ref_label_tensor.view(-1), query_label_tensor.view(-1)])
 
-    # 进行co-train
-    # classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
-    classifier = train_classifier(all_h, query_h, all_label_tensor, config)
-
-    classifier.eval()
-    with torch.no_grad():
-        pred = classifier(query_h)
-        ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
-        query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
-    
-    pred = pred.argmax(dim=1).detach().cpu().numpy()
-    acc = (pred == query_label).sum() / pred.shape[0]
-        
-    # pred = cpm_classify(ref_h, query_h, ref_label)
-    # acc = (pred == query_label).sum()
-    # acc = acc / pred.shape[0]
+    pred = cpm_classify(ref_h, query_h, ref_label)
+    acc = (pred == query_label).sum()
+    acc = acc / pred.shape[0]
 
     # 还原label
     ref_label = ref_enc.inverse_transform(ref_label)
@@ -319,11 +320,11 @@ def transfer_label(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
-    'ref_name': 'rna',
-    'query_name': 'atac',
-    'project': 'omics',
-    'class_num': 12,
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
+    'ref_name': 'cel_seq2',
+    'query_name': '10x_v3',
+    'project': 'platform',
+    'class_num': 7,
     'dataset_name':'PBMC'
 }
 
