@@ -83,11 +83,12 @@ class CPMNets():
         # classes = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
         label_onehot = torch.zeros((self.train_len, self.class_num)).to(device)
         # gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
+
         label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
         label_num = torch.sum(label_onehot, dim=0)  # 得到每个label的样本数
         F_h_h_sum = torch.mm(F_h_h, label_onehot)
 
-        print('From classification_loss, label num is : {:}}'.format(label_num))
+        print('From classification_loss, label num is : {:}'.format(label_num))
 
         label_num[torch.where(label_num==0)] = 1 # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
         
