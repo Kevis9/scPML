@@ -192,7 +192,7 @@ def transfer_label(data_path: dict,
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
     # label从1开始
-    ref_label = (ref_enc.fit_transform(ref_label)).astype(np.int64) + 1
+    ref_label = (ref_enc.fit_transform(ref_label)).astype(np.int64)
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
@@ -298,11 +298,11 @@ def transfer_label(data_path: dict,
     acc = acc / pred.shape[0]
 
     # 还原label
-    ref_label = ref_enc.inverse_transform(ref_label-1)
+    ref_label = ref_enc.inverse_transform(ref_label)
 
-    query_label = query_enc.inverse_transform(query_label-1)
+    query_label = query_enc.inverse_transform(query_label)
 
-    pred = query_enc.inverse_transform(pred-1)
+    pred = query_enc.inverse_transform(pred)
 
     ret = {
         'acc': acc,
