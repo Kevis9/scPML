@@ -153,7 +153,8 @@ def train_classifier(ref_data_tensor,
             # print(data.shape)
             # data = data.to(device)
             # labels = labels.to(device)
-
+            data = data.to(device)
+            labels = labels.to(device)
             logits = model(data)
             loss = criterion(logits, labels)
             
