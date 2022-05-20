@@ -274,7 +274,14 @@ def transfer_label(data_path: dict,
     ref_h = ref_h.detach().clone()
     query_h = query_h.detach().clone()
     ref_label_tensor = ref_label_tensor.detach().clone()
-    classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
+
+    # 这里试验下把两者连起来进行类别的训练
+    all_h = torch.cat([ref_h, query_h], dim=0)
+    all_label_tensor = torch.cat([ref_label_tensor.view(-1), query_label_tensor.view(-1)])
+
+    # 进行co-train
+    # classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
+    classifier = train_classifier(all_h, query_h, all_label_tensor, config)
 
     classifier.eval()
     with torch.no_grad():
