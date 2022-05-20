@@ -276,6 +276,9 @@ def transfer_label(data_path: dict,
     ref_h = torch.from_numpy(ref_h)
     query_h = torch.from_numpy(query_h)
 
+    ref_h = ref_h.to(device)
+    query_h = query_h.to(device)
+
     ref_label_tensor = ref_label_tensor.detach().clone()
 
     # 这里试验下把两者连起来进行类别的训练
