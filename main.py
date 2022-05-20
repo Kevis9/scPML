@@ -331,7 +331,7 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 800,  # Huang model 训练的epoch
+    'epoch_GCN': 10,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 5000,
     'epoch_classify': 120,
