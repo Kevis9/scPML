@@ -62,122 +62,17 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
                     config['w_classify'])
 
     # 开始训练
-    model.train_model(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
+    model.train_ref_h(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.test(query_data_embeddings, config['epoch_CPM_test'])
+    model.train_query_h(query_data_embeddings ,config['epoch_CPM_test'], config['do_omics'])
 
-    # ref_h = model.get_h_train().detach().cpu().numpy()
-    # query_h = model.get_h_test().detach().cpu().numpy()
-    
     ref_h = model.get_h_train().detach().cpu().numpy()
     query_h = model.get_h_test().detach().cpu().numpy()
     
     return model, ref_h, query_h
 
-# class QueryDataSet(Dataset):
-#     def __init__(self, x, y):
-#         self.data = x
-#         self.label = y
-#
-#     def __getitem__(self, index):
-#         return self.data[index][0], self.label[index]
-#
-#     def __len__(self):
-#         return len(self.label)
-
-    
-        
-def semi_eval(model, query_data_tensor, config):
-    '''
-        th: threshold
-    '''
-    # batch_size = config['batch_size_classify']
-    query_data_tensor.to(device)
-    model.eval()
-    softmax_layer = nn.Softmax(dim=1)
-    with torch.no_grad():
-        probs = softmax_layer(model(query_data_tensor))
-    probs_argmax = probs.argmax(dim=1).cpu().numpy().tolist()
-    # 获取最大的概率
-    cell_idx = []
-    label = []
-    probs_max = probs.max(dim=1).values.cpu().numpy().tolist()
-    for idx, p in enumerate(probs_max):
-        if p > config['th']:
-            cell_idx.append(idx)
-            label.append(probs_argmax[idx])
-    label_tensor = torch.from_numpy(np.array(label)).view(-1).long()
-    label_tensor = label_tensor.to(device)
-    query_data_tensor = query_data_tensor[cell_idx, :]
-
-    return TensorDataset(query_data_tensor, label_tensor)
-
-
-def train_classifier(ref_data_tensor,
-                     query_data_tensor,
-                     ref_label_tensor,
-                     config):
-    '''    
-        ref_data: 一般传入ref_h : tensor
-        query_data: 一般传入query_h : tensor
-    '''
-    
-    model = Classifier(config['lsd_dim'], config['ref_class_num'])
-    optimizer = torch.optim.Adam(model.parameters())
-    criterion = nn.CrossEntropyLoss()
-    n_epochs = config['epoch_classify']
-    batch_size = config['batch_size_classify']
-
-    model.to(device)
-    ref_data_tensor.to(device)
-    query_data_tensor.to(device)
-    ref_label_tensor.to(device)
-
-
-    # 数据准备
-    ref_dataset = TensorDataset(ref_data_tensor, ref_label_tensor.view(-1))
-    ref_dataloader = DataLoader(ref_dataset, batch_size=batch_size, shuffle=True)
-
-    for epoch in range(n_epochs):
-        # 加入半监督学习
-        # query_dataset = semi_eval(model, query_data_tensor, config)
-        # concat_dataset = ConcatDataset([ref_dataset, query_dataset])
-        # ref_dataloader = DataLoader(concat_dataset, batch_size=batch_size, shuffle=True)
-
-        # print("ref dataset len is {:}".format(ref_dataloader.dataset.__len__()))
-        model.train()
-        train_loss = []
-        train_acc = []
-        for data, labels in ref_dataloader:
-            # print(data.shape)
-            # data = data.to(device)
-            # labels = labels.to(device)
-            data = data.to(device)
-            labels = labels.to(device)
-            logits = model(data)
-            loss = criterion(logits, labels)
-            
-            optimizer.zero_grad()
-            loss.backward()
-            # '''
-            #     梯度爆炸剪枝
-            # '''
-            # grad_norm = nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)        
-            optimizer.step()            
-            acc = (logits.argmax(dim=1) == labels).float().mean().item()
-            
-            train_loss.append(loss.item())
-            train_acc.append(acc)
-        
-        train_loss = sum(train_loss) / len(train_loss)
-        train_acc = sum(train_acc) / len(train_acc)
-        
-        print('Epoch: {:} Train loss {:.3f}, Train acc {:.3f}'.format(epoch, train_loss, train_acc))
-
-    return model
-
-def transfer_label(data_path: dict,
+def transfer_train(data_path: dict,
                    label_path: dict,
                    sm_path: dict,
                    config: dict):
@@ -390,7 +285,7 @@ print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 # 获取结果
-ret = transfer_label(dataPath, labelPath, SMPath, config)
+ret = transfer_train(dataPath, labelPath, SMPath, config)
 
 
 embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)

@@ -5,7 +5,7 @@ import wandb
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
-
+from utils import cpm_classify
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
@@ -69,7 +69,7 @@ class CPMNets():
         '''
         return ((r_x - x) ** 2).sum()
 
-    def classification_loss(self, gt):
+    def classification_loss(self, h, gt):
         '''
         :param gt: ground truth labels (把train部分的label传进来),
 
@@ -77,11 +77,11 @@ class CPMNets():
         :param len:
         :return: 返回classfication的loss
         '''
-        F_h_h = torch.mm(self.h_train, self.h_train.t())
+        F_h_h = torch.mm(h, h.t())
         F_hn_hn = torch.diag(F_h_h)
         F_h_h = F_h_h - torch.diag_embed(F_hn_hn)  # 将F_h_h对角线部分置0
         # classes = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
-        label_onehot = torch.zeros((self.train_len, self.class_num)).to(device)
+        label_onehot = torch.zeros((h.shape[0], self.class_num)).to(device)
         # gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
 
         label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
@@ -140,8 +140,18 @@ class CPMNets():
 
         return F.relu(variance_loss - dist_loss)
 
+    def similarity_loss(self, ref_h, query_h):
+        '''
+        对于paired omics data，我们计算每个样本feature的Similarity
+        :param ref_h:
+        :param query_h:
+        :return:
+        '''
+        F_ref_query = torch.mm(ref_h, query_h.t())
+        F_diag = torch.diag(F_ref_query)
+        return -torch.sum(F_diag)
 
-    def train_model(self, data, labels, n_epochs, lr):
+    def train_ref_h(self, data, labels, n_epochs, lr):
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
@@ -168,9 +178,10 @@ class CPMNets():
                 r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
 
             # 每个样本的平均loss
-            r_loss = r_loss / self.train_len
+            # r_loss = r_loss / self.train_len
 
-            c_loss = self.classification_loss(labels)
+            c_loss = self.classification_loss(self.h, labels)
+
 
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
             all_loss = r_loss + self.w * c_loss
@@ -188,45 +199,59 @@ class CPMNets():
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
             if epoch % 1000 == 0:
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                    epoch, r_loss.detach().item() , c_loss.detach().item()))
+                    epoch, r_loss.detach().item(), c_loss.detach().item()))
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item()
             })
 
-    def test(self, data, n_epochs):
+    def train_query_h(self, data, n_epochs, do_omics):
         '''
-        对h_test做一个训练调整
-        :param data: 测试数据
+        :param data: query data
         :param n_epochs:
+        :param do_omics: Bool: True for the omics part.
         :return:
         '''
         data = data.to(device)
         optimizer_for_test_h = optim.Adam(params=[self.h_test])
-        r_loss_list = []
+
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[str(v)](self.h_test), data[:, self.view_idx[v]])
 
+            all_loss = r_loss
+            if do_omics:
+                # similarity loss
+                s_loss = self.similarity_loss(self.h_train, self.h_test)
+                all_loss = F.relu(all_loss + s_loss)
+
             # 每个view的平均loss
             # r_loss = r_loss / self.view_num
             # 每个测试样本的平均r_loss
-            r_loss = r_loss / self.test_len
+            # r_loss = r_loss / self.test_len
 
             optimizer_for_test_h.zero_grad()
-            r_loss.backward()
+            all_loss.backward()
             optimizer_for_test_h.step()
-            # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 1000 == 0:
-                print('TEST: epoch %d: Reconstruction loss = %.3f '%(
-                    epoch, r_loss.detach().item()))
-            wandb.log({
-                'CPM test: reconstruction loss': r_loss.detach().item()
-            })
 
-            # r_loss_list.append(r_loss.detach().item() / self.train_len)
-        # np.save('test_r_loss.npy', np.array(r_loss_list))
+
+            if epoch % 1000 == 0:
+                print('Train query h: epoch %d: Reconstruction loss = %.3f'%(
+                    epoch, r_loss.detach().item()), end=" ")
+                if do_omics:
+                    print('Similarity loss = %.3f' % (
+                        s_loss.detach().item()))
+                else:
+                    print("")
+
+            wandb.log({
+                'CPM query h: reconstruction loss': r_loss.detach().item()
+            })
+            if do_omics:
+                wandb.log({
+                    'CPM query h: similarity loss': s_loss.detach().item()
+                })
 
 
     def get_h_train(self):
