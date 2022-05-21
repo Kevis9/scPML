@@ -229,9 +229,9 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 10,  # Huang model 训练的epoch
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 5000,
+    'epoch_CPM_test': 3000,
     'epoch_classify': 120,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.0001,

@@ -185,7 +185,7 @@ def show_cluster(data, label, title):
     df = pd.DataFrame(data=data)
     plt.figure(figsize=(8, 6))
 
-    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=1)
+    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=3)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
