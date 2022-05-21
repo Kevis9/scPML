@@ -147,6 +147,8 @@ class CPMNets():
         :param query_h:
         :return:
         '''
+        ref_h = ref_h.to(device)
+        query_h = query_h.to(device)
         F_ref_query = torch.mm(ref_h, query_h.t())
         F_diag = torch.diag(F_ref_query)
         return -torch.sum(F_diag)
@@ -213,7 +215,7 @@ class CPMNets():
         :return:
         '''
         data = data.to(device)
-        optimizer_for_test_h = optim.Adam(params=[self.h_test])
+        optimizer_for_query_h = optim.Adam(params=[self.h_test])
 
         for epoch in range(n_epochs):
             r_loss = 0
@@ -226,14 +228,10 @@ class CPMNets():
                 s_loss = self.similarity_loss(self.h_train, self.h_test)
                 all_loss = F.relu(all_loss + s_loss)
 
-            # 每个view的平均loss
-            # r_loss = r_loss / self.view_num
-            # 每个测试样本的平均r_loss
-            # r_loss = r_loss / self.test_len
 
-            optimizer_for_test_h.zero_grad()
+            optimizer_for_query_h.zero_grad()
             all_loss.backward()
-            optimizer_for_test_h.step()
+            optimizer_for_query_h.step()
 
 
             if epoch % 1000 == 0:

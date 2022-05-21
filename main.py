@@ -168,35 +168,35 @@ def transfer_train(data_path: dict,
 
     # 对之前的embedding进行复制
 
-    ref_h = torch.from_numpy(ref_h)
-    query_h = torch.from_numpy(query_h)
-
-    ref_h = ref_h.to(device)
-    query_h = query_h.to(device)
-
-    ref_label_tensor = ref_label_tensor.detach().clone()
-
-    # 这里试验下把两者连起来进行类别的训练
-    all_h = torch.cat([ref_h, query_h], dim=0)
-    all_label_tensor = torch.cat([ref_label_tensor.view(-1), query_label_tensor.view(-1)])
+    # ref_h = torch.from_numpy(ref_h)
+    # query_h = torch.from_numpy(query_h)
+    #
+    # ref_h = ref_h.to(device)
+    # query_h = query_h.to(device)
+    #
+    # ref_label_tensor = ref_label_tensor.detach().clone()
+    #
+    # # 这里试验下把两者连起来进行类别的训练
+    # all_h = torch.cat([ref_h, query_h], dim=0)
+    # all_label_tensor = torch.cat([ref_label_tensor.view(-1), query_label_tensor.view(-1)])
 
     # 进行co-train
     # classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
-    classifier = train_classifier(all_h, query_h, all_label_tensor, config)
+    # classifier = train_classifier(all_h, query_h, all_label_tensor, config)
 
-    classifier.eval()
-    with torch.no_grad():
-        pred = classifier(query_h.to(device))
-        ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
-        query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
+    # classifier.eval()
+    # with torch.no_grad():
+    #     pred = classifier(query_h.to(device))
+    #     ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
+    #     query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
+    #
+    # pred = pred.argmax(dim=1).detach().cpu().numpy()
+    # acc = (pred == query_label).sum() / pred.shape[0]
 
-    pred = pred.argmax(dim=1).detach().cpu().numpy()
-    acc = (pred == query_label).sum() / pred.shape[0]
 
-
-    # pred = cpm_classify(ref_h, query_h, ref_label)
-    # acc = (pred == query_label).sum()
-    # acc = acc / pred.shape[0]
+    pred = cpm_classify(ref_h, query_h, ref_label)
+    acc = (pred == query_label).sum()
+    acc = acc / pred.shape[0]
 
     # 还原label
     ref_label = ref_enc.inverse_transform(ref_label)
@@ -220,12 +220,12 @@ def transfer_train(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/PBMC/processed_data',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
     'ref_name': 'rna',
     'query_name': 'atac',
     'project': 'omics',
-    'class_num': 12,
-    'dataset_name':'PBMC'
+    'class_num': 3,
+    'dataset_name':'A549'
 }
 
 config = {
@@ -240,6 +240,7 @@ config = {
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'th': 0.8, # 第二个数据预测的阈值
+    'do_omics': True,
     'middle_out': 2000,  # GCN中间层维数
     'w_classify': 1,  # classfication loss的权重
     'batch_size_classify' : 128,
