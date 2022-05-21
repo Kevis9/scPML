@@ -277,7 +277,9 @@ SMPath = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_" + data_config['project'], entity="kevislin", config=config,
+wandb.init(project="cell_classify_" + data_config['project'],
+           entity="kevislin",
+           config={"config":config, "data_config": data_config},
            tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
                  str(data_config['class_num']) + ' class', data_config['dataset_name']])
 
