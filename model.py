@@ -180,7 +180,7 @@ class CPMNets():
                 r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
 
             # 每个样本的平均loss
-            # r_loss = r_loss / self.train_len
+            r_loss = r_loss / self.train_len
 
             c_loss = self.classification_loss(self.h_train, labels)
 
@@ -200,7 +200,6 @@ class CPMNets():
 
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
             if epoch % 1000 == 0:
-
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item(), c_loss.detach().item()))
             wandb.log({

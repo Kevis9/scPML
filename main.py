@@ -220,12 +220,12 @@ def transfer_train(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_10x_v3',
-    'ref_name': 'drop_seq',
-    'query_name': '10x_v3',
-    'project': 'platform',
-    'class_num': 8,
-    'dataset_name':'PBMC'
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
+    'ref_name': 'rna',
+    'query_name': 'atac',
+    'project': 'omics',
+    'class_num': 3,
+    'dataset_name':'A549'
 }
 
 config = {
@@ -244,7 +244,7 @@ config = {
     'middle_out': 3000,  # GCN中间层维数
     'w_classify': 1000,  # classfication loss的权重
     'batch_size_classify' : 128,
-    'note':""
+    'note':"这里不加入Similarity loss"
 }
 
 
