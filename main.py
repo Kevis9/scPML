@@ -242,7 +242,7 @@ config = {
     'th': 0.8, # 第二个数据预测的阈值
     'do_omics': False,
     'middle_out': 3000,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'w_classify': 1000,  # classfication loss的权重
     'batch_size_classify' : 128,
     'note':""
 }
