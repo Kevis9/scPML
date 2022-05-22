@@ -220,11 +220,11 @@ def transfer_train(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/cel_seq2_10x_v3',
-    'ref_name': 'cel_seq2',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/platform_data/PBMC/drop_seq_10x_v3',
+    'ref_name': 'drop_seq',
     'query_name': '10x_v3',
     'project': 'platform',
-    'class_num': 7,
+    'class_num': 8,
     'dataset_name':'PBMC'
 }
 
@@ -330,5 +330,7 @@ show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label
 # For multi omics part
 show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
              , 'Reference-Query H')
+show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
+             , 'Reference-Query H with pred label')
 show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
              , 'Reference-Query Raw')
