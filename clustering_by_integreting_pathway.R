@@ -116,7 +116,7 @@ main<-function(paName, scName,s, paPath, save_path){
 scName= 'yan'
 paPath = "/home/zhianhuang/yuanhuang/kevislin/data/pathway"
 # rna
-data_path = '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/PBMC/processed_data'
+data_path = '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v3'
 
 mat_name = 'rna_data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='/'))
@@ -126,7 +126,6 @@ main('KEGG', scName,'human', paPath, save_path)
 main('Reactome', scName,'human', paPath, save_path)
 main('Wikipathways', scName,'human', paPath, save_path)
 main('de novo pathway', scName,'human', paPath, save_path)
-
 
 # atac
 mat_name = 'atac_data.csv'

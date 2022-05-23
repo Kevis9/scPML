@@ -2,7 +2,7 @@ import os.path
 import torch
 from torch import embedding, nn
 from utils import sc_normalization, mask_data, construct_graph, \
-    read_data_label, read_similarity_mat, \
+    read_data_label_h5, read_similarity_mat, \
     cpm_classify, z_score_normalization, show_cluster, \
     concat_views, BatchEntropy, runPCA, runUMAP
 from model import scGNN, CPMNets, Classifier
@@ -72,8 +72,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     
     return model, ref_h, query_h
 
-def transfer_train(data_path: dict,
-                   label_path: dict,
+def transfer_train(data_config: dict,
                    sm_path: dict,
                    config: dict):
     '''
@@ -83,7 +82,8 @@ def transfer_train(data_path: dict,
     :param config: 相关参数的配置
     :return:
     '''
-    ref_data, ref_label = read_data_label(data_path['ref'], label_path['ref'])
+
+    ref_data, ref_label = read_data_label_h5(data_config['data_path'], data_config['ref_name'])
     
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
@@ -133,7 +133,7 @@ def transfer_train(data_path: dict,
     '''
         Query data
     '''
-    query_data, query_label = read_data_label(data_path['query'], label_path['query'])
+    query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_name'])
     query_data = query_data.astype(np.float64)
     query_enc = preprocessing.LabelEncoder()
     query_label = (query_enc.fit_transform(query_label)).astype(np.int64)
@@ -166,34 +166,6 @@ def transfer_train(data_path: dict,
                                               config)
 
 
-    # 对之前的embedding进行复制
-
-    # ref_h = torch.from_numpy(ref_h)
-    # query_h = torch.from_numpy(query_h)
-    #
-    # ref_h = ref_h.to(device)
-    # query_h = query_h.to(device)
-    #
-    # ref_label_tensor = ref_label_tensor.detach().clone()
-    #
-    # # 这里试验下把两者连起来进行类别的训练
-    # all_h = torch.cat([ref_h, query_h], dim=0)
-    # all_label_tensor = torch.cat([ref_label_tensor.view(-1), query_label_tensor.view(-1)])
-
-    # 进行co-train
-    # classifier = train_classifier(ref_h, query_h, ref_label_tensor, config)
-    # classifier = train_classifier(all_h, query_h, all_label_tensor, config)
-
-    # classifier.eval()
-    # with torch.no_grad():
-    #     pred = classifier(query_h.to(device))
-    #     ref_h = classifier.get_embedding(ref_h).detach().cpu().numpy()
-    #     query_h = classifier.get_embedding(query_h).detach().cpu().numpy()
-    #
-    # pred = pred.argmax(dim=1).detach().cpu().numpy()
-    # acc = (pred == query_label).sum() / pred.shape[0]
-
-
     pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
@@ -220,12 +192,12 @@ def transfer_train(data_path: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/PBMC/processed_data',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
     'ref_name': 'rna',
     'query_name': 'atac',
     'project': 'omics',
-    'class_num': 12,
-    'dataset_name':'PBMC'
+    'class_num': 3,
+    'dataset_name':'A549'
 }
 
 config = {
@@ -245,18 +217,6 @@ config = {
     'w_classify': 100,  # classfication loss的权重
     'batch_size_classify' : 128,
     'note':"这里不加入Similarity loss"
-}
-
-
-# 给出ref和query data所在的路径
-dataPath = {
-    'ref': os.path.join(data_config['data_path'], data_config['ref_name'] + '_data.csv'),
-    'query': os.path.join(data_config['data_path'], data_config['query_name'] + '_data.csv'),
-}
-# label所在的路径
-labelPath = {
-    'ref': os.path.join(data_config['data_path'], data_config['ref_name'] + '_label.csv'),
-    'query': os.path.join(data_config['data_path'], data_config['query_name'] + '_label.csv'),
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
@@ -288,7 +248,7 @@ print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 # 获取结果
-ret = transfer_train(dataPath, labelPath, SMPath, config)
+ret = transfer_train(data_config, SMPath, config)
 
 
 embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)

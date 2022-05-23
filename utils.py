@@ -110,26 +110,39 @@ def construct_graph(data, similarity_mat, k):
     return g_data
 
 
-def read_data_label(data_path, label_path):
-    '''
-    读取数据, 数据格式需要满足一定格式
-    表达矩阵第一列是cell id, 第一行是名称
-    label矩阵只有一列
-    
-
-    :param Single cell的表达矩阵Path
-    :param 标签Path
-    :return: 返回Numpy类型数组（表达矩阵，标签）
-    '''
+def read_data_label_h5(data_path, key):
     print('Reading data...')
-    data_df = pd.read_csv(data_path, index_col=0)
+    data_df = pd.read_hdf(data_path, key+'_data')
     data = data_df.to_numpy()
 
-    label_df = pd.read_csv(label_path)
+    label_df = pd.read_hdf(data_path, key+'_label')
     label = label_df.to_numpy().reshape(-1)
+
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     print('label的shape为 : {}'.format(label.shape))
     return data, label
+
+# def read_data_label(data_path, label_path):
+#     '''
+#     读取数据, 数据格式需要满足一定格式
+#     表达矩阵第一列是cell id, 第一行是名称
+#     label矩阵只有一列
+#
+#
+#     :param Single cell的表达矩阵Path
+#     :param 标签Path
+#     :return: 返回Numpy类型数组（表达矩阵，标签）
+#     '''
+#
+#     print('Reading data...')
+#     data_df = pd.read_csv(data_path, index_col=0)
+#     data = data_df.to_numpy()
+#
+#     label_df = pd.read_csv(label_path)
+#     label = label_df.to_numpy().reshape(-1)
+#     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
+#     print('label的shape为 : {}'.format(label.shape))
+#     return data, label
 
 
 def read_similarity_mat(path):    
