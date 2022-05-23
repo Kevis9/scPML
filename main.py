@@ -82,8 +82,9 @@ def transfer_train(data_config: dict,
     :param config: 相关参数的配置
     :return:
     '''
+    data_path = os.path.join(data_config['data_path'], 'data.h5')
 
-    ref_data, ref_label = read_data_label_h5(data_config['data_path'], data_config['ref_name'])
+    ref_data, ref_label = read_data_label_h5(data_path, data_config['ref_name'])
     
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
@@ -133,7 +134,7 @@ def transfer_train(data_config: dict,
     '''
         Query data
     '''
-    query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_name'])
+    query_data, query_label = read_data_label_h5(data_path, data_config['query_name'])
     query_data = query_data.astype(np.float64)
     query_enc = preprocessing.LabelEncoder()
     query_label = (query_enc.fit_transform(query_label)).astype(np.int64)
@@ -192,7 +193,7 @@ def transfer_train(data_config: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v3',
     'ref_name': 'rna',
     'query_name': 'atac',
     'project': 'omics',
