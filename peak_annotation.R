@@ -5,7 +5,7 @@ library(patchwork)
 
 # peaks <- Read10X_h5("atac_v1_pbmc_10k_filtered_peak_bc_matrix.h5")
 # create a gene activity matrix from the peak matrix and GTF, using chromosomes 1:22, X, and Y.
-chromosomes = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19',
+chromosomes = c('chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19',
                 'chr2', 'chr20', 'chr21', 'chr22', 'chr3', 'chr4', 'chr5', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9',
                 'GL000191.1', 'GL000192.1', 'GL000193.1', 'GL000194.1', 'GL000195.1', 'GL000196.1', 'GL000198.1',
                 'GL000199.1', 'GL000201.1', 'GL000202.1', 'GL000204.1', 'GL000205.1', 'GL000208.1', 'GL000209.1',
@@ -41,7 +41,7 @@ chromosomes = ['chr1', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'ch
                 'JH806601.1', 'JH806602.1', 'JH806603.1', 'KB021645.1', 'KB021646.2', 'KB021647.1', 'KB021648.1',
                 'KB663603.1', 'KB663604.1', 'KB663605.1', 'KB663606.1', 'KB663607.2', 'KB663608.1', 'KB663609.1',
                 'KE332495.1', 'KE332496.1', 'KE332497.1', 'KE332498.1', 'KE332499.1', 'KE332501.1', 'KE332502.1',
-                'KE332505.1', 'KE332506.1', 'M', 'chrX', 'chrY', 'hs37d5']
+                'KE332505.1', 'KE332506.1', 'M', 'chrX', 'chrY', 'hs37d5')
 
 atac_data = read.csv('atac_middle_out.csv', row.names=1)
 # print(rownames(atac_data))
