@@ -50,13 +50,13 @@ label_df = rna_cell.iloc[label_idx, :]['treatment_time']
 # 对RNA做gene selection
 # Create and fit selector
 
-selector = SelectKBest(f_classif, k=10000)
-selector.fit(rna_df.to_numpy(), label_df.to_numpy())
-cols = selector.get_support(indices=True)
-rna_df = rna_df.iloc[:, cols]
-print(rna_df.shape)
-rna_df.to_csv('rna_data.csv')
-label_df.to_csv('label.csv', index=False)
+# selector = SelectKBest(f_classif, k=10000)
+# selector.fit(rna_df.to_numpy(), label_df.to_numpy())
+# cols = selector.get_support(indices=True)
+# rna_df = rna_df.iloc[:, cols]
+# print(rna_df.shape)
+
+# label_df.to_csv('label.csv', index=False)
 # data = reduce_dimension(rna_df)
 # show_cluster(data, label_df.to_numpy().reshape(-1), 'rna_8000_v2')
 # exit()
@@ -84,7 +84,7 @@ print(rna_df.shape)
 print(atac_df.shape)
 print(label_df.shape)
 
-
+rna_df.to_csv('rna_data.csv')
 atac_df.to_csv('atac_data.csv')
 label_df.to_csv('label.csv', index=False)
 

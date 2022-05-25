@@ -187,8 +187,6 @@ def show_cluster(data, label, title):
     :param label: 样本的标签
     :param title: 可视化窗口的titleplt.scatter
     '''
-    
-    
     data = {
         'x':data[:,0],
         'y':data[:,1],
