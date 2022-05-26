@@ -55,10 +55,12 @@ class CPMNets():
         self.net = dict()
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
-                nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
-                # nn.ReLU(),
-                # nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i], device=device)
-                # nn.Dropout(0.2)
+                nn.Linear(self.lsd_dim, int(view_d_arr[i]/4), device=device),  # 我对源码的理解就是只有一层全连接
+                nn.ReLU(),
+                nn.Linear(int(view_d_arr[i]/4),  int(view_d_arr[i]/2), device=device),
+                nn.ReLU(),
+                nn.Dropout(0.2),
+                nn.Linear(int(view_d_arr[i] / 2), view_d_arr[i], device=device)
             )
 
     def reconstrution_loss(self, r_x, x):
