@@ -195,10 +195,10 @@ def show_cluster(data, label, title):
     
     df = pd.DataFrame(data=data)
     # 去掉部分数据(为了更好的可视化)
-    df = df[~((df['x']>10) | (df['y']>10))]
+    # df = df[~((df['x']>10) | (df['y']>10))]
 
     plt.figure(figsize=(8, 6))
-    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=3)
+    sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=1)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')

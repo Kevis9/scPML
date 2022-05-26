@@ -58,7 +58,7 @@ class CPMNets():
                 nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.ReLU(),
                 # nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i], device=device)
-                nn.Dropout(0.2)
+                # nn.Dropout(0.2)
             )
 
     def reconstrution_loss(self, r_x, x):
@@ -227,7 +227,7 @@ class CPMNets():
             if do_omics:
                 # similarity loss
                 s_loss = self.similarity_loss(self.h_train, self.h_test)
-                all_loss = F.relu(all_loss + s_loss)
+                all_loss = F.relu(all_loss + 0.1*s_loss)
 
 
             optimizer_for_query_h.zero_grad()
