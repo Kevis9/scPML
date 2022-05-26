@@ -59,7 +59,7 @@ class CPMNets():
                 nn.ReLU(),
                 nn.Linear(int(view_d_arr[i]/4),  int(view_d_arr[i]/2), device=device),
                 nn.ReLU(),
-                nn.Dropout(0.2),
+                # nn.Dropout(0.2),
                 nn.Linear(int(view_d_arr[i] / 2), view_d_arr[i], device=device)
             )
 
