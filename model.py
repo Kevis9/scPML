@@ -57,7 +57,7 @@ class CPMNets():
             self.net[str(i)] = nn.Sequential(
                 nn.Linear(self.lsd_dim, int(view_d_arr[i]/2), device=device),  # 我对源码的理解就是只有一层全连接
                 nn.ReLU(),
-                nn.Linear(int(view_d_arr/2),  view_d_arr[i], device=device)
+                nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i], device=device)
                 # nn.Dropout(0.2)
             )
 
