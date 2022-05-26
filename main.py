@@ -4,7 +4,7 @@ from torch import embedding, nn
 from utils import sc_normalization, mask_data, construct_graph, \
     read_data_label_h5, read_similarity_mat, \
     cpm_classify, z_score_normalization, show_cluster, \
-    concat_views, BatchEntropy, runPCA, runUMAP
+    concat_views, batch_mixing_entropy, runPCA, runUMAP
 from model import scGNN, CPMNets, Classifier
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
@@ -193,7 +193,7 @@ def transfer_train(data_config: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v4',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v3',
     'ref_name': 'rna',
     'query_name': 'atac',
     'project': 'omics',
@@ -255,7 +255,7 @@ query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
 # evaluation metrics
 s_score = silhouette_score(query_h, ret['pred'])
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
-bme = BatchEntropy(ref_h, query_h)
+bme = batch_mixing_entropy(ref_h, query_h)
 bme = sum(bme) / len(bme)
 
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
