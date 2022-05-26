@@ -213,7 +213,7 @@ config = {
     'k': 2,  # 图构造的时候k_neighbor参数
     'do_omics': False,
     'middle_out': 1024,  # GCN中间层维数
-    'w_classify': 100,  # classfication loss的权重
+    'w_classify': 10,  # classfication loss的权重
     's_weight': 1, # similarity loss 权重
 }
 
