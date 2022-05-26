@@ -12,7 +12,7 @@ from utils import cpm_classify
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class CPMNets():
-    def __init__(self, view_num, train_len, test_len, view_d_arr, class_num, lsd_dim, w):
+    def __init__(self, view_num, train_len, test_len, view_d_arr, class_num, lsd_dim, config):
         '''
         :param view_num: view的数目
         :param train_len: training data length
@@ -24,7 +24,7 @@ class CPMNets():
         这里也不考虑用源码中的sn矩阵，因为我们不缺view，也没必要随机取产生缺失的view
         '''
         super(CPMNets, self).__init__()
-        self.w = w
+        self.config = config
         self.view_num = view_num
         # 记录每一个view在data中的index 比如第一个view的长度是10，那么0,1,...,9都放在view_idx[0]中
         self.view_idx = [[] for v in view_d_arr]
@@ -185,7 +185,7 @@ class CPMNets():
             c_loss = self.classification_loss(self.h_train, labels)
 
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.w * c_loss
+            all_loss = r_loss + self.config['w_classify'] * c_loss
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
@@ -227,7 +227,7 @@ class CPMNets():
             if do_omics:
                 # similarity loss
                 s_loss = self.similarity_loss(self.h_train, self.h_test)
-                all_loss = F.relu(all_loss + 0.1*s_loss)
+                all_loss = F.relu(all_loss + self.config['s_weight']*s_loss)
 
 
             optimizer_for_query_h.zero_grad()

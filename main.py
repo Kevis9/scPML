@@ -59,7 +59,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     test_len = query_data_embeddings.shape[0]
     # lsd_dim 作为超参数可调
     model = CPMNets(ref_view_num, train_len, test_len, ref_view_feat_len, config['ref_class_num'], config['lsd_dim'],
-                    config['w_classify'])
+                    config)
 
     # 开始训练
     model.train_ref_h(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
@@ -202,9 +202,9 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 2000,  # Huang model 训练的epoch
+    'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 2000,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
@@ -214,6 +214,7 @@ config = {
     'do_omics': True,
     'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
+    's_weight': 1, # similarity loss 权重
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
