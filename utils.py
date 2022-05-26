@@ -177,7 +177,7 @@ def runUMAP(data):
     return data_2d
 
 def runPCA(data):
-    pca = PCA(n_components=50)
+    pca = PCA(n_components=32)
     return pca.fit_transform(data)
 
 def show_cluster(data, label, title):
@@ -194,8 +194,10 @@ def show_cluster(data, label, title):
     }
     
     df = pd.DataFrame(data=data)
+    # 去掉部分数据(为了更好的可视化)
+    df = df[~((df['x']>10) | (df['y']>10))]
+    
     plt.figure(figsize=(8, 6))
-
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=3)
     plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
     plt.xlabel('UMAP1')
