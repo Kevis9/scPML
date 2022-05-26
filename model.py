@@ -101,7 +101,7 @@ class CPMNets():
         F_h_hn_mean_ = torch.mul(F_h_h_mean, label_onehot)
         F_h_hn_mean = torch.sum(F_h_hn_mean_, dim=1)  # 1*n
 
-        return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
+        return torch.sum(F.relu(100*theta + (F_h_h_mean_max - F_h_hn_mean)))
         # return torch.sum(F.relu(F_h_h_mean_max - F_h_hn_mean))
 
     def fisher_loss(self, gt):
@@ -156,6 +156,16 @@ class CPMNets():
         F_diag = torch.diag(F_ref_query)
         return -torch.sum(F_diag)
 
+    # def intra_loss(self, h, labels):
+    #     '''
+    #     计算h簇内平均距离
+    #     :param h:
+    #     :param labels:
+    #     :return:
+    #     '''
+
+
+
     def train_ref_h(self, data, labels, n_epochs, lr):
         '''
         这个函数直接对模型进行训练
@@ -188,7 +198,7 @@ class CPMNets():
             f_loss = self.fisher_loss(labels)
 
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss + 5 * f_loss
+            all_loss = r_loss + self.config['w_classify'] * c_loss
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
