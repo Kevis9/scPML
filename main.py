@@ -203,7 +203,7 @@ data_config = {
 
 config = {
     'epoch_GCN': 2500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 3000,
+    'epoch_CPM_train': 4000,
     'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
@@ -212,7 +212,7 @@ config = {
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
     'do_omics': False,
-    'middle_out': 512,  # GCN中间层维数
+    'middle_out': 256,  # GCN中间层维数
     'w_classify': 100,  # classfication loss的权重
     's_weight': 1, # similarity loss 权重
 }
@@ -255,19 +255,24 @@ query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
 
 # evaluation metrics
 
-s_score = silhouette_score(embedding_h_pca, list(ret['ref_label']) + list(ret['pred']))
+total_s_score = silhouette_score(embedding_h_pca, list(ret['ref_label']) + list(ret['pred']))
+ref_s_score = silhouette_score(ref_h, ret['ref_label'])
+q_s_score = silhouette_score(query_h, ret['pred'])
+
 ari = adjusted_rand_score(ret['query_label'], ret['pred'])
 bme = batch_mixing_entropy(ref_h, query_h)
 bme = sum(bme) / len(bme)
 
 print("Prediction Accuracy is {:.3f}".format(ret['acc']))
-print('Prediction Silhouette score is {:.3f}'.format(s_score))
+# print('Prediction Silhouette score is {:.3f}'.format(s_score))
 print('Prediction ARI is {:.3f}'.format(ari))
 
 # 数据上报
 wandb.log({
     'Prediction Acc': ret['acc'],
-    'Prediction Silhouette ': s_score,
+    'ref Silhouette ': ref_s_score,
+    'query Silhouette ': q_s_score,
+    'total Silhouette ': total_s_score,
     'ARI': ari,
     'Batch Mixing Entropy Mean' : bme
 })
