@@ -193,7 +193,7 @@ def transfer_train(data_config: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v3',
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v5',
     'ref_name': 'rna',
     'query_name': 'atac',
     'project': 'omics',

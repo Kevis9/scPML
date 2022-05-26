@@ -1,3 +1,4 @@
+import math
 import os.path
 import random
 import numpy as np
@@ -219,7 +220,7 @@ def batch_mixing_entropy(ref_data, query_data, L=100, M=300, K=500):
     :param query_data:
     :param L: 次数
     :param M: 随机抽取的细胞数
-    :param k: neibor数x`
+    :param k: neibor数x
     :return: 返回一个BatchEntroy数组, 代表进行L次随机取样的结果
     '''
     data = np.concatenate([ref_data, query_data], axis=0)
@@ -235,6 +236,6 @@ def batch_mixing_entropy(ref_data, query_data, L=100, M=300, K=500):
         for i in range(len(rand_samples_idx)):
             for j in range(nbatchs):
                 xi = max(1, (batch0[neighbor_idx[i]]==j).sum())
-                entropy[boot] += xi
+                entropy[boot] += xi * math.log(xi)
     entropy = [-(x / M) for x in entropy]
     return entropy
