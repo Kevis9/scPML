@@ -178,7 +178,7 @@ def runUMAP(data):
     return data_2d
 
 def runPCA(data):
-    pca = PCA(n_components=16)
+    pca = PCA(n_components=32)
     return pca.fit_transform(data)
 
 def show_cluster(data, label, title):
