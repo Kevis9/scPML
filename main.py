@@ -205,7 +205,7 @@ config = {
     'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
-    'lsd_dim': 128,  # CPM_net latent space dimension
+    'lsd_dim': 32,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
@@ -213,7 +213,7 @@ config = {
     'k': 2,  # 图构造的时候k_neighbor参数
     'do_omics': False,
     'middle_out': 512,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'w_classify': 10,  # classfication loss的权重
     's_weight': 1, # similarity loss 权重
 }
 
