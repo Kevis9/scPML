@@ -205,14 +205,14 @@ config = {
     'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
-    'lsd_dim': 32,  # CPM_net latent space dimension
+    'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
-    'k': 2,  # 图构造的时候k_neighbor参数
+    'k': 3,  # 图构造的时候k_neighbor参数
     'do_omics': False,
-    'middle_out': 512,  # GCN中间层维数
+    'middle_out': 1024,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 1, # similarity loss 权重
 }
@@ -248,8 +248,8 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 # 获取结果
 ret = transfer_train(data_config, SMPath, config)
 embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
-# embedding_h_pca = runPCA(embedding_h)
-embedding_h_pca = embedding_h
+embedding_h_pca = runPCA(embedding_h)
+
 ref_h = embedding_h_pca[:ret['ref_h'].shape[0], :]
 query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
 
@@ -272,8 +272,8 @@ wandb.log({
 })
 
 raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-# raw_data_pca = runPCA(raw_data)
-raw_data_pca = raw_data
+raw_data_pca = runPCA(raw_data)
+
 raw_data_2d = runUMAP(raw_data_pca) # 对PCA之后的数据进行UMAP可视化
 ref_len = ret['ref_raw_data'].shape[0]
 
