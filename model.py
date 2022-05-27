@@ -165,14 +165,15 @@ class CPMNets():
         '''
         dis = []
         class_idx = []  # 记录每一类的下标
+        labels = labels.view(-1)
         for i in range(self.class_num):
             class_idx.append(torch.where(labels == i)[1])
-            print(torch.where(labels == i)[1])
+            # print(torch.where(labels == i)[0])
         for i in range(len(class_idx)):
             h_i = h[class_idx[i], :]
             u_i = torch.mean(h_i, dim=0)
             mean_dis = torch.diag(torch.mm(h_i - u_i, (h_i - u_i).T)).mean()
-            print(mean_dis)
+            # print(mean_dis)
             dis.append(mean_dis)
 
 

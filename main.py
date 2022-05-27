@@ -14,6 +14,9 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset, ConcatD
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
 
+a = torch.FloatTensor([[1,2,3,3],[1,2,3,3]])
+print(torch.where(a==3))
+exit()
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
