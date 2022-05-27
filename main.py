@@ -279,27 +279,27 @@ wandb.log({
     'Batch Mixing Entropy Mean' : bme
 })
 
-# raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-# raw_data_pca = runPCA(raw_data)
+raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
+raw_data_pca = runPCA(raw_data)
 #
-# raw_data_2d = runUMAP(raw_data_pca) # 对PCA之后的数据进行UMAP可视化
-# ref_len = ret['ref_raw_data'].shape[0]
+raw_data_2d = runUMAP(raw_data_pca) # 对PCA之后的数据进行UMAP可视化
+ref_len = ret['ref_raw_data'].shape[0]
 #
-# h_data_2d = runUMAP(embedding_h_pca)
+h_data_2d = runUMAP(embedding_h_pca)
 
 # show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
 # show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
 
-# show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
-# show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
-# show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
+show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
+show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
 
 # For multi omics part
-# show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-#              , 'Reference-Query H')
-# show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
-             # , 'Reference-Query H with pred label')
+show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query H')
+show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
+             , 'Reference-Query H with pred label')
 
 
-# show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-#              , 'Reference-Query Raw')
+show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+             , 'Reference-Query Raw')
