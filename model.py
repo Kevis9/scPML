@@ -167,7 +167,7 @@ class CPMNets():
         class_idx = []  # 记录每一类的下标
         labels = labels.view(-1)
         for i in range(self.class_num):
-            class_idx.append(torch.where(labels == i)[1])
+            class_idx.append(torch.where(labels == i)[0])
             # print(torch.where(labels == i)[0])
         for i in range(len(class_idx)):
             h_i = h[class_idx[i], :]
