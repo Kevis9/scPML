@@ -215,7 +215,7 @@ config = {
     'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 0.5, # similarity loss 权重
-    'c_weighr': 1,
+    'c_weight': 1,
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
