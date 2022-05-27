@@ -168,7 +168,7 @@ def transfer_train(data_config: dict,
                                               config)
 
 
-    pred = cpm_classify(ref_h, query_h, ref_label, config['class_num'])
+    pred = cpm_classify(ref_h, query_h, ref_label, data_config['class_num'])
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
 
