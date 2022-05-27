@@ -208,7 +208,7 @@ class CPMNets():
             # f_loss = self.fisher_loss(labels)
             cen_loss = self.center_loss(self.h_train, labels)
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss + cen_loss
+            all_loss = r_loss + self.config['w_classify'] * c_loss + 1.5 * cen_loss
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
