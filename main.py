@@ -15,6 +15,7 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset, ConcatD
 # drop_seq_10x_v3有8类
 
 
+
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -211,11 +212,11 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'do_omics': True,
+    'do_omics': False,
     'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 5, # similarity loss 权重
-    'c_weight': 2,
+    'cen_weight': 2,
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')

@@ -204,12 +204,12 @@ class CPMNets():
 
             # 每个样本的平均loss
             r_loss = r_loss / self.train_len
-            c_loss = self.classification_loss(self.h_train, labels)
+            # c_loss = self.classification_loss(self.h_train, labels)
             # f_loss = self.fisher_loss(labels)
             cen_loss = self.center_loss(self.h_train, labels)
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss + self.config['c_weight'] * cen_loss
-
+            # all_loss = r_loss + self.config['w_classify'] * c_loss + self.config['c_weight'] * cen_loss
+            all_loss = r_loss + self.config['cen_weight'] * cen_loss
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
 
@@ -222,11 +222,13 @@ class CPMNets():
 
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
             if epoch % 1000 == 0:
+                # print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
+                #     epoch, r_loss.detach().item(), c_loss.detach().item()))
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                    epoch, r_loss.detach().item(), c_loss.detach().item()))
+                    epoch, r_loss.detach().item(), cen_loss.detach().item()))
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
-                'CPM train: classification loss': c_loss.detach().item(),
+                # 'CPM train: classification loss': c_loss.detach().item(),
                 # 'CPM train: fisher loss': f_loss.detach().item()
                 'CPM train: center loss': cen_loss.detach().item()
             })

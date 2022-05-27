@@ -152,24 +152,43 @@ def read_similarity_mat(path):
     return similarity_mat.astype(np.float64)
 
 
-def cpm_classify(lsd1, lsd2, label):
-    """In most cases, this method is used to predict the highest accuracy.
-    :param lsd1: train set's latent space data
-    :param lsd2: test set's latent space data
-    :param label: label of train set
-    :return: Predicted label
-    """
-    F_h_h = np.dot(lsd2, np.transpose(lsd1))
-    label = label.reshape(len(label), 1)
-    enc = OneHotEncoder()
-    a = enc.fit_transform(label)
-    # print(a)
-    label_onehot = a.toarray()
-    label_num = np.sum(label_onehot, axis=0)
-    F_h_h_sum = np.dot(F_h_h, label_onehot)
-    F_h_h_mean = F_h_h_sum / label_num
-    label_pre = np.argmax(F_h_h_mean, axis=1)
-    return label_pre
+# def cpm_classify(lsd1, lsd2, label):
+#     """In most cases, this method is used to predict the highest accuracy.
+#     :param lsd1: train set's latent space data
+#     :param lsd2: test set's latent space data
+#     :param label: label of train set
+#     :return: Predicted label
+#     """
+#     F_h_h = np.dot(lsd2, np.transpose(lsd1))
+#     label = label.reshape(len(label), 1)
+#     enc = OneHotEncoder()
+#     a = enc.fit_transform(label)
+#     # print(a)
+#     label_onehot = a.toarray()
+#     label_num = np.sum(label_onehot, axis=0)
+#     F_h_h_sum = np.dot(F_h_h, label_onehot)
+#     F_h_h_mean = F_h_h_sum / label_num
+#     label_pre = np.argmax(F_h_h_mean, axis=1)
+#     return label_pre
+
+def cpm_classify(ref_h, query_h, ref_label, class_num):
+    # 计算出ref_h的中心点
+    class_idx = []
+    pred_arr = []
+    labels = ref_label.reshape(-1)
+    for i in range(class_num):
+        class_idx.append(np.where(labels == i)[0])
+    for i in range(len(class_idx)):
+        h_i = ref_h[class_idx[i], :]
+        u_i = np.mean(h_i, axis=0)
+        dis = np.diag(np.dot(query_h-u_i, np.transpose(query_h-u_i))).reshape(-1, 1)
+        pred_arr.append(dis)
+
+    # samples * class_num
+    pred_mat = np.concatenate(pred_arr, axis=1)
+    pred = pred_mat.argmax(axis=1)
+    return pred
+
 
     
 def runUMAP(data):
