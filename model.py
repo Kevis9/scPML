@@ -5,11 +5,14 @@ import wandb
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
+from scipy.spatial.distance import pdist
 from utils import cpm_classify
+
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class CPMNets():
     def __init__(self, view_num, train_len, test_len, view_d_arr, class_num, lsd_dim, config):
@@ -39,7 +42,7 @@ class CPMNets():
         self.test_len = test_len
 
         self.h_train = torch.zeros((self.train_len, self.lsd_dim), dtype=torch.float).to(device)
-        self.h_train.requires_grad = True # 先放在GPU上再设置requires_grad
+        self.h_train.requires_grad = True  # 先放在GPU上再设置requires_grad
 
         self.h_test = torch.zeros((self.test_len, self.lsd_dim), dtype=torch.float).to(device)
         self.h_test.requires_grad = True
@@ -92,8 +95,8 @@ class CPMNets():
 
         # print('From classification_loss, label num is : {:}'.format(label_num))
 
-        label_num[torch.where(label_num==0)] = 1 # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
-        
+        label_num[torch.where(label_num == 0)] = 1  # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
+
         F_h_h_mean = F_h_h_sum / label_num  # 自动广播
         gt_ = torch.argmax(F_h_h_mean, dim=1)  # 获得每个样本预测的类别
         F_h_h_mean_max = torch.max(F_h_h_mean, dim=1)[0]  # 取到每个样本的最大值 1*n
@@ -101,7 +104,7 @@ class CPMNets():
         F_h_hn_mean_ = torch.mul(F_h_h_mean, label_onehot)
         F_h_hn_mean = torch.sum(F_h_hn_mean_, dim=1)  # 1*n
 
-        return torch.sum(F.relu(1000*theta + (F_h_h_mean_max - F_h_hn_mean)))
+        return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
         # return torch.sum(F.relu(F_h_h_mean_max - F_h_hn_mean))
 
     def fisher_loss(self, gt):
@@ -111,24 +114,22 @@ class CPMNets():
         :return:
         '''
         label_list = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
-        idx = [] # 存储每一个类别所在行数
+        idx = []  # 存储每一个类别所在行数
 
         for label in label_list:
-            idx.append(torch.where(gt==label)[1])
+            idx.append(torch.where(gt == label)[1])
 
         v_arr = []
         u_arr = []
         for i in range(len(idx)):
-
             data = self.h_train[idx[i], :]
 
             u = torch.mean(data, dim=0, dtype=torch.float64)
 
-            v_arr.append((torch.diag(torch.mm(data-u, (data-u).T)).sum()/(data.shape[0])).view(1,-1))
+            v_arr.append((torch.diag(torch.mm(data - u, (data - u).T)).sum() / (data.shape[0])).view(1, -1))
             u_arr.append(u.reshape(1, -1))
 
         variance_loss = torch.cat(v_arr, dim=1).sum()
-
 
         u_tensor = torch.cat(u_arr, dim=0)
         u_tensor = torch.mm(u_tensor, u_tensor.T)
@@ -141,7 +142,6 @@ class CPMNets():
         dist_loss = u_tensor.sum()
 
         return F.relu(variance_loss - dist_loss)
-
 
     def similarity_loss(self, ref_h, query_h):
         '''
@@ -156,15 +156,24 @@ class CPMNets():
         F_diag = torch.diag(F_ref_query)
         return -torch.sum(F_diag)
 
-    # def intra_loss(self, h, labels):
-    #     '''
-    #     计算h簇内平均距离
-    #     :param h:
-    #     :param labels:
-    #     :return:
-    #     '''
+    def center_loss(self, h, labels):
+        '''
+        计算中心loss(有点类似EM)
+        :param h:
+        :param labels:
+        :return:
+        '''
+        dis = []
+        class_idx = []  # 记录每一类的下标
+        for i in range(self.class_num):
+            class_idx.append(torch.where(labels == i))
+        for i in range(len(class_idx)):
+            h_i = h[class_idx[i], :]
+            u_i = torch.mean(h_i, dim=0)
+            mean_dis = torch.diag(torch.mm(h_i - u_i, (h_i - u_i).T)).mean()
+            dis.append(mean_dis)
 
-
+        return torch.cat(dis, dim=1).mean()
 
     def train_ref_h(self, data, labels, n_epochs, lr):
         '''
@@ -195,10 +204,10 @@ class CPMNets():
             # 每个样本的平均loss
             r_loss = r_loss / self.train_len
             c_loss = self.classification_loss(self.h_train, labels)
-            f_loss = self.fisher_loss(labels)
-
+            # f_loss = self.fisher_loss(labels)
+            cen_loss = self.center_loss(self.h_train, labels)
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss + 10*f_loss
+            all_loss = r_loss + self.config['w_classify'] * c_loss + 5 * cen_loss
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
@@ -210,7 +219,6 @@ class CPMNets():
             # 更新h部分
             optimizer_for_h.step()
 
-
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
             if epoch % 1000 == 0:
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
@@ -218,7 +226,8 @@ class CPMNets():
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item(),
-                'CPM train: fisher loss': f_loss.detach().item()
+                # 'CPM train: fisher loss': f_loss.detach().item()
+                'CPM train: center loss': cen_loss.detach().item()
             })
 
     def train_query_h(self, data, n_epochs, do_omics):
@@ -241,16 +250,14 @@ class CPMNets():
             if do_omics:
                 # similarity loss
                 s_loss = self.similarity_loss(self.h_train, self.h_test)
-                all_loss = F.relu(all_loss + self.config['s_weight']*s_loss)
-
+                all_loss = F.relu(all_loss + self.config['s_weight'] * s_loss)
 
             optimizer_for_query_h.zero_grad()
             all_loss.backward()
             optimizer_for_query_h.step()
 
-
             if epoch % 1000 == 0:
-                print('Train query h: epoch %d: Reconstruction loss = %.3f'%(
+                print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
                     epoch, r_loss.detach().item()), end=" ")
                 if do_omics:
                     print('Similarity loss = %.3f' % (
@@ -265,7 +272,6 @@ class CPMNets():
                 wandb.log({
                     'CPM query h: similarity loss': s_loss.detach().item()
                 })
-
 
     def get_h_train(self):
         return self.h_train
@@ -304,18 +310,17 @@ class Classifier(nn.Module):
         '''
         super().__init__()
         self.embedding_layer = nn.Sequential(
-            nn.Linear(lsd, int(lsd/2)),
+            nn.Linear(lsd, int(lsd / 2)),
             nn.ReLU()
         )
-        self.prediction_layer = nn.Sequential(            
-            nn.Linear(int(lsd/2), class_num)
+        self.prediction_layer = nn.Sequential(
+            nn.Linear(int(lsd / 2), class_num)
         )
-            
+
     def forward(self, x):
         x = self.embedding_layer(x)
         logits = self.prediction_layer(x)
         return logits
-    
+
     def get_embedding(self, x):
         return self.embedding_layer(x)
-    
