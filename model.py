@@ -174,8 +174,8 @@ class CPMNets():
             u_i = torch.mean(h_i, dim=0)
             mean_dis = torch.diag(torch.mm(h_i - u_i, (h_i - u_i).T)).sum()
             dis.append(mean_dis.reshape(-1))
-            
-        return torch.cat(dis, dim=1).sum()
+
+        return torch.cat(dis).sum()
 
     def train_ref_h(self, data, labels, n_epochs, lr):
         '''
