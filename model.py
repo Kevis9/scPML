@@ -172,12 +172,10 @@ class CPMNets():
         for i in range(len(class_idx)):
             h_i = h[class_idx[i], :]
             u_i = torch.mean(h_i, dim=0)
-            mean_dis = torch.diag(torch.mm(h_i - u_i, (h_i - u_i).T)).mean()
-            print(mean_dis)
-            dis.append(mean_dis)
-
-
-        return torch.cat(dis, dim=1).mean()
+            mean_dis = torch.diag(torch.mm(h_i - u_i, (h_i - u_i).T)).sum()
+            dis.append(mean_dis.reshape(-1))
+            
+        return torch.cat(dis, dim=1).sum()
 
     def train_ref_h(self, data, labels, n_epochs, lr):
         '''
