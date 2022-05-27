@@ -168,7 +168,6 @@ class CPMNets():
         labels = labels.view(-1)
         for i in range(self.class_num):
             class_idx.append(torch.where(labels == i)[0])
-            print(torch.where(labels == i)[0])
         for i in range(len(class_idx)):
             h_i = h[class_idx[i], :]
             u_i = torch.mean(h_i, dim=0)
@@ -209,7 +208,7 @@ class CPMNets():
             # f_loss = self.fisher_loss(labels)
             cen_loss = self.center_loss(self.h_train, labels)
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss + 5 * cen_loss
+            all_loss = r_loss + self.config['w_classify'] * c_loss + 0.1 * cen_loss
 
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
