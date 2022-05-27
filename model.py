@@ -166,7 +166,8 @@ class CPMNets():
         dis = []
         class_idx = []  # 记录每一类的下标
         for i in range(self.class_num):
-            class_idx.append(torch.where(labels == i))
+            class_idx.append(torch.where(labels == i).detach().cpu().numpu().tolist())
+            
         for i in range(len(class_idx)):
             h_i = h[class_idx[i], :]
             u_i = torch.mean(h_i, dim=0)
