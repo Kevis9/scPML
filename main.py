@@ -212,7 +212,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'do_omics': True,
+    'do_omics': False,
     'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 10, # similarity loss 权重
@@ -256,7 +256,6 @@ ref_h = embedding_h_pca[:ret['ref_h'].shape[0], :]
 query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
 
 # evaluation metrics
-
 total_s_score = silhouette_score(embedding_h_pca, list(ret['ref_label']) + list(ret['pred']))
 ref_s_score = silhouette_score(ref_h, ret['ref_label'])
 q_s_score = silhouette_score(query_h, ret['pred'])
