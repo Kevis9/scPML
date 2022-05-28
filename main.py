@@ -212,11 +212,11 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'do_omics': False,
+    'do_omics': True,
     'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
-    's_weight': 5, # similarity loss 权重
-    'cen_weight': 2,
+    's_weight': 10, # similarity loss 权重
+    'cen_weight': 0.5,
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
