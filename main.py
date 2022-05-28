@@ -203,8 +203,8 @@ data_config = {
 }
 
 config = {
-    'epoch_GCN': 2500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 6000,
+    'epoch_GCN': 3500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 4000,
     'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
@@ -216,7 +216,7 @@ config = {
     'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 10, # similarity loss 权重
-    'cen_weight': 0.5,
+    'cen_weight': 1,
 }
 
 sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
