@@ -220,11 +220,10 @@ class CPMNets():
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-    def get_query_h(self, data, n_epochs, do_omics):
+    def get_query_h(self, data, n_epochs):
         '''
         :param data: query data
         :param n_epochs:
-        :param do_omics: Bool: True for the omics part.
         :return:
         '''
         data = data.to(device)

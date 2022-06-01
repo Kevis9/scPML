@@ -64,7 +64,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     model.train_ref_h(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.get_query_h(query_data_embeddings, config['epoch_CPM_test'], config['do_omics'])
+    model.get_query_h(query_data_embeddings, config['epoch_CPM_test'])
 
     ref_h = model.get_h_train().detach().cpu().numpy()
     query_h = model.get_h_test().detach().cpu().numpy()
@@ -202,9 +202,9 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 3500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 4000,
-    'epoch_CPM_test': 3000,
+    'epoch_GCN': 1,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1,
+    'epoch_CPM_test': 1,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
