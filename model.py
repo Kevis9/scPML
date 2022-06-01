@@ -222,7 +222,7 @@ class CPMNets():
                 #     epoch, r_loss.detach().item(), c_loss.detach().item()))
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item(), c_loss.detach().item()))
-                self.evaluate_ref_h(self.h_train, self.h_train, labels)
+                self.evaluate_ref_h(self.h_train, labels)
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item(),
