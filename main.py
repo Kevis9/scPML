@@ -202,16 +202,16 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 1,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1,
-    'epoch_CPM_test': 1,
+    'epoch_GCN': 2000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 2500,  # GCN中间层维数
+    'middle_out': 1000,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 100, # similarity loss 权重
     'cen_weight': 0.5,
