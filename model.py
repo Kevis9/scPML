@@ -163,6 +163,15 @@ class CPMNets():
 
         return torch.cat(dis).sum()
 
+    def evaluate_ref_h(self, ref_h, labels):
+        ref_h = ref_h.detach().cpu().numpy()
+        eval_label = cpm_classify(ref_h, ref_h, labels)
+        acc = (eval_label==labels)/len(eval_label)
+        print("ref h acc is {:.2f}".format(acc))
+        wandb.log({
+            "CPM train acc" : acc
+        })
+
     def train_ref_h(self, data, labels, n_epochs, lr):
         '''
         这个函数直接对模型进行训练
@@ -208,11 +217,12 @@ class CPMNets():
             optimizer_for_h.step()
 
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 1000 == 0:
+            if epoch % 200 == 0:
                 # print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                 #     epoch, r_loss.detach().item(), c_loss.detach().item()))
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item(), c_loss.detach().item()))
+                self.evaluate_ref_h(self.h_train, self.h_train, labels)
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item(),
