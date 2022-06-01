@@ -66,7 +66,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     model.train_ref_h(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.train_query_h(query_data_embeddings ,config['epoch_CPM_test'], config['do_omics'])
+    model.get_query_h(query_data_embeddings, config['epoch_CPM_test'], config['do_omics'])
 
     ref_h = model.get_h_train().detach().cpu().numpy()
     query_h = model.get_h_test().detach().cpu().numpy()
@@ -194,13 +194,14 @@ def transfer_train(data_config: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/omics_data/A549_v5',
-    'ref_name': 'rna',
-    'query_name': 'atac',
-    'project': 'omics',
-    'class_num': 3,
-    'dataset_name':'A549'
+    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/no_diff',
+    'ref_name': 'human',
+    'query_name': 'mouse',
+    'project': 'species',
+    'class_num': 8,
+    'dataset_name':'GSE84133'
 }
+#{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
     'epoch_GCN': 3500,  # Huang model 训练的epoch
@@ -212,8 +213,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'do_omics': True,
-    'middle_out': 512,  # GCN中间层维数
+    'middle_out': 2500,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     's_weight': 100, # similarity loss 权重
     'cen_weight': 0.5,
@@ -250,13 +250,17 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 # 获取结果
 ret = transfer_train(data_config, SMPath, config)
 embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
-embedding_h_pca = runPCA(embedding_h)
+# embedding_h_pca = runPCA(embedding_h)
 
-ref_h = embedding_h_pca[:ret['ref_h'].shape[0], :]
-query_h = embedding_h_pca[ret['ref_h'].shape[0]:, :]
+'''
+    ==================结果处理====================
+'''
+
+ref_h = embedding_h[:ret['ref_h'].shape[0], :]
+query_h = embedding_h[ret['ref_h'].shape[0]:, :]
 
 # evaluation metrics
-total_s_score = silhouette_score(embedding_h_pca, list(ret['ref_label']) + list(ret['pred']))
+total_s_score = silhouette_score(embedding_h, list(ret['ref_label']) + list(ret['pred']))
 ref_s_score = silhouette_score(ref_h, ret['ref_label'])
 q_s_score = silhouette_score(query_h, ret['pred'])
 
@@ -275,30 +279,39 @@ wandb.log({
     'query Silhouette ': q_s_score,
     'total Silhouette ': total_s_score,
     'ARI': ari,
-    'Batch Mixing Entropy Mean' : bme
+    'Batch Mixing Entropy Mean': bme
 })
 
 raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-raw_data_pca = runPCA(raw_data)
+# raw_data_pca = runPCA(raw_data)
 #
-raw_data_2d = runUMAP(raw_data_pca) # 对PCA之后的数据进行UMAP可视化
+raw_data_2d = runUMAP(raw_data) # 对PCA之后的数据进行UMAP可视化
 ref_len = ret['ref_raw_data'].shape[0]
 #
-h_data_2d = runUMAP(embedding_h_pca)
+h_data_2d = runUMAP(embedding_h)
+
+np.save('result/raw_data_2d.npy', raw_data_2d)
+np.save('result/h_data_2d.npy', h_data_2d)
+
+all_true_labels = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
+all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
+np.save('result/all_true_labels.npy', all_true_labels)
+np.save('result/all_pred_labels.npy', all_pred_labels)
+
+show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
+show_cluster(h_data_2d, all_true_labels, 'reference-query h true label')
+show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label')
 
 # show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
 # show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
-
-show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
-show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
-show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+# show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
+# show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
+# show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
 
 # For multi omics part
-show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query H')
-show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
-             , 'Reference-Query H with pred label')
-
-
-show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-             , 'Reference-Query Raw')
+# show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+#              , 'Reference-Query H')
+# show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
+#              , 'Reference-Query H with pred label')
+# show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+#              , 'Reference-Query Raw')

@@ -18,6 +18,7 @@ from random import sample
 from sklearn.decomposition import PCA
 
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
+hue = []
 
 def sc_normalization(data):
     '''
@@ -170,26 +171,6 @@ def cpm_classify(lsd1, lsd2, label):
     F_h_h_mean = F_h_h_sum / label_num
     label_pre = np.argmax(F_h_h_mean, axis=1)
     return label_pre
-
-# def cpm_classify(ref_h, query_h, ref_label, class_num):
-#     # 计算出ref_h的中心点
-#     class_idx = []
-#     pred_arr = []
-#     labels = ref_label.reshape(-1)
-#     for i in range(class_num):
-#         class_idx.append(np.where(labels == i)[0])
-#     for i in range(len(class_idx)):
-#         h_i = ref_h[class_idx[i], :]
-#         u_i = np.mean(h_i, axis=0)
-#         dis = np.diag(np.dot(query_h-u_i, np.transpose(query_h-u_i))).reshape(-1, 1)
-#         pred_arr.append(dis)
-#
-#     # samples * class_num
-#     pred_mat = np.concatenate(pred_arr, axis=1)
-#     pred = pred_mat.argmax(axis=1)
-#     return pred
-
-
     
 def runUMAP(data):
     umap_model = umap.UMAP(random_state=0)
@@ -203,7 +184,7 @@ def runPCA(data):
 def show_cluster(data, label, title):
     '''
     可视化聚类的函数
-    :param data: 降维之后的数据
+    :param data: 降维之后的数据(2d)
     :param label: 样本的标签
     :param title: 可视化窗口的titleplt.scatter
     '''

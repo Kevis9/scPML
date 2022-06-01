@@ -143,19 +143,6 @@ class CPMNets():
 
         return F.relu(variance_loss - dist_loss)
 
-    def similarity_loss(self, ref_h, query_h):
-        '''
-        对于paired omics data，我们计算每个样本feature的Similarity
-        :param ref_h:
-        :param query_h:
-        :return:
-        '''
-        ref_h = ref_h.to(device)
-        query_h = query_h.to(device)
-        F_ref_query = torch.mm(ref_h, query_h.t())
-        F_diag = torch.diag(F_ref_query)
-        return -torch.sum(F_diag)
-
     def center_loss(self, h, labels):
         '''
         计算中心loss(有点类似EM)
@@ -206,9 +193,9 @@ class CPMNets():
             r_loss = r_loss / self.train_len
             c_loss = self.classification_loss(self.h_train, labels)
             # f_loss = self.fisher_loss(labels)
-            cen_loss = self.center_loss(self.h_train, labels)
+            # cen_loss = self.center_loss(self.h_train, labels)
             # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss + self.config['cen_weight'] * cen_loss
+            all_loss = r_loss + self.config['w_classify'] * c_loss
             # all_loss = r_loss + self.config['cen_weight'] * cen_loss
             optimizer_for_net.zero_grad()
             optimizer_for_h.zero_grad()
@@ -225,15 +212,15 @@ class CPMNets():
                 # print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                 #     epoch, r_loss.detach().item(), c_loss.detach().item()))
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                    epoch, r_loss.detach().item(), cen_loss.detach().item()))
+                    epoch, r_loss.detach().item(), c_loss.detach().item()))
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
-                # 'CPM train: classification loss': c_loss.detach().item(),
+                'CPM train: classification loss': c_loss.detach().item(),
                 # 'CPM train: fisher loss': f_loss.detach().item()
-                'CPM train: center loss': cen_loss.detach().item()
+                # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-    def train_query_h(self, data, n_epochs, do_omics):
+    def get_query_h(self, data, n_epochs, do_omics):
         '''
         :param data: query data
         :param n_epochs:
@@ -250,10 +237,7 @@ class CPMNets():
 
             r_loss = r_loss / self.test_len
             all_loss = r_loss
-            if do_omics:
-                # similarity loss
-                s_loss = self.similarity_loss(self.h_train, self.h_test)
-                all_loss = F.relu(all_loss + self.config['s_weight'] * s_loss)
+
 
             optimizer_for_query_h.zero_grad()
             all_loss.backward()
@@ -262,19 +246,10 @@ class CPMNets():
             if epoch % 1000 == 0:
                 print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
                     epoch, r_loss.detach().item()), end=" ")
-                if do_omics:
-                    print('Similarity loss = %.3f' % (
-                        s_loss.detach().item()))
-                else:
-                    print("")
 
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
             })
-            if do_omics:
-                wandb.log({
-                    'CPM query h: similarity loss': s_loss.detach().item()
-                })
 
     def get_h_train(self):
         return self.h_train
