@@ -14,8 +14,6 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset, ConcatD
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
 
-
-
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGNN(model, n_epochs, G_data, optimizer,
                 index_pair, masking_idx, norm_data, loss_title):
@@ -231,7 +229,7 @@ SMPath = {
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
         os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_yan.csv"),
+        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_biase.csv"),
     ]
 }
 
