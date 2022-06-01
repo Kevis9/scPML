@@ -202,7 +202,7 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 600,  # Huang model 训练的epoch
+    'epoch_GCN': 400,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
     'lsd_dim': 128,  # CPM_net latent space dimension
