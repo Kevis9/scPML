@@ -59,8 +59,10 @@ class CPMNets():
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
                 nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
+                # nn.Linear(self.lsd_dim, int(view_d_arr[i]/2), device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.ReLU(),
-                # nn.Linear(int(view_d_arr[i]/4),  int(view_d_arr[i]/2), device=device),
+                nn.Dropout(p=0.5)
+                # nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i]/2, device=device),
                 # nn.ReLU(),
                 # # nn.Dropout(0.2),
                 # nn.Linear(int(view_d_arr[i] / 2), view_d_arr[i], device=device)
@@ -282,7 +284,7 @@ class scGNN(torch.nn.Module):
         x = F.relu(self.conv1(x, edge_index))
 
         # 可以调整dropout的比率
-        x = F.dropout(x, training=self.training, p=0.2)
+        x = F.dropout(x, training=self.training)
         x = self.conv2(x, edge_index)
         return x
 

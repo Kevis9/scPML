@@ -72,7 +72,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
 
 def self_supervised_train(data, data_name, data_path, config):
     # 可以试试调整这个mask比例来调参
-    masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.2)
+    masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.3)
     masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
 
     sm_arr = [read_similarity_mat_h5(data_path, "sm_" + data_name + "_" + str(i + 1)) for i in
