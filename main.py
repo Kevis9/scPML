@@ -171,14 +171,14 @@ def transfer_train(data_config: dict,
     # query_norm_data = preprocessing.minmax_scale(query_norm_data, axis=0)
 
     # 构造Query data的Graph
-    # query_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
-    # query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
+    query_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
+    query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
 
     # 获得Embedding
-    query_views, query_gcn_models = self_supervised_train(query_norm_data, data_config['query_name'], data_path, config)
-    # query_views = []
-    # for i in range(len(GNN_models)):
-    #     query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
+    # query_views, query_gcn_models = self_supervised_train(query_norm_data, data_config['query_name'], data_path, config)
+    query_views = []
+    for i in range(len(ref_gcn_models)):
+        query_views.append(ref_gcn_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
     query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
 
