@@ -257,7 +257,7 @@ class CPMNets():
             all_loss.backward()
             optimizer_for_query_h.step()
 
-            if epoch % 50 == 0:
+            if epoch % 10 == 0:
                 # 这里加入这个试试早停法
                 pred = cpm_classify(self.h_train.detach().cpu().numpy(), self.h_test.detach().cpu().numpy(), ref_label.detach().cpu().numpy().reshape(-1, 1)).reshape(-1)
                 acc = (pred == true_label.detach().cpu().numpy().reshape(-1)).sum() / len(pred)
