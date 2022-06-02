@@ -154,8 +154,8 @@ def transfer_train(data_config: dict,
         ref_view_feat_len.append(ref_views[i].shape[1])
 
     # 把所有的view连接在一起
-    # ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
-    ref_data_embeddings_tensor = torch.from_numpy(concat_views(ref_views)).float().to(device)
+    ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
+    # ref_data_embeddings_tensor = torch.from_numpy(concat_views(ref_views)).float().to(device)
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
 
     '''
@@ -180,9 +180,9 @@ def transfer_train(data_config: dict,
     # for i in range(len(GNN_models)):
     #     query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
-    # query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
+    query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
 
-    query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
+    # query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
     query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long().to(device)
 
     '''
@@ -232,9 +232,9 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1200,
-    'epoch_CPM_test': 1200,
+    'epoch_GCN': 1500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1500,
+    'epoch_CPM_test': 1500,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
