@@ -234,7 +234,7 @@ data_config = {
 config = {
     'epoch_GCN': 1000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 6000,
+    'epoch_CPM_test': 15000,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.01],  # CPM_ner中net和train_h,test_h的学习率
