@@ -231,7 +231,7 @@ class CPMNets():
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-    def train_query_h(self, data, n_epochs):
+    def train_query_h(self, data, ref_label, true_label, n_epochs):
         '''
         :param data: query data
         :param n_epochs:
@@ -257,8 +257,14 @@ class CPMNets():
             all_loss.backward()
             optimizer_for_query_h.step()
 
+            if epoch % 50 == 0:
+                # 这里加入这个试试早停法
+                pred = cpm_classify(self.h_train, self.h_test, ref_label.detach().cpu().numpy()).reshape(-1)
+                acc = (pred == true_label.detach().cpu().numpy().reshape(-1)).sum() / len(pred)
+                wandb.log({
+                    "query_h_train_acc" : acc
+                })
             if epoch % 200 == 0:
-
                 print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
                     epoch, r_loss.detach().item()))
 
