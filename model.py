@@ -253,7 +253,7 @@ class CPMNets():
 
             if epoch % 200 == 0:
                 print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
-                    epoch, r_loss.detach().item()), end=" ")
+                    epoch, r_loss.detach().item()))
 
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
