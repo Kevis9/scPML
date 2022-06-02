@@ -118,7 +118,7 @@ def transfer_train(data_config: dict,
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
-    ref_views, ref_gcn_models = self_supervised_train(ref_norm_data, config['ref_name'], data_path, config)
+    ref_views, ref_gcn_models = self_supervised_train(ref_norm_data, data_config['ref_name'], data_path, config)
     # 可以试试调整这个mask比例来调参
     # masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.2)
     # masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
@@ -175,7 +175,7 @@ def transfer_train(data_config: dict,
     # query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
 
     # 获得Embedding
-    query_views, query_gcn_models = self_supervised_train(query_norm_data, config['query_name'], data_path, config)
+    query_views, query_gcn_models = self_supervised_train(query_norm_data, data_config['query_name'], data_path, config)
     # query_views = []
     # for i in range(len(GNN_models)):
     #     query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
