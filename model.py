@@ -61,7 +61,7 @@ class CPMNets():
                 nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.Linear(self.lsd_dim, int(view_d_arr[i]/2), device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.ReLU(),
-                nn.Dropout(p=0.5)
+                # nn.Dropout(p=0.5)
                 # nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i]/2, device=device),
                 # nn.ReLU(),
                 # # nn.Dropout(0.2),
@@ -218,7 +218,7 @@ class CPMNets():
             optimizer_for_h.step()
 
             # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 200 == 0:
+            if epoch % 100 == 0:
                 # print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                 #     epoch, r_loss.detach().item(), c_loss.detach().item()))
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
