@@ -238,12 +238,12 @@ class CPMNets():
         :return:
         '''
         data = data.to(device)
-        optimizer_for_query_h = optim.Adam(params=[self.h_test])
+        optimizer_for_query_h = optim.Adam(params=[self.h_test], lr=self.config['CPM_lr'][2])
 
         # 变成eval模式，不更新参数，以及可以去掉dropout层的计算
         for v in range(self.view_num):
             self.net[str(v)] = self.net[str(v)].eval()
-
+        acc = 0
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
@@ -258,6 +258,7 @@ class CPMNets():
             optimizer_for_query_h.step()
 
             if epoch % 200 == 0:
+
                 print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
                     epoch, r_loss.detach().item()))
 
