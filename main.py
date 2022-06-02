@@ -171,7 +171,7 @@ def transfer_train(data_config: dict,
     # query_norm_data = preprocessing.minmax_scale(query_norm_data, axis=0)
 
     # 构造Query data的Graph
-    query_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
+    query_sm_arr = [read_similarity_mat_h5(data_path, "sm_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
     query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
 
     # 获得Embedding
@@ -232,7 +232,7 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 1500,  # Huang model 训练的epoch
+    'epoch_GCN': 800,  # Huang model 训练的epoch
     'epoch_CPM_train': 1500,
     'epoch_CPM_test': 1500,
     'lsd_dim': 128,  # CPM_net latent space dimension
@@ -261,7 +261,6 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 
 # 获取结果
 ret = transfer_train(data_config, config)
-
 
 '''
     ==================结果处理====================
