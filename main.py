@@ -222,7 +222,7 @@ def transfer_train(data_config: dict,
 
 # 数据配置
 data_config = {
-    'data_path': '/home/zhianhuang/yuanhuang/kevislin/data/species_data/GSE84133/no_diff',
+    'data_path': 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\GSE84133',
     'ref_name': 'mouse',
     'query_name': 'human',
     'project': 'species',
