@@ -10,7 +10,6 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 from sklearn import preprocessing
-from torch.utils.data import Dataset, DataLoader, TensorDataset, Subset, ConcatDataset
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
 
@@ -71,6 +70,34 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     
     return model, ref_h, query_h
 
+def self_supervised_train(data, data_name, data_path, config):
+    # 可以试试调整这个mask比例来调参
+    masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.2)
+    masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
+
+    sm_arr = [read_similarity_mat_h5(data_path, "SM_" + data_name + "_" + str(i + 1)) for i in
+                  range(4)]
+    graphs = [construct_graph(masked_data, sm_arr[i], config['k']) for i in range(len(sm_arr))]
+
+    embeddings_arr = []
+    GNN_models = []
+
+    # 训练ref data in scGNN
+    for i in range(len(graphs)):
+        model = scGNN(graphs[i], config['middle_out'])
+        optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
+        model = train_scGNN(model, config['epoch_GCN'], graphs[i], optimizer, index_pair, masking_idx,
+                            data, data_name +': GNN: view' + str(i + 1) + ' loss')
+
+        # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
+        # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
+        # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
+        embedding = model.get_embedding(graphs[i])
+        embeddings_arr.append(embedding.detach().cpu().numpy())
+        GNN_models.append(model)
+    return embeddings_arr, GNN_models
+
+
 def transfer_train(data_config: dict,
                    config: dict):
     '''
@@ -86,34 +113,35 @@ def transfer_train(data_config: dict,
     
     ref_data = ref_data.astype(np.float64)
     ref_enc = preprocessing.LabelEncoder()
-    # label从1开始
+    # label从0开始
     ref_label = (ref_enc.fit_transform(ref_label)).astype(np.int64)
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
-    # ref_norm_data = preprocessing.minmax_scale(ref_norm_data, axis=0)
-
-    masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
-    masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
-
-    ref_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["ref_name"]+"_"+str(i+1)) for i in range(4)]
-    ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[i], config['k']) for i in range(len(ref_sm_arr))]
-
-    ref_views = []
-    GNN_models = []
-    # 训练ref data in scGNN
-    for i in range(len(ref_graphs)):
-        model = scGNN(ref_graphs[i], config['middle_out'])
-        optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
-        model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
-                            ref_norm_data, 'GNN: view' + str(i + 1) + ' loss')
-
-        # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
-        # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
-        # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
-        embedding = model.get_embedding(ref_graphs[i])
-        ref_views.append(embedding.detach().cpu().numpy())
-        GNN_models.append(model)
+    ref_views, ref_gcn_models = self_supervised_train(ref_norm_data, config['ref_name'], data_path, config)
+    # 可以试试调整这个mask比例来调参
+    # masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.2)
+    # masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
+    #
+    # ref_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["ref_name"]+"_"+str(i+1)) for i in range(4)]
+    # ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[i], config['k']) for i in range(len(ref_sm_arr))]
+    #
+    # ref_views = []
+    # GNN_models = []
+    #
+    # # 训练ref data in scGNN
+    # for i in range(len(ref_graphs)):
+    #     model = scGNN(ref_graphs[i], config['middle_out'])
+    #     optimizer = torch.optim.Adam(model.parameters(), lr=config['GNN_lr'])
+    #     model = train_scGNN(model, config['epoch_GCN'], ref_graphs[i], optimizer, index_pair, masking_idx,
+    #                         ref_norm_data, 'GNN: view' + str(i + 1) + ' loss')
+    #
+    #     # 利用未mask的矩阵，构造图，丢入训练好的model，得到中间层embedding
+    #     # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
+    #     # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
+    #     embedding = model.get_embedding(ref_graphs[i])
+    #     ref_views.append(embedding.detach().cpu().numpy())
+    #     GNN_models.append(model)
 
     '''
         Reference Data Embeddings  
@@ -126,7 +154,8 @@ def transfer_train(data_config: dict,
         ref_view_feat_len.append(ref_views[i].shape[1])
 
     # 把所有的view连接在一起
-    ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
+    # ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
+    ref_data_embeddings_tensor = torch.from_numpy(concat_views(ref_views)).float().to(device)
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
 
     '''
@@ -142,13 +171,14 @@ def transfer_train(data_config: dict,
     # query_norm_data = preprocessing.minmax_scale(query_norm_data, axis=0)
 
     # 构造Query data的Graph
-    query_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
-    query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
+    # query_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
+    # query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
 
     # 获得Embedding
-    query_views = []
-    for i in range(len(GNN_models)):
-        query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
+    query_views, query_gcn_models = self_supervised_train(query_norm_data, config['query_name'], data_path, config)
+    # query_views = []
+    # for i in range(len(GNN_models)):
+    #     query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
     query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
 
@@ -232,13 +262,11 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 ret = transfer_train(data_config, config)
 
 
-
 '''
     ==================结果处理====================
 '''
 embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
 # embedding_h_pca = runPCA(embedding_h)
-
 
 ref_h = embedding_h[:ret['ref_h'].shape[0], :]
 query_h = embedding_h[ret['ref_h'].shape[0]:, :]

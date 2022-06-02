@@ -280,7 +280,9 @@ class scGNN(torch.nn.Module):
         x, edge_index = G_data.x, G_data.edge_index
         # 中间夹了一层relu和一层dropout(避免过拟合的发生)
         x = F.relu(self.conv1(x, edge_index))
-        x = F.dropout(x, training=self.training)
+
+        # 可以调整dropout的比率
+        x = F.dropout(x, training=self.training, p=0.2)
         x = self.conv2(x, edge_index)
         return x
 
