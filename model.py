@@ -259,7 +259,7 @@ class CPMNets():
 
             if epoch % 50 == 0:
                 # 这里加入这个试试早停法
-                pred = cpm_classify(self.h_train, self.h_test, ref_label.detach().cpu().numpy()).reshape(-1)
+                pred = cpm_classify(self.h_train.detach().cpu().numpy(), self.h_test.detach().cpu().numpy(), ref_label.detach().cpu().numpy()).reshape(-1)
                 acc = (pred == true_label.detach().cpu().numpy().reshape(-1)).sum() / len(pred)
                 wandb.log({
                     "query_h_train_acc" : acc
