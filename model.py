@@ -168,7 +168,7 @@ class CPMNets():
     def evaluate_ref_h(self, ref_h, labels):
         eval_label = cpm_classify(ref_h, ref_h, labels.reshape(-1))
         acc = ((eval_label==labels).sum())/len(eval_label)
-        print("ref h acc is {:.2f}".format(acc))
+        # print("ref h acc is {:.2f}".format(acc))
         wandb.log({
             "CPM train acc" : acc
         })
