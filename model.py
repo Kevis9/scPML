@@ -165,7 +165,7 @@ class CPMNets():
 
     def evaluate_ref_h(self, ref_h, labels):
         ref_h = ref_h.detach().cpu().numpy()
-        eval_label = cpm_classify(ref_h, ref_h, labels)
+        eval_label = cpm_classify(ref_h, ref_h, labels.reshape(-1))
         acc = (eval_label==labels)/len(eval_label)
         print("ref h acc is {:.2f}".format(acc))
         wandb.log({
