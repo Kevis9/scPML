@@ -75,7 +75,7 @@ def self_supervised_train(data, data_name, data_path, config):
     masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.2)
     masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
 
-    sm_arr = [read_similarity_mat_h5(data_path, "SM_" + data_name + "_" + str(i + 1)) for i in
+    sm_arr = [read_similarity_mat_h5(data_path, "sm_" + data_name + "_" + str(i + 1)) for i in
                   range(4)]
     graphs = [construct_graph(masked_data, sm_arr[i], config['k']) for i in range(len(sm_arr))]
 
