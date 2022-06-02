@@ -229,7 +229,7 @@ class CPMNets():
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-    def get_query_h(self, data, n_epochs):
+    def train_query_h(self, data, n_epochs):
         '''
         :param data: query data
         :param n_epochs:
@@ -251,7 +251,7 @@ class CPMNets():
             all_loss.backward()
             optimizer_for_query_h.step()
 
-            if epoch % 1000 == 0:
+            if epoch % 200 == 0:
                 print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
                     epoch, r_loss.detach().item()), end=" ")
 

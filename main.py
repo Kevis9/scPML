@@ -63,7 +63,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     model.train_ref_h(ref_data_embeddings, ref_label, config['epoch_CPM_train'], config['CPM_lr'])
 
     # 对test_h进行adjust（按照论文的想法，保证consistency）
-    model.get_query_h(query_data_embeddings, config['epoch_CPM_test'])
+    model.train_query_h(query_data_embeddings, config['epoch_CPM_test'])
 
     ref_h = model.get_h_train().detach().cpu().numpy()
     query_h = model.get_h_test().detach().cpu().numpy()
@@ -180,8 +180,9 @@ def transfer_train(data_config: dict,
     # for i in range(len(GNN_models)):
     #     query_views.append(GNN_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
 
-    query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
+    # query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
 
+    query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
     query_label_tensor = torch.from_numpy(query_label).view(1, query_label.shape[0]).long().to(device)
 
     '''
