@@ -61,7 +61,7 @@ class CPMNets():
                 nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.Linear(self.lsd_dim, int(view_d_arr[i]/2), device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.ReLU(),
-                # nn.Dropout(p=0.5)
+                nn.Dropout(p=0.3)
                 # nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i]/2, device=device),
                 # nn.ReLU(),
                 # # nn.Dropout(0.2),
@@ -240,6 +240,10 @@ class CPMNets():
         data = data.to(device)
         optimizer_for_query_h = optim.Adam(params=[self.h_test])
 
+        # 变成eval模式，不更新参数，以及可以去掉dropout层的计算
+        for v in range(self.view_num):
+            self.net[str(v)] = self.net[str(v)].eval()
+        
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
