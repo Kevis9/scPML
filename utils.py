@@ -147,9 +147,17 @@ def read_data_label_h5(data_path, key):
 #     return data, label
 
 
-def read_similarity_mat(path):    
-    mat_df = pd.read_csv(path, index_col=0)
+# def read_similarity_mat(path):
+#     mat_df = pd.read_csv(path, index_col=0)
+#     similarity_mat = mat_df.to_numpy()
+#     return similarity_mat.astype(np.float64)
+
+
+def read_similarity_mat_h5(path, key):
+    print("reading graph...")
+    mat_df = pd.read_hdf(path, key)
     similarity_mat = mat_df.to_numpy()
+    print("Finish")
     return similarity_mat.astype(np.float64)
 
 

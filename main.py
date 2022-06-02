@@ -2,7 +2,7 @@ import os.path
 import torch
 from torch import embedding, nn
 from utils import sc_normalization, mask_data, construct_graph, \
-    read_data_label_h5, read_similarity_mat, \
+    read_data_label_h5, read_similarity_mat_h5, \
     cpm_classify, z_score_normalization, show_cluster, \
     concat_views, batch_mixing_entropy, runPCA, runUMAP
 from model import scGNN, CPMNets, Classifier
@@ -72,7 +72,6 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
     return model, ref_h, query_h
 
 def transfer_train(data_config: dict,
-                   sm_path: dict,
                    config: dict):
     '''
     :param data_path: 表达矩阵的路径
@@ -97,7 +96,7 @@ def transfer_train(data_config: dict,
     masked_prob = min(len(ref_norm_data.nonzero()[0]) / (ref_norm_data.shape[0] * ref_norm_data.shape[1]), 0.3)
     masked_ref_data, index_pair, masking_idx = mask_data(ref_norm_data, masked_prob)
 
-    ref_sm_arr = [read_similarity_mat(sm_path['ref'][i]) for i in range(len(sm_path['ref']))]
+    ref_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["ref_name"]+"_"+str(i+1)) for i in range(4)]
     ref_graphs = [construct_graph(masked_ref_data, ref_sm_arr[i], config['k']) for i in range(len(ref_sm_arr))]
 
     ref_views = []
@@ -143,7 +142,7 @@ def transfer_train(data_config: dict,
     # query_norm_data = preprocessing.minmax_scale(query_norm_data, axis=0)
 
     # 构造Query data的Graph
-    query_sm_arr = [read_similarity_mat(sm_path['query'][i]) for i in range(len(sm_path['query']))]
+    query_sm_arr = [read_similarity_mat_h5(data_path, "SM_"+data_config["query_name"]+"_"+str(i+1)) for i in range(4)]
     query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], config['k']) for i in range(len(query_sm_arr))]
 
     # 获得Embedding
@@ -216,21 +215,6 @@ config = {
     'cen_weight': 0.5,
 }
 
-sm_path = os.path.join(data_config['data_path'], 'similarity_mat')
-SMPath = {
-    'ref': [
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_KEGG.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Reactome.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['ref_name'] + ("_biase.csv" if data_config['ref_name']=='mouse' else "_yan.csv")),
-    ],
-    'query': [
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_KEGG.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Reactome.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + "_Wikipathways.csv"),
-        os.path.join(sm_path, "SM_" + data_config['query_name'] + ("_biase.csv" if data_config['query_name']=='mouse' else "_yan.csv")),
-    ]
-}
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -245,13 +229,16 @@ print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 # 获取结果
-ret = transfer_train(data_config, SMPath, config)
-embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
-# embedding_h_pca = runPCA(embedding_h)
+ret = transfer_train(data_config, config)
+
+
 
 '''
     ==================结果处理====================
 '''
+embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
+# embedding_h_pca = runPCA(embedding_h)
+
 
 ref_h = embedding_h[:ret['ref_h'].shape[0], :]
 query_h = embedding_h[ret['ref_h'].shape[0]:, :]
