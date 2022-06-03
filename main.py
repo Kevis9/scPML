@@ -221,6 +221,70 @@ def transfer_train(data_config: dict,
     }
     return ret
 
+def show_result(ret):
+    embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
+    # embedding_h_pca = runPCA(embedding_h)
+
+    ref_h = embedding_h[:ret['ref_h'].shape[0], :]
+    query_h = embedding_h[ret['ref_h'].shape[0]:, :]
+
+    # evaluation metrics
+    total_s_score = silhouette_score(embedding_h, list(ret['ref_label']) + list(ret['pred']))
+    ref_s_score = silhouette_score(ref_h, ret['ref_label'])
+    q_s_score = silhouette_score(query_h, ret['pred'])
+
+    ari = adjusted_rand_score(ret['query_label'], ret['pred'])
+    bme = batch_mixing_entropy(ref_h, query_h)
+    bme = sum(bme) / len(bme)
+
+    print("Prediction Accuracy is {:.3f}".format(ret['acc']))
+    # print('Prediction Silhouette score is {:.3f}'.format(s_score))
+    print('Prediction ARI is {:.3f}'.format(ari))
+
+    # 数据上报
+    wandb.log({
+        'Prediction Acc': ret['acc'],
+        'ref Silhouette ': ref_s_score,
+        'query Silhouette ': q_s_score,
+        'total Silhouette ': total_s_score,
+        'ARI': ari,
+        'Batch Mixing Entropy Mean': bme
+    })
+
+    raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
+    # raw_data_pca = runPCA(raw_data)
+    #
+    raw_data_2d = runUMAP(raw_data)  # 对PCA之后的数据进行UMAP可视化
+    ref_len = ret['ref_raw_data'].shape[0]
+    #
+    h_data_2d = runUMAP(embedding_h)
+
+    np.save('result/raw_data_2d.npy', raw_data_2d)
+    np.save('result/h_data_2d.npy', h_data_2d)
+
+    all_true_labels = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
+    all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
+    np.save('result/all_true_labels.npy', all_true_labels)
+    np.save('result/all_pred_labels.npy', all_pred_labels)
+
+    show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
+    show_cluster(h_data_2d, all_true_labels, 'reference-query h true label')
+    show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label')
+
+    # show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
+    # show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
+    # show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
+    # show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
+    # show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
+
+    # For multi omics part
+    # show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+    #              , 'Reference-Query H')
+    # show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
+    #              , 'Reference-Query H with pred label')
+    # show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
+    #              , 'Reference-Query Raw')
+
 
 # 数据配置
 data_config = {
@@ -234,7 +298,7 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 1000,  # Huang model 训练的epoch
+    'epoch_GCN': 1500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 5000,
     'lsd_dim': 128,  # CPM_net latent space dimension
@@ -243,7 +307,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 4096,  # GCN中间层维数
+    'middle_out': 512,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     'cen_weight': 0.5,
 }
@@ -251,81 +315,38 @@ config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-wandb.init(project="cell_classify_" + data_config['project'],
-           entity="kevislin",
-           config={"config":config, "data_config": data_config},
-           tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
-                 str(data_config['class_num']) + ' class', data_config['dataset_name']])
-
-
 print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
-# 获取结果
-ret = transfer_train(data_config, config)
 
-'''
-    ==================结果处理====================
-'''
-embedding_h = np.concatenate([ret['ref_h'], ret['query_h']], axis=0)
-# embedding_h_pca = runPCA(embedding_h)
+def main_process(data_config, config):
+    run = wandb.init(project="cell_classify_" + data_config['project'],
+                     entity="kevislin",
+                     config={"config": config, "data_config": data_config},
+                     tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
+                           str(data_config['class_num']) + ' class', data_config['dataset_name']],
+                     reinit=True)
+    ret = transfer_train(data_config, config)
+    show_result(ret)
+    run.finish()
 
-ref_h = embedding_h[:ret['ref_h'].shape[0], :]
-query_h = embedding_h[ret['ref_h'].shape[0]:, :]
 
-# evaluation metrics
-total_s_score = silhouette_score(embedding_h, list(ret['ref_label']) + list(ret['pred']))
-ref_s_score = silhouette_score(ref_h, ret['ref_label'])
-q_s_score = silhouette_score(query_h, ret['pred'])
+# 我们测试参数 middle_out对我们的影响
+config['middle_out'] = 512
+main_process(data_config, config)
 
-ari = adjusted_rand_score(ret['query_label'], ret['pred'])
-bme = batch_mixing_entropy(ref_h, query_h)
-bme = sum(bme) / len(bme)
+config['middle_out'] = 1024
+main_process(data_config, config)
 
-print("Prediction Accuracy is {:.3f}".format(ret['acc']))
-# print('Prediction Silhouette score is {:.3f}'.format(s_score))
-print('Prediction ARI is {:.3f}'.format(ari))
+config['middle_out'] = 2048
+main_process(data_config, config)
 
-# 数据上报
-wandb.log({
-    'Prediction Acc': ret['acc'],
-    'ref Silhouette ': ref_s_score,
-    'query Silhouette ': q_s_score,
-    'total Silhouette ': total_s_score,
-    'ARI': ari,
-    'Batch Mixing Entropy Mean': bme
-})
+config['middle_out'] = 4096
+main_process(data_config, config)
 
-raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-# raw_data_pca = runPCA(raw_data)
-#
-raw_data_2d = runUMAP(raw_data) # 对PCA之后的数据进行UMAP可视化
-ref_len = ret['ref_raw_data'].shape[0]
-#
-h_data_2d = runUMAP(embedding_h)
+config['middle_out'] = 8192
+main_process(data_config, config)
 
-np.save('result/raw_data_2d.npy', raw_data_2d)
-np.save('result/h_data_2d.npy', h_data_2d)
 
-all_true_labels = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
-all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
-np.save('result/all_true_labels.npy', all_true_labels)
-np.save('result/all_pred_labels.npy', all_pred_labels)
 
-show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
-show_cluster(h_data_2d, all_true_labels, 'reference-query h true label')
-show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label')
 
-# show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
-# show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
-# show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
-# show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
-# show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
-
-# For multi omics part
-# show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-#              , 'Reference-Query H')
-# show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
-#              , 'Reference-Query H with pred label')
-# show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-#              , 'Reference-Query Raw')
