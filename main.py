@@ -73,7 +73,7 @@ def train_cpm_net(ref_data_embeddings: torch.Tensor,
 
 def self_supervised_train(data, data_name, data_path, config):
     # 可以试试调整这个mask比例来调参
-    masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.3)
+    masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), config["mask_rate"])
     masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
 
     sm_arr = [read_similarity_mat_h5(data_path, "sm_" + data_name + "_" + str(i + 1)) for i in
@@ -310,6 +310,7 @@ config = {
     'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     'cen_weight': 0.5,
+    'mask_rate': 0.3,
 }
 
 
@@ -333,34 +334,30 @@ def main_process(data_config, config):
 
 # 测试epoch_CPM_train
 
-config['epoch_CPM_train'] = 500
+
+config['mask_rate'] = 0.05
 main_process(data_config, config)
 
-config['epoch_CPM_train'] = 1000
+config['mask_rate'] = 0.1
 main_process(data_config, config)
 
-config['epoch_CPM_train'] = 1500
+config['mask_rate'] = 0.15
 main_process(data_config, config)
 
-
-config['epoch_CPM_train'] = 2000
+config['mask_rate'] = 0.2
 main_process(data_config, config)
 
-config['epoch_CPM_train'] = 2000
+config['mask_rate'] = 0.25
 main_process(data_config, config)
 
-config['epoch_CPM_train'] = 2500
+config['mask_rate'] = 0.3
 main_process(data_config, config)
 
-config['epoch_CPM_train'] = 3000
+config['mask_rate'] = 0.4
 main_process(data_config, config)
 
-config['epoch_CPM_train'] = 4000
+config['mask_rate'] = 0.5
 main_process(data_config, config)
-
-config['epoch_CPM_train'] = 5000
-main_process(data_config, config)
-
 
 
 # main_process(data_config, config)
