@@ -332,6 +332,10 @@ def main_process(data_config, config):
 
 
 # 测试epoch_CPM_train
+
+config['epoch_CPM_train'] = 500
+main_process(data_config, config)
+
 config['epoch_CPM_train'] = 1000
 main_process(data_config, config)
 
