@@ -298,7 +298,7 @@ data_config = {
 #{'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
 config = {
-    'epoch_GCN': 1500,  # Huang model 训练的epoch
+    'epoch_GCN': 2000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 5000,
     'lsd_dim': 64,  # CPM_net latent space dimension
@@ -331,21 +331,32 @@ def main_process(data_config, config):
     run.finish()
 
 
-# 测试epoch_GCN
-config['epoch_GCN'] = 500
+# 测试epoch_CPM_train
+config['epoch_CPM_train'] = 1000
 main_process(data_config, config)
 
-config['epoch_GCN'] = 1000
+config['epoch_CPM_train'] = 1500
 main_process(data_config, config)
 
-config['epoch_GCN'] = 1500
+
+config['epoch_CPM_train'] = 2000
 main_process(data_config, config)
 
-config['epoch_GCN'] = 2000
+config['epoch_CPM_train'] = 2000
 main_process(data_config, config)
 
-config['epoch_GCN'] = 3000
+config['epoch_CPM_train'] = 2500
 main_process(data_config, config)
+
+config['epoch_CPM_train'] = 3000
+main_process(data_config, config)
+
+config['epoch_CPM_train'] = 4000
+main_process(data_config, config)
+
+config['epoch_CPM_train'] = 5000
+main_process(data_config, config)
+
 
 
 # main_process(data_config, config)
