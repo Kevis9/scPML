@@ -307,7 +307,7 @@ config = {
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
     'query_class_num': data_config['class_num'],  # query data的类别数
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 512,  # GCN中间层维数
+    'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     'cen_weight': 0.5,
 }
@@ -324,27 +324,30 @@ def main_process(data_config, config):
                      entity="kevislin",
                      config={"config": config, "data_config": data_config},
                      tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project'],
-                           str(data_config['class_num']) + ' class', data_config['dataset_name']],
+                           str(data_config['class_num']) + ' class', data_config['dataset_name'], "Adjust: lsd_dim"],
                      reinit=True)
     ret = transfer_train(data_config, config)
     show_result(ret)
     run.finish()
 
 
-# 我们测试参数 middle_out对我们的影响
-config['middle_out'] = 512
+# 测试lsd_dim对我们的影响
+config['lsd_dim'] = 32
 main_process(data_config, config)
 
-config['middle_out'] = 1024
+config['lsd_dim'] = 64
 main_process(data_config, config)
 
-config['middle_out'] = 2048
+config['lsd_dim'] = 128
 main_process(data_config, config)
 
-config['middle_out'] = 4096
+config['lsd_dim'] = 256
 main_process(data_config, config)
 
-config['middle_out'] = 8192
+config['lsd_dim'] = 512
+main_process(data_config, config)
+
+config['lsd_dim'] = 1024
 main_process(data_config, config)
 
 
