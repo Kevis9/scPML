@@ -301,7 +301,7 @@ config = {
     'epoch_GCN': 1500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 5000,
-    'lsd_dim': 128,  # CPM_net latent space dimension
+    'lsd_dim': 64,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
@@ -331,24 +331,24 @@ def main_process(data_config, config):
     run.finish()
 
 
-# 测试lsd_dim对我们的影响
-config['lsd_dim'] = 32
+# 测试epoch_GCN
+config['epoch_GCN'] = 500
 main_process(data_config, config)
 
-config['lsd_dim'] = 64
+config['epoch_GCN'] = 1000
 main_process(data_config, config)
 
-config['lsd_dim'] = 128
+config['epoch_GCN'] = 1500
 main_process(data_config, config)
 
-config['lsd_dim'] = 256
+config['epoch_GCN'] = 2000
 main_process(data_config, config)
 
-config['lsd_dim'] = 512
+config['epoch_GCN'] = 3000
 main_process(data_config, config)
 
-config['lsd_dim'] = 1024
-main_process(data_config, config)
+
+# main_process(data_config, config)
 
 
 
