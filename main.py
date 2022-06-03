@@ -237,7 +237,7 @@ config = {
     'epoch_GCN': 2000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 8000,
-    'lsd_dim': 32,  # CPM_net latent space dimension
+    'lsd_dim': 256,  # CPM_net latent space dimension
     'GNN_lr': 0.001,
     'CPM_lr': [0.001, 0.001, 0.001],  # CPM_ner中net和train_h,test_h的学习率
     'ref_class_num': data_config['class_num'],  # Reference data的类别数
