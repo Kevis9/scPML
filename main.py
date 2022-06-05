@@ -83,7 +83,7 @@ def train_query(gcn_models, cpm_model, query_data):
     query_norm_data = sc_normalization(query_data)
 
     # 构造Query data的Graph
-    query_sm_arr = [read_similarity_mat_h5(data_config['data_path'], "query/sm_" + str(i + 1)) for i in
+    query_sm_arr = [read_similarity_mat_h5(data_config['data_path'], data_config['query_key']+"/sm_" + str(i + 1)) for i in
                     range(4)]
     query_graphs = [construct_graph(query_norm_data, query_sm_arr[i], parameter_config['k'])
                     for i in range(len(query_sm_arr))]
@@ -308,7 +308,7 @@ data_config = {
     'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
     'query_name': 'GSE84133: human',
-    'query_key': 'query_1',
+    'query_key': 'query/query_1',
     'project': 'species',
     'ref_class_num': 8,
     'dataset_name': 'GSE84133',
