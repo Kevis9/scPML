@@ -99,7 +99,7 @@ def train_query(gcn_models, cpm_model, query_data):
     # query_label_tensor = torch.from_numpy(query_labels).view(1, query_labels.shape[0]).long().to(device)
 
     query_h = cpm_model.train_query_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'])
-    return query_h
+    return query_h.detach().cpu().numpy()
 
 
 def transfer_labels():
