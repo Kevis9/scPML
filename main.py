@@ -307,8 +307,8 @@ def main_process():
 data_config = {
     'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
-    'query_name': 'GSE84133: human',
-    'query_key': 'query/query_1',
+    'query_name': 'E_MTAB_5061: human',
+    'query_key': 'query/query_2',
     'project': 'species',
     'ref_class_num': 8,
     'dataset_name': 'GSE84133',
@@ -324,9 +324,8 @@ parameter_config = {
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
-    'cen_weight': 0.5,
     'mask_rate': 0.3,
-    'model_exist': False,  # 如果事先已经有了模型,则为True
+    'model_exist': True,  # 如果事先已经有了模型,则为True
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
