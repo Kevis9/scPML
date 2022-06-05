@@ -296,8 +296,10 @@ def main_process():
                      tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']],
                      reinit=True)
     ret = transfer_labels()
+
     # 保存模型, 利用pickle
-    save_models(ret['gcn_models'], ret['cpm_model'])
+    if not parameter_config['model_exist']:
+        save_models(ret['gcn_models'], ret['cpm_model'])
     # 查看结果
     show_result(ret)
 
