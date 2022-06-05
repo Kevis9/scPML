@@ -123,7 +123,8 @@ def transfer_labels():
         # 还原label
         ref_label = enc.inverse_transform(ref_label)
         query_label = enc.inverse_transform(query_label)
-
+        pred = enc.inverse_transform(pred)
+        
         ret = {
             'acc': acc,
             'ref_h': ref_h,
