@@ -9,7 +9,7 @@ from model import scGNN, CPMNets, Classifier
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
-import pickle
+
 
 
 # seq_well_smart 只有五类!!!
@@ -112,11 +112,17 @@ def transfer_labels():
         ref_h = cpm_model.get_h_train()
         ref_label = cpm_model.get_ref_labels()
 
+        ref_label, query_label, enc = encode_label(ref_label, query_label)
+
         query_h = train_query(gcn_models, cpm_model, query_data)
 
         pred = cpm_classify(ref_h, query_h, ref_label)
         acc = (pred == query_label).sum()
         acc = acc / pred.shape[0]
+
+        # 还原label
+        ref_label = enc.inverse_transform(ref_label)
+        query_label = enc.inverse_transform(query_label)
 
         ret = {
             'acc': acc,
@@ -168,7 +174,7 @@ def transfer_labels():
     cpm_model = CPMNets(ref_view_num,
                         ref_data.shape[0],
                         ref_view_feat_len,
-                        ref_label,
+                        enc.inverse_transform(ref_label),
                         parameter_config)
 
     # 开始训练
@@ -184,7 +190,6 @@ def transfer_labels():
 
     # 还原label
     ref_label = enc.inverse_transform(ref_label)
-
     query_label = enc.inverse_transform(query_label)
 
     pred = enc.inverse_transform(pred)
@@ -309,8 +314,9 @@ def main_process():
 data_config = {
     'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
-    'query_name': 'E_MTAB_5061: human',
-    'query_key': 'query/query_2',
+    # 'query_name': 'E_MTAB_5061: human',
+    'query_name': 'GSE84133: human',
+    'query_key': 'query/query_1',
     'project': 'species',
     'ref_class_num': 8,
     'dataset_name': 'GSE84133',
@@ -321,13 +327,13 @@ parameter_config = {
     'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
     'epoch_GCN': 2000,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 5000,
+    'epoch_CPM_test': 2500,
     'lsd_dim': 64,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     'mask_rate': 0.3,
-    'model_exist': True,  # 如果事先已经有了模型,则为True
+    'model_exist': False,  # 如果事先已经有了模型,则为True
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -34,7 +34,7 @@ class CPMNets(torch.nn.Module):
         self.h_train.requires_grad = True  # 先放在GPU上再设置requires_grad
         self.class_num = config['ref_class_num']
 
-        self.ref_labels = ref_labels
+        self.ref_label_name = ref_labels
         # 初始化
         nn.init.xavier_uniform_(self.h_train)
 
@@ -212,7 +212,7 @@ class CPMNets(torch.nn.Module):
         return self.h_train.detach().cpu().numpy()
 
     def get_ref_labels(self):
-        return self.ref_labels
+        return self.ref_label_name
     def forward(self):
         # 这里暂时不需要实现foward
         pass
