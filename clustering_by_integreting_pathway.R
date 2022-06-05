@@ -115,9 +115,9 @@ main<-function(paName, scName,s, paPath, save_path){
 
 
 scName= 'yan'
-paPath = "C:\\Users\\WRX80\\Desktop\\kevislin\\data\\pathway"
+paPath = "F:\\yuanhuang\\kevislin\\data\\pathway"
 # ref
-data_path = 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\task1\\ref'
+data_path = 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\ref'
 
 mat_name = 'data.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
@@ -131,7 +131,7 @@ main('de novo pathway', scName,'human', paPath, save_path)
 # query_1
 # mat_name = 'mouse_data.csv'
 # scName= 'biase'
-data_path = 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\task1\\query\\query_1'
+data_path = 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\query\\query_1'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_mouse_', sep='\\')
@@ -144,7 +144,7 @@ main('de novo pathway', scName,'human', paPath, save_path)
 # query_2
 # mat_name = 'mouse_data.csv'
 # scName= 'biase'
-data_path = 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\task1\\query\\query_2'
+data_path = 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\query\\query_2'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 save_path = paste(data_path, 'similarity_mat/SM_mouse_', sep='\\')
