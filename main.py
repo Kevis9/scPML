@@ -317,9 +317,9 @@ data_config = {
 
 parameter_config = {
     'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
-    'epoch_GCN': 1,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1,
-    'epoch_CPM_test': 1,
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 3000,
+    'epoch_CPM_test': 5000,
     'lsd_dim': 64,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
