@@ -305,7 +305,7 @@ def main_process():
 
 # 数据配置
 data_config = {
-    'data_path': 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\task1\\data.h5',
+    'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
     'query_name': 'GSE84133: human',
     'query_key': 'query_1',
