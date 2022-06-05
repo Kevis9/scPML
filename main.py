@@ -286,36 +286,7 @@ def load_models():
 
     return gcn_models, cpm_model
 
-# 数据配置
-data_config = {
-    'data_path': 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\GSE84133\\data.h5',
-    'ref_name': 'GSE84133: mouse',
-    'query_name': 'GSE84133: human',
-    'query_key': 'query_1',
-    'project': 'species',
-    'class_num': 8,
-    'dataset_name': 'GSE84133',
-}
-# {'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
 
-parameter_config = {
-    'ref_class_num': data_config['class_num'],  # Reference data的类别数
-    'epoch_GCN': 1,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1,
-    'epoch_CPM_test': 1,
-    'lsd_dim': 64,  # CPM_net latent space dimension
-    'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 2048,  # GCN中间层维数
-    'w_classify': 10,  # classfication loss的权重
-    'cen_weight': 0.5,
-    'mask_rate': 0.3,
-    'model_exist': False,  # 如果事先已经有了模型,则为True
-}
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-print("Transfer across " + data_config['project'])
-print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 
 def main_process():
@@ -332,6 +303,36 @@ def main_process():
 
     run.finish()
 
+# 数据配置
+data_config = {
+    'data_path': 'C:\\Users\\WRX80\\Desktop\\kevislin\\data\\species\\task1\\data.h5',
+    'ref_name': 'GSE84133: mouse',
+    'query_name': 'GSE84133: human',
+    'query_key': 'query_1',
+    'project': 'species',
+    'ref_class_num': 8,
+    'dataset_name': 'GSE84133',
+}
+# {'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
+
+parameter_config = {
+    'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
+    'epoch_GCN': 1,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1,
+    'epoch_CPM_test': 1,
+    'lsd_dim': 64,  # CPM_net latent space dimension
+    'k': 2,  # 图构造的时候k_neighbor参数
+    'middle_out': 2048,  # GCN中间层维数
+    'w_classify': 10,  # classfication loss的权重
+    'cen_weight': 0.5,
+    'mask_rate': 0.3,
+    'model_exist': False,  # 如果事先已经有了模型,则为True
+}
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+print("Transfer across " + data_config['project'])
+print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 # 测试epoch_CPM_train
 main_process()
