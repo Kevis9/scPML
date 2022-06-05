@@ -14,18 +14,8 @@ from utils import cpm_classify
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-class CPMNets():
-    def __init__(self, view_num, train_len, test_len, view_d_arr, class_num, lsd_dim, config):
-        '''
-        :param view_num: view的数目
-        :param train_len: training data length
-        :param test_len: test data length
-        :param view_d_arr: 一个数组，代表每一个view的特征长度
-        :param lsd_dim: latent space H dimension
-        :param class_num: 类别数
-        :param w: classfication loss的权重
-        这里也不考虑用源码中的sn矩阵，因为我们不缺view，也没必要随机取产生缺失的view
-        '''
+class CPMNets(torch.nn.Module):
+    def __init__(self, view_num, train_len, view_d_arr, ref_labels, config):
         super(CPMNets, self).__init__()
         self.config = config
         self.view_num = view_num
@@ -37,21 +27,16 @@ class CPMNets():
                 self.view_idx[i].append(cnt)
                 cnt += 1
 
-        self.lsd_dim = lsd_dim
+        self.lsd_dim = config['lsd_dim']
         self.train_len = train_len
-        self.test_len = test_len
 
         self.h_train = torch.zeros((self.train_len, self.lsd_dim), dtype=torch.float).to(device)
         self.h_train.requires_grad = True  # 先放在GPU上再设置requires_grad
+        self.class_num = config['ref_class_num']
 
-        self.h_test = torch.zeros((self.test_len, self.lsd_dim), dtype=torch.float).to(device)
-        self.h_test.requires_grad = True
-
-        self.class_num = class_num
-
+        self.ref_labels = ref_labels
         # 初始化
         nn.init.xavier_uniform_(self.h_train)
-        nn.init.xavier_uniform_(self.h_test)
 
         # 模型的搭建
         # net的输入是representation h ---> 重构成 X
@@ -107,73 +92,16 @@ class CPMNets():
         F_h_hn_mean = torch.sum(F_h_hn_mean_, dim=1)  # 1*n
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
-        # return torch.sum(F.relu(F_h_h_mean_max - F_h_hn_mean))
-
-    def fisher_loss(self, gt):
-        '''
-        给出LDA中fisher_loss
-        :param gt:
-        :return:
-        '''
-        label_list = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
-        idx = []  # 存储每一个类别所在行数
-
-        for label in label_list:
-            idx.append(torch.where(gt == label)[1])
-
-        v_arr = []
-        u_arr = []
-        for i in range(len(idx)):
-            data = self.h_train[idx[i], :]
-
-            u = torch.mean(data, dim=0, dtype=torch.float64)
-
-            v_arr.append((torch.diag(torch.mm(data - u, (data - u).T)).sum() / (data.shape[0])).view(1, -1))
-            u_arr.append(u.reshape(1, -1))
-
-        variance_loss = torch.cat(v_arr, dim=1).sum()
-
-        u_tensor = torch.cat(u_arr, dim=0)
-        u_tensor = torch.mm(u_tensor, u_tensor.T)
-
-        # 将对角线置为0
-        u_diag = torch.diag(u_tensor)
-        u_tensor = u_tensor - torch.diag_embed(u_diag)
-
-        # 簇之间的距离
-        dist_loss = u_tensor.sum()
-
-        return F.relu(variance_loss - dist_loss)
-
-    def center_loss(self, h, labels):
-        '''
-        计算中心loss(有点类似EM)
-        :param h:
-        :param labels:
-        :return:
-        '''
-        dis = []
-        class_idx = []  # 记录每一类的下标
-        labels = labels.view(-1)
-        for i in range(self.class_num):
-            class_idx.append(torch.where(labels == i)[0])
-        for i in range(len(class_idx)):
-            h_i = h[class_idx[i], :]
-            u_i = torch.mean(h_i, dim=0)
-            mean_dis = torch.diag(torch.mm(h_i - u_i, (h_i - u_i).T)).sum()
-            dis.append(mean_dis.reshape(-1))
-
-        return torch.cat(dis).sum()
 
     def evaluate_ref_h(self, ref_h, labels):
         eval_label = cpm_classify(ref_h, ref_h, labels.reshape(-1))
-        acc = ((eval_label==labels).sum())/len(eval_label)
+        acc = ((eval_label == labels).sum()) / len(eval_label)
         # print("ref h acc is {:.2f}".format(acc))
         wandb.log({
-            "CPM train acc" : acc
+            "CPM train acc": acc
         })
 
-    def train_ref_h(self, data, labels, n_epochs, lr):
+    def train_ref_h(self, data, labels):
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
@@ -191,10 +119,10 @@ class CPMNets():
             for p in self.net[str(v)].parameters():
                 netParams.append(p)
 
-        optimizer_for_net = optim.Adam(params=netParams, lr=lr[0])
-        optimizer_for_h = optim.Adam(params=[self.h_train], lr=lr[1])
+        optimizer_for_net = optim.Adam(params=netParams)
+        optimizer_for_h = optim.Adam(params=[self.h_train])
 
-        for epoch in range(n_epochs):
+        for epoch in range(self.config['epoch_CPM_train']):
             r_loss = 0
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
@@ -223,6 +151,8 @@ class CPMNets():
                 #     epoch, r_loss.detach().item(), c_loss.detach().item()))
                 print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                     epoch, r_loss.detach().item(), c_loss.detach().item()))
+
+                # 这里后面考虑加入一个验证集
                 self.evaluate_ref_h(self.h_train.detach().cpu().numpy(), labels.detach().cpu().numpy())
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
@@ -231,39 +161,44 @@ class CPMNets():
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-    def train_query_h(self, data, ref_label, true_label, n_epochs):
+    def train_query_h(self, data, n_epochs):
         '''
         :param data: query data
         :param n_epochs:
         :return:
         '''
         data = data.to(device)
-        optimizer_for_query_h = optim.Adam(params=[self.h_test], lr=self.config['CPM_lr'][2])
+
+        h_test = torch.zeros((data.shape[0], self.lsd_dim), dtype=torch.float).to(device)
+        h_test.requires_grad = True
+        nn.init.xavier_uniform_(h_test)
+        optimizer_for_query_h = optim.Adam(params=[h_test])
 
         # 变成eval模式，不更新参数，以及可以去掉dropout层的计算
         for v in range(self.view_num):
             self.net[str(v)] = self.net[str(v)].eval()
-        acc = 0
+
+        # acc = 0
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
-                r_loss += self.reconstrution_loss(self.net[str(v)](self.h_test), data[:, self.view_idx[v]])
+                r_loss += self.reconstrution_loss(self.net[str(v)](h_test), data[:, self.view_idx[v]])
 
-            r_loss = r_loss / self.test_len
+            r_loss = r_loss / h_test.shape[0]
+
             all_loss = r_loss
-
 
             optimizer_for_query_h.zero_grad()
             all_loss.backward()
             optimizer_for_query_h.step()
 
-            if epoch % 10 == 0:
-                # 这里加入这个试试早停法
-                pred = cpm_classify(self.h_train.detach().cpu().numpy(), self.h_test.detach().cpu().numpy(), ref_label.detach().cpu().numpy().reshape(-1, 1)).reshape(-1)
-                acc = (pred == true_label.detach().cpu().numpy().reshape(-1)).sum() / len(pred)
-                wandb.log({
-                    "query_h_train_acc" : acc
-                })
+            # if epoch % 10 == 0:
+            #     # 这里加入这个试试早停法
+            #     pred = cpm_classify(self.h_train.detach().cpu().numpy(), self.h_test.detach().cpu().numpy(), ref_label.detach().cpu().numpy().reshape(-1, 1)).reshape(-1)
+            #     acc = (pred == true_label.detach().cpu().numpy().reshape(-1)).sum() / len(pred)
+            #     wandb.log({
+            #         "query_h_train_acc" : acc
+            #     })
             if epoch % 200 == 0:
                 print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
                     epoch, r_loss.detach().item()))
@@ -271,13 +206,16 @@ class CPMNets():
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
             })
+        return h_test
 
     def get_h_train(self):
-        return self.h_train
+        return self.h_train.detach().cpu().numpy()
 
-    def get_h_test(self):
-        return self.h_test
-
+    def get_ref_labels(self):
+        return self.ref_labels
+    def forward(self):
+        # 这里暂时不需要实现foward
+        pass
 
 class scGNN(torch.nn.Module):
     def __init__(self, G_data, middle_out):
@@ -293,9 +231,8 @@ class scGNN(torch.nn.Module):
         x, edge_index = G_data.x, G_data.edge_index
         # 中间夹了一层relu和一层dropout(避免过拟合的发生)
         x = F.relu(self.conv1(x, edge_index))
-
         # 可以调整dropout的比率
-        x = F.dropout(x, training=self.training)
+        x = F.dropout(x)
         x = self.conv2(x, edge_index)
         return x
 

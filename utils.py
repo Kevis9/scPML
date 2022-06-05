@@ -16,7 +16,7 @@ import wandb
 import scipy.spatial as spt
 from random import sample
 from sklearn.decomposition import PCA
-
+from sklearn.preprocessing import LabelEncoder
 RESULT_PATH = os.path.join(os.getcwd(), 'result')
 hue = []
 
@@ -114,10 +114,11 @@ def construct_graph(data, similarity_mat, k):
 
 def read_data_label_h5(data_path, key):
     print('Reading data...')
-    data_df = pd.read_hdf(data_path, key+'_data')
+
+    data_df = pd.read_hdf(data_path, key+'/data')
     data = data_df.to_numpy()
 
-    label_df = pd.read_hdf(data_path, key+'_label')
+    label_df = pd.read_hdf(data_path, key+'/label')
     label = label_df.to_numpy().reshape(-1)
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
@@ -247,3 +248,9 @@ def batch_mixing_entropy(ref_data, query_data, L=100, M=300, K=500):
                 entropy[boot] += xi * math.log(xi)
     entropy = [-(x / M) for x in entropy]
     return entropy
+
+def encode_label(ref_label, query_label):
+    enc = LabelEncoder()
+    all_label = np.concatenate([ref_label, query_label])
+    all_label = enc.fit_transform(all_label)
+    return all_label[:len(ref_label)], all_label[len(ref_label):], enc
