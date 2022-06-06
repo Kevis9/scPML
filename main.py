@@ -10,8 +10,6 @@ import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
 
-
-
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
 
@@ -124,7 +122,7 @@ def transfer_labels():
         ref_label = enc.inverse_transform(ref_label)
         query_label = enc.inverse_transform(query_label)
         pred = enc.inverse_transform(pred)
-        
+
         ret = {
             'acc': acc,
             'ref_h': ref_h,
@@ -315,9 +313,9 @@ def main_process():
 data_config = {
     'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
-    'query_name': 'E_MTAB_5061: human',
-    # 'query_name': 'GSE84133: human',
-    'query_key': 'query/query_2',
+    # 'query_name': 'E_MTAB_5061: human',
+    'query_name': 'GSE84133: human',
+    'query_key': 'query/query_1',
     'project': 'species',
     'ref_class_num': 8,
     'dataset_name': 'GSE84133',
@@ -326,15 +324,15 @@ data_config = {
 
 parameter_config = {
     'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
-    'epoch_GCN': 2000,  # Huang model 训练的epoch
+    'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 2500,
+    'epoch_CPM_test': 3000,
     'lsd_dim': 64,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     'mask_rate': 0.3,
-    'model_exist': True,  # 如果事先已经有了模型,则为True
+    'model_exist': False,  # 如果事先已经有了模型,则为True
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -343,5 +341,16 @@ print("Transfer across " + data_config['project'])
 print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 # 测试epoch_CPM_train
+parameter_config['w_classify'] = 1
 main_process()
 # main_process(data_config, config)
+
+parameter_config['w_classify'] = 10
+main_process()
+
+parameter_config['w_classify'] = 100
+main_process()
+
+parameter_config['w_classify'] = 10
+parameter_config['lsd_dim'] = 128
+main_process()
