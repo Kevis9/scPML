@@ -320,7 +320,7 @@ data_config = {
     'ref_class_num': 8,
     'dataset_name': 'GSE84133',
 }
-# {'gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate'}
+# ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
 parameter_config = {
     'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
@@ -342,12 +342,12 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 
 # 测试epoch_CPM_train
 # main_process(data_config, config)
-main_process()
+# main_process()
 
 parameter_config['model_exist'] = True
-data_config['query_name'] = 'E_MTAB_5061: human'
-data_config['query_key'] = 'query/query_2'
-main_process()
+# data_config['query_name'] = 'E_MTAB_5061: human'
+# data_config['query_key'] = 'query/query_2'
+# main_process()
 
 
 data_config['query_name'] = 'GSE85241: human'
