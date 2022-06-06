@@ -48,12 +48,12 @@ common_type = set(label1['CellType'].tolist()) & set(label2['CellType'].tolist()
               set(label3['CellType'].tolist()) & set(label4['CellType'].tolist()) & \
               set(label5['CellType'].tolist()) & set(label6['CellType'].tolist())
 
-save_data_label(data1, label1, "data1.csv", "label1.csv")
-save_data_label(data2, label2, "data2.csv", "label2.csv")
-save_data_label(data3, label3, "data3.csv", "label3.csv")
-save_data_label(data4, label4, "data4.csv", "label4.csv")
-save_data_label(data5, label5, "data5.csv", "label5.csv")
-save_data_label(data6, label6, "data6.csv", "label6.csv")
+save_data_label(data1, label1, common_type,"data1.csv", "label1.csv")
+save_data_label(data2, label2, common_type,"data2.csv", "label2.csv")
+save_data_label(data3, label3, common_type,"data3.csv", "label3.csv")
+save_data_label(data4, label4, common_type,"data4.csv", "label4.csv")
+save_data_label(data5, label5, common_type,"data5.csv", "label5.csv")
+save_data_label(data6, label6, common_type,"data6.csv", "label6.csv")
 
 # task1: ref: data1
 # common_type = list(set(label1['CellType'].tolist()))
