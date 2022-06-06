@@ -302,8 +302,9 @@ def main_process():
     ret = transfer_labels()
 
     # 保存模型, 利用pickle
-    if not parameter_config['model_exist']:
+    if not parameter_config['model_exist'] and ret['acc']>0.95:
         save_models(ret['gcn_models'], ret['cpm_model'])
+        exit()
     # 查看结果
     show_result(ret)
 
@@ -315,7 +316,7 @@ data_config = {
     'ref_name': 'GSE84133: mouse',
     'query_name': 'E_MTAB_5061: human',
     # 'query_name': 'GSE84133: human',
-    'query_key': 'query/query_2',
+    'query_key': 'query/query_1',
     'project': 'species',
     'ref_class_num': 8,
     'dataset_name': 'GSE84133',
@@ -342,6 +343,8 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 
 # 测试epoch_CPM_train
 # main_process(data_config, config)
+main_process()
+main_process()
 main_process()
 
 
