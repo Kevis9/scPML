@@ -345,16 +345,13 @@ parameter_config['w_classify'] = 1
 main_process()
 # main_process(data_config, config)
 
-parameter_config['epoch_CPM_test'] = 1500
+parameter_config['middle_out'] = 1024
 main_process()
 
-parameter_config['epoch_CPM_test'] = 2500
+parameter_config['middle_out'] = 512
 main_process()
 
 
-parameter_config['epoch_GCN'] = 1500
-main_process()
 
-parameter_config['epoch_GCN'] = 3500
-main_process()
+
 
