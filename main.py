@@ -327,7 +327,7 @@ parameter_config = {
     'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
-    'lsd_dim': 64,  # CPM_net latent space dimension
+    'lsd_dim': 128,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
@@ -345,12 +345,16 @@ parameter_config['w_classify'] = 1
 main_process()
 # main_process(data_config, config)
 
-parameter_config['w_classify'] = 10
+parameter_config['epoch_CPM_test'] = 1500
 main_process()
 
-parameter_config['w_classify'] = 100
+parameter_config['epoch_CPM_test'] = 2500
 main_process()
 
-parameter_config['w_classify'] = 10
-parameter_config['lsd_dim'] = 128
+
+parameter_config['epoch_GCN'] = 1500
 main_process()
+
+parameter_config['epoch_GCN'] = 3500
+main_process()
+
