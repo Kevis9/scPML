@@ -302,9 +302,8 @@ def main_process():
     ret = transfer_labels()
 
     # 保存模型, 利用pickle
-    if not parameter_config['model_exist'] and ret['acc']>0.95:
+    if not parameter_config['model_exist']:
         save_models(ret['gcn_models'], ret['cpm_model'])
-        exit()
     # 查看结果
     show_result(ret)
 
@@ -314,8 +313,8 @@ def main_process():
 data_config = {
     'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
-    'query_name': 'E_MTAB_5061: human',
-    # 'query_name': 'GSE84133: human',
+    # 'query_name': 'E_MTAB_5061: human',
+    'query_name': 'GSE84133: human',
     'query_key': 'query/query_1',
     'project': 'species',
     'ref_class_num': 8,
@@ -333,7 +332,7 @@ parameter_config = {
     'middle_out': 2048,  # GCN中间层维数
     'w_classify': 10,  # classfication loss的权重
     'mask_rate': 0.3,
-    'model_exist': True,  # 如果事先已经有了模型,则为True
+    'model_exist': False,  # 如果事先已经有了模型,则为True
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -344,8 +343,18 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 # 测试epoch_CPM_train
 # main_process(data_config, config)
 main_process()
+
+parameter_config['model_exist'] = True
+data_config['query_name'] = 'E_MTAB_5061: human'
+data_config['query_key'] = 'query/query_2'
 main_process()
+
+
+data_config['query_name'] = 'GSE85241: human'
+data_config['query_key'] = 'query/query_3'
 main_process()
+
+
 
 
 
