@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+
 data = pd.read_csv('/Users/kevislin/Desktop/sq627/SeoulBikeData.csv', index_col=0)
 # 1.确认数据是否有缺省值
 # data.isnull()

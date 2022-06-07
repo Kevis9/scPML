@@ -353,7 +353,7 @@ data_config['query_name'] = 'PBMC: 10x_v3'
 data_config['query_key'] = 'query/query_1'
 main_process()
 
-data_config['model_exist'] = True
+parameter_config['model_exist'] = True
 data_config['query_name'] = 'PBMC: indrop'
 data_config['query_key'] = 'query/query_2'
 main_process()
