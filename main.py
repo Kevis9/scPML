@@ -311,14 +311,13 @@ def main_process():
 
 # 数据配置
 data_config = {
-    'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1_plus\\data.h5',
+    'data_path': 'F:\\yuanhuang\\kevislin\\data\\platform\\PBMC_with_all_common_type\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'GSE84133: human',
     'query_key': 'query/query_1',
-    'project': 'species',
-    'ref_class_num': 8,
-    'dataset_name': 'GSE84133',
+    'project': 'platform',
+    'ref_class_num': 5,
 }
 # ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
@@ -344,15 +343,33 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 # main_process(data_config, config)
 # main_process()
 
-parameter_config['model_exist'] = True
+# parameter_config['model_exist'] = True
 # data_config['query_name'] = 'E_MTAB_5061: human'
 # data_config['query_key'] = 'query/query_2'
 # main_process()
 
+data_config['ref_name']  = 'PBMC: cel-seq2'
+data_config['query_name'] = 'PBMC: 10x_v3'
+data_config['query_key'] = 'query/query_1'
+main_process()
 
-data_config['query_name'] = 'GSE85241: human'
+data_config['model_exist'] = True
+data_config['query_name'] = 'PBMC: indrop'
+data_config['query_key'] = 'query/query_2'
+main_process()
+
+data_config['query_name'] = 'PBMC: dropseq'
 data_config['query_key'] = 'query/query_3'
 main_process()
+
+data_config['query_name'] = 'PBMC: seq-well'
+data_config['query_key'] = 'query/query_4'
+main_process()
+
+data_config['query_name'] = 'PBMC: smart-seq2'
+data_config['query_key'] = 'query/query_5'
+main_process()
+
 
 
 
