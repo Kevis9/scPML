@@ -336,8 +336,8 @@ parameter_config = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-print("Transfer across " + data_config['project'])
-print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
+# print("Transfer across " + data_config['project'])
+# print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_name'])
 
 # 测试epoch_CPM_train
 # main_process(data_config, config)
@@ -348,28 +348,28 @@ print("Reference: " + data_config['ref_name'], "Query: " + data_config['query_na
 # data_config['query_key'] = 'query/query_2'
 # main_process()
 
-data_config['ref_name']  = 'PBMC: cel-seq2'
-data_config['query_name'] = 'PBMC: 10x_v3'
-data_config['query_key'] = 'query/query_1'
-main_process()
-
-parameter_config['model_exist'] = True
-data_config['query_name'] = 'PBMC: indrop'
-data_config['query_key'] = 'query/query_2'
-main_process()
-
-data_config['query_name'] = 'PBMC: dropseq'
-data_config['query_key'] = 'query/query_3'
-main_process()
-
+data_config['ref_name']  = 'PBMC: cel-seq'
 data_config['query_name'] = 'PBMC: seq-well'
 data_config['query_key'] = 'query/query_4'
 main_process()
 
-data_config['query_name'] = 'PBMC: smart-seq2'
-data_config['query_key'] = 'query/query_5'
-main_process()
-
+# parameter_config['model_exist'] = True
+# data_config['query_name'] = 'PBMC: indrop'
+# data_config['query_key'] = 'query/query_2'
+# main_process()
+#
+# data_config['query_name'] = 'PBMC: dropseq'
+# data_config['query_key'] = 'query/query_3'
+# main_process()
+#
+# data_config['query_name'] = 'PBMC: seq-well'
+# data_config['query_key'] = 'query/query_4'
+# main_process()
+#
+# data_config['query_name'] = 'PBMC: smart-seq2'
+# data_config['query_key'] = 'query/query_5'
+# main_process()
+#
 
 
 
