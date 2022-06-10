@@ -5,7 +5,7 @@ from utils import sc_normalization, mask_data, construct_graph, \
     read_data_label_h5, read_similarity_mat_h5, \
     cpm_classify, z_score_normalization, show_cluster, \
     concat_views, batch_mixing_entropy, runPCA, runUMAP, encode_label
-from model import scGNN, CPMNets, Classifier
+from model import scGNN, CPMNets
 import numpy as np
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 import wandb
@@ -170,6 +170,7 @@ def transfer_labels():
     '''
         对ref data进行训练
     '''
+
     cpm_model = CPMNets(ref_view_num,
                         ref_data.shape[0],
                         ref_view_feat_len,
@@ -182,8 +183,9 @@ def transfer_labels():
     # 得到最后的embeddings (ref和query)
     ref_h = cpm_model.get_h_train()
     query_h = train_query(ref_gcn_models, cpm_model, query_data)
-
-    pred = cpm_classify(ref_h, query_h, ref_label)
+    # cpm_model.train_classifier(ref_h, ref_label)
+    pred = cpm_model.classify(query_h)
+    # pred = cpm_classify(ref_h, query_h, ref_label)
     acc = (pred == query_label).sum()
     acc = acc / pred.shape[0]
 
@@ -243,11 +245,9 @@ def show_result(ret):
 
     if not parameter_config['model_exist']:
         raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-        # raw_data_pca = runPCA(raw_data)
-        #
+
         raw_data_2d = runUMAP(raw_data)  # 对PCA之后的数据进行UMAP可视化
-        # ref_len = ret['ref_raw_data'].shape[0]
-        #
+
         np.save('result/raw_data_2d.npy', raw_data_2d)
         show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
 
@@ -255,30 +255,14 @@ def show_result(ret):
     np.save('result/h_data_2d.npy', h_data_2d)
     np.save('result/all_true_labels.npy', all_true_labels)
     np.save('result/all_pred_labels.npy', all_pred_labels)
-
-
     show_cluster(h_data_2d, all_true_labels, 'reference-query h true label')
     show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label')
 
-    # show_cluster(raw_data_2d[:ref_len, :], ret['ref_label'], 'Raw reference data')
-    # show_cluster(raw_data_2d[ref_len:, :], ret['query_label'], 'Raw query data')
-    # show_cluster(h_data_2d[:ref_len, :], ret['ref_label'], 'Reference h')
-    # show_cluster(h_data_2d[ref_len:, :], ret['query_label'], 'Query h')
-    # show_cluster(h_data_2d[ref_len:, :], ret['pred'], 'Query h with prediction label')
-
-    # For multi omics part
-    # show_cluster(h_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-    #              , 'Reference-Query H')
-    # show_cluster(h_data_2d, np.concatenate([ret['ref_label'].reshape(-1), ret['query_label'].reshape(-1)])
-    #              , 'Reference-Query H with pred label')
-    # show_cluster(raw_data_2d, np.concatenate([['Reference' for i in range(len(ret['ref_label']))], ['Query' for i in range(len(ret['query_label']))]])
-    #              , 'Reference-Query Raw')
 
 def save_models(gcn_models, cpm_model):
     for i, model in enumerate(gcn_models):
         torch.save(model, 'result/gcn_model_'+ str(i) + '.pt')
     torch.save(cpm_model, 'result/cpm_model.pt')
-
 
 
 def load_models():
@@ -289,8 +273,6 @@ def load_models():
     cpm_model = torch.load('result/cpm_model.pt')
 
     return gcn_models, cpm_model
-
-
 
 
 def main_process():
@@ -326,6 +308,8 @@ parameter_config = {
     'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 3000,
     'epoch_CPM_test': 3000,
+    'epoch_classify': 500,
+    'batch_size_cpm': 256,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
@@ -348,9 +332,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # data_config['query_key'] = 'query/query_2'
 # main_process()
 
-data_config['ref_name']  = 'PBMC: cel-seq'
-data_config['query_name'] = 'PBMC: seq-well'
-data_config['query_key'] = 'query/query_4'
+# data_config['ref_name']  = 'PBMC: cel-seq'
+# data_config['query_name'] = 'PBMC: seq-well'
+# data_config['query_key'] = 'query/query_4'
 main_process()
 
 # parameter_config['model_exist'] = True
