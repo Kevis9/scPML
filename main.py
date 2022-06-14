@@ -170,7 +170,7 @@ def transfer_labels():
     '''
         对ref data进行训练
     '''
-
+    print(ref_data[0].shape)
     cpm_model = CPMNets(ref_view_num,
                         ref_data.shape[0],
                         ref_view_feat_len,
@@ -293,7 +293,7 @@ def main_process():
 
 # 数据配置
 data_config = {
-    'data_path': 'F:\\yuanhuang\\kevislin\\data\\platform\\PBMC_with_all_common_type\\task1\\data.h5',
+    'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1_plus\\data.h5',
     'ref_name': 'GSE84133: mouse',
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'GSE84133: human',
