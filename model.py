@@ -164,7 +164,9 @@ class CPMNets(torch.nn.Module):
         train_data = self.h_train[idx[:train_len],:]
         val_data = self.h_train[idx[train_len:], :]
 
+        print(labels.shape)
         labels = labels.view(-1)
+        print("xxx")
         print(labels.shape)
         print(max(idx[train_len:]))
         train_label = labels[idx[:train_len]]
