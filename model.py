@@ -166,7 +166,7 @@ class CPMNets(torch.nn.Module):
         train_label = labels[idx[:train_len]]
         val_label = labels[idx[train_len:]]
         print("you pass !!")
-        
+        exit()
         train_data_set = TensorDataset(train_data, train_label)
         train_data_loader = DataLoader(train_data_set, batch_size=self.config['batch_size_cpm'], shuffle=True)
         # loss function和optimizer
