@@ -163,8 +163,12 @@ class CPMNets(torch.nn.Module):
         train_len = int(self.h_train.shape[0] * 0.8)
         train_data = self.h_train[idx[:train_len],:]
         val_data = self.h_train[idx[train_len:], :]
-        train_label = labels.view(-1)[idx[:train_len]]
-        val_label = labels.view(-1)[idx[train_len:]]
+
+        labels = labels.view(-1)
+        print(labels.shape)
+        print(max(idx[train_len:]))
+        train_label = labels[idx[:train_len]]
+        val_label = labels[idx[train_len:]]
 
         train_data_set = TensorDataset(train_data, train_label)
         train_data_loader = DataLoader(train_data_set, batch_size=self.config['batch_size_cpm'], shuffle=True)
