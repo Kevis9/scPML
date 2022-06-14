@@ -157,16 +157,19 @@ class CPMNets(torch.nn.Module):
             })
 
         # 接着train classifier, 利用classifier对Embedding进行分类的学习
-        print("you pass !!")
+
         idx = [i for i in range(self.h_train.shape[0])]
         np.random.shuffle(idx)
         train_len = int(self.h_train.shape[0] * 0.8)
         train_data = self.h_train[idx[:train_len],:]
         val_data = self.h_train[idx[train_len:], :]
+
         train_label = labels[idx[:train_len]]
-        val_label = labels[idx[train_len:]]
-        print("you pass !!")
+        print(idx[train_len:])
         exit()
+        val_label = labels[idx[train_len:]]
+
+
         train_data_set = TensorDataset(train_data, train_label)
         train_data_loader = DataLoader(train_data_set, batch_size=self.config['batch_size_cpm'], shuffle=True)
         # loss function和optimizer
