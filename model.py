@@ -171,6 +171,7 @@ class CPMNets(torch.nn.Module):
         optimizer = optim.Adam(params=self.classifier.parameters())
         criterion = nn.CrossEntropyLoss()
         # train the classifier
+        print("you pass !!")
         for i in range(self.config['epoch_classify']):
             self.classifier.train()
             for batch, labels in train_data_loader:
