@@ -305,10 +305,10 @@ data_config = {
 
 parameter_config = {
     'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
-    'epoch_GCN': 2500,  # Huang model 训练的epoch
-    'epoch_CPM_train': 3000,
-    'epoch_CPM_test': 3000,
-    'epoch_classify': 500,
+    'epoch_GCN': 1,  # Huang model 训练的epoch
+    'epoch_CPM_train': 1,
+    'epoch_CPM_test': 1,
+    'epoch_classify': 1,
     'batch_size_cpm': 256,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
