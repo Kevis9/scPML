@@ -170,8 +170,6 @@ def transfer_labels():
     '''
         对ref data进行训练
     '''
-    print("xxx")
-    print(ref_data[0].shape)
     cpm_model = CPMNets(ref_view_num,
                         ref_data.shape[0],
                         ref_view_feat_len,
