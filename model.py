@@ -34,7 +34,7 @@ class CPMNets(torch.nn.Module):
 
         self.h_train = torch.zeros((self.train_len, self.lsd_dim), dtype=torch.float).to(device)
         self.h_train.requires_grad = True  # 先放在GPU上再设置requires_grad
-        self.class_num = config['ref_class_num']
+        # self.class_num = config['ref_class_num']
 
         self.ref_label_name = ref_labels
         # 初始化
@@ -85,10 +85,10 @@ class CPMNets(torch.nn.Module):
         F_h_h = torch.mm(h, h.t())
         F_hn_hn = torch.diag(F_h_h)
         F_h_h = F_h_h - torch.diag_embed(F_hn_hn)  # 将F_h_h对角线部分置0
-        classe_num = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
+        class_num = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
         # label_onehot = torch.zeros((h.shape[0], self.class_num)).to(device)
 
-        label_onehot = torch.zeros((h.shape[0], classe_num)).to(device)
+        label_onehot = torch.zeros((h.shape[0], class_num)).to(device)
         # gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
 
         label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
