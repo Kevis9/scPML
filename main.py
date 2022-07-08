@@ -7,8 +7,9 @@ from utils import sc_normalization, mask_data, construct_graph, \
     concat_views, batch_mixing_entropy, runPCA, runUMAP, encode_label
 from model import scGNN, CPMNets
 import numpy as np
-from sklearn.metrics import silhouette_score, adjusted_rand_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score, accuracy_score
 import wandb
+
 
 # seq_well_smart 只有五类!!!
 # drop_seq_10x_v3有8类
@@ -139,7 +140,6 @@ def transfer_labels():
         数据准备
     '''
     # data_path = os.path.join(data_config['data_path'], 'data.h5')
-
     ref_data, ref_label = read_data_label_h5(data_config['data_path'], "ref")
     ref_data = ref_data.astype(np.float64)
 
@@ -185,9 +185,7 @@ def transfer_labels():
     # cpm_model.train_classifier(ref_h, ref_label)
     pred = cpm_model.classify(query_h)
     # pred = cpm_classify(ref_h, query_h, ref_label)
-    acc = (pred == query_label).sum()
-    acc = acc / pred.shape[0]
-
+    acc =  accuracy_score(pred, query_label)
     # 还原label
     ref_label = enc.inverse_transform(ref_label)
     query_label = enc.inverse_transform(query_label)
@@ -287,8 +285,8 @@ def main_process():
         save_models(ret['gcn_models'], ret['cpm_model'])
     # 查看结果
     show_result(ret)
-
     run.finish()
+
 
 # 数据配置
 data_config = {
@@ -315,6 +313,8 @@ parameter_config = {
     'w_classify': 10,  # classfication loss的权重
     'mask_rate': 0.3,
     'model_exist': False,  # 如果事先已经有了模型,则为True
+    'layer_size': 256,     # 中间层中的layer 大小（假定为两层）
+    'step': [5, 5]         # 分别是net和h在一个epoch中的迭代的次数
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

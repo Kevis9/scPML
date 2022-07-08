@@ -9,6 +9,7 @@ from scipy.spatial.distance import pdist
 from utils import cpm_classify
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
+
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
@@ -44,7 +45,11 @@ class CPMNets(torch.nn.Module):
         self.net = dict()
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
-                nn.Linear(self.lsd_dim, view_d_arr[i], device=device),  # 我对源码的理解就是只有一层全连接
+                # nn.Linear(self.lsd_dim, view_d_arr[i], device=device),
+                nn.Linear(self.lsd_dim, config['layer_size'], device=device),
+                nn.Dropout(0.2),
+                nn.Linear(config['layer_size'], view_d_arr[i], device=device),
+                nn.Dropout(0.2)
                 # nn.Linear(self.lsd_dim, int(view_d_arr[i]/2), device=device),  # 我对源码的理解就是只有一层全连接
                 # nn.ReLU(),
                 # nn.Dropout(p=0.2)
@@ -53,11 +58,10 @@ class CPMNets(torch.nn.Module):
                 # # nn.Dropout(0.2),
                 # nn.Linear(int(view_d_arr[i] / 2), view_d_arr[i], device=device)
             )
-        self.classifier = nn.Sequential(
-            nn.Linear(self.lsd_dim, config['ref_class_num']),
 
-        )
-
+        # self.classifier = nn.Sequential(
+        #     nn.Linear(self.lsd_dim, config['ref_class_num']),
+        # )
 
     def reconstrution_loss(self, r_x, x):
         '''
@@ -121,34 +125,32 @@ class CPMNets(torch.nn.Module):
         optimizer_for_h = optim.Adam(params=[self.h_train])
 
         for epoch in range(self.config['epoch_CPM_train']):
-            r_loss = 0
-            for i in range(self.view_num):
-                r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
+            for i in range(self.config['step'][0]):
+                # 迭代step
+                # 更新net只考虑reconstruction loss
+                r_loss = 0
+                for i in range(self.view_num):
+                    r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
+                optimizer_for_net.zero_grad()
+                r_loss.backward()
+                optimizer_for_net.step()
 
-            # 每个样本的平均loss
-            r_loss = r_loss / self.train_len
-            c_loss = self.classification_loss(self.h_train, labels)
-            # f_loss = self.fisher_loss(labels)
-            # cen_loss = self.center_loss(self.h_train, labels)
-            # 每个样本的平均loss, 在这里 *w 来着重降低 classfication loss
-            all_loss = r_loss + self.config['w_classify'] * c_loss
-            # all_loss = r_loss + self.config['cen_weight'] * cen_loss
-            optimizer_for_net.zero_grad()
-            optimizer_for_h.zero_grad()
+            for i in range(self.cofig['step'][1]):
+                # 迭代更新h
+                r_loss = 0
+                for i in range(self.view_num):
+                    r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
 
-            # 这里的写all_loss想法是这样：对net参数求导，c_loss为0，对h求导，r_loss和c_loss都要考虑
-            all_loss.backward()
-            # 更新net部分
-            optimizer_for_net.step()
-            # 更新h部分
-            optimizer_for_h.step()
+                # r_loss不再求平均(不然会影响和c_loss之间的相对权重)
+                c_loss = self.classification_loss(self.h_train, labels)
+                total_loss = r_loss + self.config['w_classify'] * c_loss
 
-            # 这里应该打印平均的loss（也就是每一个样本的复原的loss）
-            if epoch % 100 == 0:
-                # print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                #     epoch, r_loss.detach().item(), c_loss.detach().item()))
-                print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                    epoch, r_loss.detach().item(), c_loss.detach().item()))
+                optimizer_for_h.zero_grad()
+                total_loss.backward()
+                optimizer_for_h.step()
+
+            print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
+                epoch, r_loss.detach().item(), c_loss.detach().item()))
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item(),
@@ -156,47 +158,45 @@ class CPMNets(torch.nn.Module):
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
+
         # 接着train classifier, 利用classifier对Embedding进行分类的学习
-
-        idx = [i for i in range(self.h_train.shape[0])]
-        np.random.shuffle(idx)
-        train_len = int(self.h_train.shape[0] * 0.8)
-        train_data = self.h_train[idx[:train_len],:]
-        val_data = self.h_train[idx[train_len:], :]
-
-        print(labels.shape)
-        exit()
-        # labels = labels.view(-1)
-        print("xxx")
-        print(labels.shape)
-        print(max(idx[train_len:]))
-        train_label = labels[idx[:train_len]]
-        val_label = labels[idx[train_len:]]
-
-        train_data_set = TensorDataset(train_data, train_label)
-        train_data_loader = DataLoader(train_data_set, batch_size=self.config['batch_size_cpm'], shuffle=True)
-        # loss function和optimizer
-        optimizer = optim.Adam(params=self.classifier.parameters())
-        criterion = nn.CrossEntropyLoss()
-        # train the classifier
-
-
-        for i in range(self.config['epoch_classify']):
-            self.classifier.train()
-            for batch, labels in train_data_loader:
-                logits = self.classifier(batch)
-                loss = criterion(logits, labels)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                wandb.log({
-                    "classify_loss": loss.item()
-                })
-            val_acc = self.evaluate(val_data, val_label)
-            wandb.log({
-                'val_acc': val_acc
-            })
-
+        # idx = [i for i in range(self.h_train.shape[0])]
+        # np.random.shuffle(idx)
+        # train_len = int(self.h_train.shape[0] * 0.8)
+        # train_data = self.h_train[idx[:train_len], :]
+        # val_data = self.h_train[idx[train_len:], :]
+        #
+        # print(labels.shape)
+        # exit()
+        # # labels = labels.view(-1)
+        # print("xxx")
+        # print(labels.shape)
+        # print(max(idx[train_len:]))
+        # train_label = labels[idx[:train_len]]
+        # val_label = labels[idx[train_len:]]
+        #
+        # train_data_set = TensorDataset(train_data, train_label)
+        # train_data_loader = DataLoader(train_data_set, batch_size=self.config['batch_size_cpm'], shuffle=True)
+        # # loss function和optimizer
+        # optimizer = optim.Adam(params=self.classifier.parameters())
+        # criterion = nn.CrossEntropyLoss()
+        # # train the classifier
+        #
+        # for i in range(self.config['epoch_classify']):
+        #     self.classifier.train()
+        #     for batch, labels in train_data_loader:
+        #         logits = self.classifier(batch)
+        #         loss = criterion(logits, labels)
+        #         optimizer.zero_grad()
+        #         loss.backward()
+        #         optimizer.step()
+        #         wandb.log({
+        #             "classify_loss": loss.item()
+        #         })
+        #     val_acc = self.evaluate(val_data, val_label)
+        #     wandb.log({
+        #         'val_acc': val_acc
+        #     })
 
     def train_query_h(self, data, n_epochs):
         '''
@@ -215,28 +215,23 @@ class CPMNets(torch.nn.Module):
         for v in range(self.view_num):
             self.net[str(v)] = self.net[str(v)].eval()
 
-        # acc = 0
         for epoch in range(n_epochs):
-            r_loss = 0
-            for v in range(self.view_num):
-                r_loss += self.reconstrution_loss(self.net[str(v)](h_test), data[:, self.view_idx[v]])
+            for i in range(5):
+                r_loss = 0
+                for v in range(self.view_num):
+                    r_loss += self.reconstrution_loss(self.net[str(v)](h_test), data[:, self.view_idx[v]])
 
-            r_loss = r_loss / h_test.shape[0]
+                optimizer_for_query_h.zero_grad()
+                r_loss.backward()
+                optimizer_for_query_h.step()
 
-            all_loss = r_loss
-
-            optimizer_for_query_h.zero_grad()
-            all_loss.backward()
-            optimizer_for_query_h.step()
-
-            if epoch % 200 == 0:
-                print('Train query h: epoch %d: Reconstruction loss = %.3f' % (
-                    epoch, r_loss.detach().item()))
+            print('Train query h: epoch %d: Reconstruction loss = %.3f' % (epoch, r_loss.detach().item()))
 
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
             })
         return h_test
+
     def evaluate(self, val_data, val_labels):
         self.classifier.eval()
         with torch.no_grad():
@@ -260,6 +255,7 @@ class CPMNets(torch.nn.Module):
 
     def forward(self):
         pass
+
 
 class scGNN(torch.nn.Module):
     def __init__(self, G_data, middle_out):
