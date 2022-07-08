@@ -72,6 +72,9 @@ class CPMNets(torch.nn.Module):
         return ((r_x - x) ** 2).sum()
 
     def classification_loss(self, h, gt):
+        # print("ref_labels:")
+        # print(gt)
+        # exit()
         '''
         :param gt: ground truth labels (把train部分的label传进来),
 
@@ -82,8 +85,10 @@ class CPMNets(torch.nn.Module):
         F_h_h = torch.mm(h, h.t())
         F_hn_hn = torch.diag(F_h_h)
         F_h_h = F_h_h - torch.diag_embed(F_hn_hn)  # 将F_h_h对角线部分置0
-        # classes = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
-        label_onehot = torch.zeros((h.shape[0], self.class_num)).to(device)
+        classe_num = torch.max(gt).item() - torch.min(gt).item() + 1   # class数量
+        # label_onehot = torch.zeros((h.shape[0], self.class_num)).to(device)
+
+        label_onehot = torch.zeros((h.shape[0], classe_num)).to(device)
         # gt = gt - 1  # 因为这里我的labels是从1开始的，矩阵从0开始，减1避免越界
 
         label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
@@ -91,7 +96,10 @@ class CPMNets(torch.nn.Module):
         F_h_h_sum = torch.mm(F_h_h, label_onehot)
 
         # print('From classification_loss, label num is : {:}'.format(label_num))
+        # print(gt)
 
+        # print(label_num==0)
+        # print(torch.where(label_num==0))
         label_num[torch.where(label_num == 0)] = 1  # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
 
         F_h_h_mean = F_h_h_sum / label_num  # 自动广播
@@ -104,6 +112,7 @@ class CPMNets(torch.nn.Module):
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
     def train_ref_h(self, data, labels):
+
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
@@ -113,8 +122,13 @@ class CPMNets(torch.nn.Module):
         :param lr: 学习率，是一个数组，0 for net， 1 for h
         :return:
         '''
+
         data = data.to(device)
         labels = labels.to(device)
+
+        # print("xxx")
+        # print(labels)
+
         # 优化器
         netParams = []
         for v in range(self.view_num):
@@ -135,13 +149,14 @@ class CPMNets(torch.nn.Module):
                 r_loss.backward()
                 optimizer_for_net.step()
 
-            for i in range(self.cofig['step'][1]):
+            for i in range(self.config['step'][1]):
                 # 迭代更新h
                 r_loss = 0
                 for i in range(self.view_num):
                     r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
 
                 # r_loss不再求平均(不然会影响和c_loss之间的相对权重)
+
                 c_loss = self.classification_loss(self.h_train, labels)
                 total_loss = r_loss + self.config['w_classify'] * c_loss
 

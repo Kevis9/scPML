@@ -167,6 +167,7 @@ def transfer_labels():
     ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
 
+
     '''
         对ref data进行训练
     '''
@@ -177,15 +178,17 @@ def transfer_labels():
                         parameter_config)
 
     # 开始训练
+
     cpm_model.train_ref_h(ref_data_embeddings_tensor, ref_label_tensor)
 
     # 得到最后的embeddings (ref和query)
     ref_h = cpm_model.get_h_train()
     query_h = train_query(ref_gcn_models, cpm_model, query_data)
     # cpm_model.train_classifier(ref_h, ref_label)
-    pred = cpm_model.classify(query_h)
+    # pred = cpm_model.classify(query_h)
+    pred = cpm_classify(ref_h, query_h, ref_label)
     # pred = cpm_classify(ref_h, query_h, ref_label)
-    acc =  accuracy_score(pred, query_label)
+    acc = accuracy_score(pred, query_label)
     # 还原label
     ref_label = enc.inverse_transform(ref_label)
     query_label = enc.inverse_transform(query_label)
@@ -295,22 +298,20 @@ data_config = {
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'GSE84133: human',
     'query_key': 'query/query_1',
-    'project': 'platform',
-    'ref_class_num': 5,
+    'project': 'species',
 }
 # ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
 parameter_config = {
-    'ref_class_num': data_config['ref_class_num'],  # Reference data的类别数
-    'epoch_GCN': 1,  # Huang model 训练的epoch
-    'epoch_CPM_train': 1,
-    'epoch_CPM_test': 1,
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 500,
+    'epoch_CPM_test': 500,
     'epoch_classify': 1,
     'batch_size_cpm': 256,
     'lsd_dim': 128,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 2048,  # GCN中间层维数
-    'w_classify': 10,  # classfication loss的权重
+    'w_classify': 1,  # classfication loss的权重
     'mask_rate': 0.3,
     'model_exist': False,  # 如果事先已经有了模型,则为True
     'layer_size': 256,     # 中间层中的layer 大小（假定为两层）
