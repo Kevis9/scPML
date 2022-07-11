@@ -40,6 +40,24 @@ class MultiViewDataSet(Dataset):
     def __len__(self):
         return self.multi_view_data[0].shape[0]
 
+class FocalLoss(torch.nn.Module):
+
+    def __init__(self, gamma):
+        self.gamma = gamma
+
+    def forward(self, logits, gt):
+        # 先做一个softmax归一化， 然后计算log，这样得到了 log(p)
+        preds_logsoft = F.log_softmax(logits, dim=1)
+        preds_softmax = torch.exp(preds_logsoft)    # 这里对上面的log做一次exp，得到只计算softmax的数值
+
+        preds_logsoft = preds_logsoft.gather(preds_logsoft, gt.view(-1, 1))
+        preds_softmax = preds_softmax.gather(preds_softmax, gt.view(-1, 1))
+
+        loss = -torch.mul(torch.pow((1-preds_softmax), self.gamma), preds_logsoft)
+
+
+        return loss.mean()
+
 
 class CPMNets(torch.nn.Module):
     def __init__(self, view_num, train_len, view_dim_arr, ref_labels, config):
@@ -139,10 +157,11 @@ class CPMNets(torch.nn.Module):
         optimizer_for_net = optim.Adam(params=netParams)
         optimizer_for_h = optim.Adam(params=[self.h_train])
         optimizer_for_classifier = optim.Adam(params=self.classifier.parameters())
-        criterion = nn.CrossEntropyLoss()   #暂时考虑用CrossEntropy，如果样本不太均衡就用Focal loss
+        # criterion = nn.CrossEntropyLoss()   #暂时考虑用CrossEntropy，如果样本不太均衡就用Focal loss
+        criterion = FocalLoss(gamma=2)
         # 数据准备
         dataset = MultiViewDataSet(multi_view_data, labels, self.h_train, self.view_num)
-        dataloader = DataLoader(dataset, shuffle=True, batch_size=128)
+        dataloader = DataLoader(dataset, shuffle=True, batch_size=self.config['batch_size_cpm'])
         labels = labels.view(-1)
         for epoch in range(self.config['epoch_CPM_train']):
 
@@ -172,6 +191,7 @@ class CPMNets(torch.nn.Module):
                 optimizer_for_classifier.step()
 
             # 更新h
+            # 这里没有选择用batch的方式去更新h，觉得h在这里作为参数，不适合用batch的方式去更新
             for step in range(5):
                 data_tensor = torch.concat(multi_view_data, dim=1)
                 r_loss = 0

@@ -336,8 +336,7 @@ parameter_config = {
     'epoch_GCN': 2500,  # Huang model 训练的epoch
     'epoch_CPM_train': 300,
     'epoch_CPM_test': 3000,
-    'epoch_classify': 1,
-    'batch_size_cpm': 256,
+    'batch_size_cpm': 128,  # CPM中重构和分类的batch size
     'lsd_dim': 256,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 1024,  # GCN中间层维数
@@ -345,7 +344,6 @@ parameter_config = {
     'mask_rate': 0.3,
     'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
     'model_exist_cpm': False,
-    'layer_size': 512,       # 中间层中的layer 大小（假定为两层）
     'step': [10, 10]         # 分别是net和h在一个epoch中的迭代的次数
 }
 
