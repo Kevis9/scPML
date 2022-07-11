@@ -9,23 +9,48 @@ from scipy.spatial.distance import pdist
 from utils import cpm_classify
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
-
+from torch.utils.data import Dataset
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+class MultiViewDataSet(Dataset):
+    def __init__(self, multi_view_data, labels, latent_representation, view_num):
+        '''
+        :param multi_view_data: list类型，保存每个view ，每个元素都是tensor
+        :param labels:
+        :param latent_representation: 相当于h
+        :param view_dim_arr:
+        '''
+        self.multi_view_data = multi_view_data
+        self.labels = labels.view(-1)
+        self.latent_representation = latent_representation
+        self.view_num = view_num
+
+    def __getitem__(self, item):
+        data = []
+        for i in range(self.view_num):
+            data.append(self.multi_view_data[i][item].view(1, -1))
+        if self.labels is not None:
+            return torch.concat(data, dim=1).view(-1), self.latent_representation[item], self.labels[item]
+        else:
+            return torch.concat(data, dim=1).view(-1), self.latent_representation[item]
+
+    def __len__(self):
+        return self.multi_view_data[0].shape[0]
+
 
 class CPMNets(torch.nn.Module):
-    def __init__(self, view_num, train_len, view_d_arr, ref_labels, config):
+    def __init__(self, view_num, train_len, view_dim_arr, ref_labels, config):
         super(CPMNets, self).__init__()
         self.config = config
         self.view_num = view_num
         # 记录每一个view在data中的index 比如第一个view的长度是10，那么0,1,...,9都放在view_idx[0]中
-        self.view_idx = [[] for v in view_d_arr]
+        self.view_idx = [[] for v in view_dim_arr]
         cnt = 0
-        for i in range(len(view_d_arr)):
-            for j in range(view_d_arr[i]):
+        for i in range(len(view_dim_arr)):
+            for j in range(view_dim_arr[i]):
                 self.view_idx[i].append(cnt)
                 cnt += 1
 
@@ -45,23 +70,13 @@ class CPMNets(torch.nn.Module):
         self.net = dict()
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
-                # nn.Linear(self.lsd_dim, view_d_arr[i], device=device),
-                nn.Linear(self.lsd_dim, config['layer_size'], device=device),
-                nn.Dropout(0.2),
-                nn.Linear(config['layer_size'], view_d_arr[i], device=device),
-                nn.Dropout(0.2)
-                # nn.Linear(self.lsd_dim, int(view_d_arr[i]/2), device=device),  # 我对源码的理解就是只有一层全连接
-                # nn.ReLU(),
-                # nn.Dropout(p=0.2)
-                # nn.Linear(int(view_d_arr[i]/2),  view_d_arr[i]/2, device=device),
-                # nn.ReLU(),
-                # # nn.Dropout(0.2),
-                # nn.Linear(int(view_d_arr[i] / 2), view_d_arr[i], device=device)
+                nn.Linear(self.lsd_dim, view_dim_arr[i], device=device),
             )
 
-        # self.classifier = nn.Sequential(
-        #     nn.Linear(self.lsd_dim, config['ref_class_num']),
-        # )
+        self.classnum = len(set(ref_labels))
+        self.classifier = nn.Sequential(
+            nn.Linear(self.lsd_dim, self.classnum, device=device),
+        )
 
     def reconstrution_loss(self, r_x, x):
         '''
@@ -72,9 +87,6 @@ class CPMNets(torch.nn.Module):
         return ((r_x - x) ** 2).sum()
 
     def classification_loss(self, h, gt):
-        # print("ref_labels:")
-        # print(gt)
-        # exit()
         '''
         :param gt: ground truth labels (把train部分的label传进来),
 
@@ -94,12 +106,6 @@ class CPMNets(torch.nn.Module):
         label_onehot.scatter_(dim=1, index=gt.view(-1, 1), value=1)  # 得到各个样本分类的one-hot表示
         label_num = torch.sum(label_onehot, dim=0)  # 得到每个label的样本数
         F_h_h_sum = torch.mm(F_h_h, label_onehot)
-
-        # print('From classification_loss, label num is : {:}'.format(label_num))
-        # print(gt)
-
-        # print(label_num==0)
-        # print(torch.where(label_num==0))
         label_num[torch.where(label_num == 0)] = 1  # 这里要排除掉为分母为0的风险(transfer across species里面有这种情况)
 
         F_h_h_mean = F_h_h_sum / label_num  # 自动广播
@@ -111,24 +117,19 @@ class CPMNets(torch.nn.Module):
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_ref_h(self, data, labels):
+    def train_ref_h(self, multi_view_data, labels):
 
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
-        :param data: training data , type: Tensor , (cell * views)
+        :param multi_view_data: training data , type: Tensor , (cell * views)
         :param labels: training labels
         :param n_epochs: epochs
         :param lr: 学习率，是一个数组，0 for net， 1 for h
         :return:
         '''
-
-        data = data.to(device)
-        labels = labels.to(device)
-
-        # print("xxx")
-        # print(labels)
-
+        # multi_view_data = multi_view_data.to(device)
+        # labels = labels.to(device)
         # 优化器
         netParams = []
         for v in range(self.view_num):
@@ -137,32 +138,54 @@ class CPMNets(torch.nn.Module):
 
         optimizer_for_net = optim.Adam(params=netParams)
         optimizer_for_h = optim.Adam(params=[self.h_train])
-
+        optimizer_for_classifier = optim.Adam(params=self.classifier.parameters())
+        criterion = nn.CrossEntropyLoss()   #暂时考虑用CrossEntropy，如果样本不太均衡就用Focal loss
+        # 数据准备
+        dataset = MultiViewDataSet(multi_view_data, labels, self.h_train, self.view_num)
+        dataloader = DataLoader(dataset, shuffle=True, batch_size=128)
+        labels = labels.view(-1)
         for epoch in range(self.config['epoch_CPM_train']):
-            for i in range(self.config['step'][0]):
-                # 迭代step
-                # 更新net只考虑reconstruction loss
+
+            # 更新reconstruction net
+            for batch in dataloader:
+                b_data, b_h, _ = batch
+                b_data = b_data.to(device)
+                b_h = b_h.to(device)
                 r_loss = 0
                 for i in range(self.view_num):
-                    r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
+                    r_loss += self.reconstrution_loss(self.net[str(i)](b_h), b_data[:, self.view_idx[i]])
                 optimizer_for_net.zero_grad()
                 r_loss.backward()
                 optimizer_for_net.step()
 
-            for i in range(self.config['step'][1]):
-                # 迭代更新h
+            # 更新classifier
+            for batch in dataloader:
+                b_data, b_h, b_label = batch
+                b_data = b_data.to(device)
+                b_h = b_h.to(device)
+                b_label = b_label.to(device)
+
+                logits = self.classifier(b_h)
+                c_loss = criterion(logits, b_label)
+                optimizer_for_classifier.zero_grad()
+                c_loss.backward()
+                optimizer_for_classifier.step()
+
+            # 更新h
+            for step in range(5):
+                data_tensor = torch.concat(multi_view_data, dim=1)
                 r_loss = 0
                 for i in range(self.view_num):
-                    r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data[:, self.view_idx[i]])
+                    r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data_tensor[:, self.view_idx[i]])
+                logits = self.classifier(self.h_train)
 
-                # r_loss不再求平均(不然会影响和c_loss之间的相对权重)
+                c_loss = criterion(logits, labels)
 
-                c_loss = self.classification_loss(self.h_train, labels)
                 total_loss = r_loss + self.config['w_classify'] * c_loss
-
                 optimizer_for_h.zero_grad()
                 total_loss.backward()
                 optimizer_for_h.step()
+
 
             print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
                 epoch, r_loss.detach().item(), c_loss.detach().item()))
@@ -173,49 +196,9 @@ class CPMNets(torch.nn.Module):
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-
-        # 接着train classifier, 利用classifier对Embedding进行分类的学习
-        # idx = [i for i in range(self.h_train.shape[0])]
-        # np.random.shuffle(idx)
-        # train_len = int(self.h_train.shape[0] * 0.8)
-        # train_data = self.h_train[idx[:train_len], :]
-        # val_data = self.h_train[idx[train_len:], :]
-        #
-        # print(labels.shape)
-        # exit()
-        # # labels = labels.view(-1)
-        # print("xxx")
-        # print(labels.shape)
-        # print(max(idx[train_len:]))
-        # train_label = labels[idx[:train_len]]
-        # val_label = labels[idx[train_len:]]
-        #
-        # train_data_set = TensorDataset(train_data, train_label)
-        # train_data_loader = DataLoader(train_data_set, batch_size=self.config['batch_size_cpm'], shuffle=True)
-        # # loss function和optimizer
-        # optimizer = optim.Adam(params=self.classifier.parameters())
-        # criterion = nn.CrossEntropyLoss()
-        # # train the classifier
-        #
-        # for i in range(self.config['epoch_classify']):
-        #     self.classifier.train()
-        #     for batch, labels in train_data_loader:
-        #         logits = self.classifier(batch)
-        #         loss = criterion(logits, labels)
-        #         optimizer.zero_grad()
-        #         loss.backward()
-        #         optimizer.step()
-        #         wandb.log({
-        #             "classify_loss": loss.item()
-        #         })
-        #     val_acc = self.evaluate(val_data, val_label)
-        #     wandb.log({
-        #         'val_acc': val_acc
-        #     })
-
     def train_query_h(self, data, n_epochs):
         '''
-        :param data: query data
+        :param data: query data, not a list
         :param n_epochs:
         :return:
         '''
@@ -230,18 +213,18 @@ class CPMNets(torch.nn.Module):
         for v in range(self.view_num):
             self.net[str(v)] = self.net[str(v)].eval()
 
+        # 数据准备
+        # dataset = MultiViewDataSet(multi_view_data, None, h_test, self.view_num)
+        # dataloader = DataLoader(dataset, shuffle=False, batch_size=128)
+
         for epoch in range(n_epochs):
-            for i in range(5):
-                r_loss = 0
-                for v in range(self.view_num):
-                    r_loss += self.reconstrution_loss(self.net[str(v)](h_test), data[:, self.view_idx[v]])
-
-                optimizer_for_query_h.zero_grad()
-                r_loss.backward()
-                optimizer_for_query_h.step()
-
+            r_loss = 0
+            for v in range(self.view_num):
+                r_loss += self.reconstrution_loss(self.net[str(v)](h_test), data[:, self.view_idx[v]])
+            optimizer_for_query_h.zero_grad()
+            r_loss.backward()
+            optimizer_for_query_h.step()
             print('Train query h: epoch %d: Reconstruction loss = %.3f' % (epoch, r_loss.detach().item()))
-
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
             })
@@ -263,7 +246,7 @@ class CPMNets(torch.nn.Module):
             return pred
 
     def get_h_train(self):
-        return self.h_train.detach().cpu().numpy()
+        return self.h_train
 
     def get_ref_labels(self):
         return self.ref_label_name

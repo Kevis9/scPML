@@ -1,4 +1,5 @@
 import os.path
+import pandas as pd
 import torch
 from torch import embedding, nn
 from utils import sc_normalization, mask_data, construct_graph, \
@@ -72,7 +73,7 @@ def self_supervised_train(data):
         # embedding = model.get_embedding(Graph(scDataNorm, similarity_matrix_arr[i]))
         # 还是用mask好的数据得到Embedding比较符合自监督的逻辑
         embedding = model.get_embedding(graphs[i])
-        embeddings_arr.append(embedding.detach().cpu().numpy())
+        embeddings_arr.append(torch.from_numpy(z_score_normalization(embedding.detach().cpu().numpy())).float().to(device))
         gcn_models.append(model)
     return embeddings_arr, gcn_models
 
@@ -90,20 +91,21 @@ def train_query(gcn_models, cpm_model, query_data):
     # 获得Embedding
     query_views = []
     for i in range(len(gcn_models)):
-        query_views.append(gcn_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy())
+        query_views.append(z_score_normalization(gcn_models[i].get_embedding(query_graphs[i]).detach().cpu().numpy()))
 
-    query_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(query_views))).float().to(device)
+    query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
 
     # query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
     # query_label_tensor = torch.from_numpy(query_labels).view(1, query_labels.shape[0]).long().to(device)
 
     query_h = cpm_model.train_query_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'])
-    return query_h.detach().cpu().numpy()
+    return query_h
 
 
 def transfer_labels():
-    if parameter_config['model_exist']:
-        # 如果模型存在, 加载已存在的模型，然后对query进行重构
+    if parameter_config['model_exist_gcn'] and parameter_config['model_exist_cpm']:
+        # 如果GCN模型存在, 加载已存在的模型，然后对query进行重构
+        # query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_key'])
         gcn_models, cpm_model = load_models()
         query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_key'])
         query_data = query_data.astype(np.float64)
@@ -141,9 +143,12 @@ def transfer_labels():
     '''
     # data_path = os.path.join(data_config['data_path'], 'data.h5')
     ref_data, ref_label = read_data_label_h5(data_config['data_path'], "ref")
+
+
     ref_data = ref_data.astype(np.float64)
 
     query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_key'])
+
     query_data = query_data.astype(np.float64)
 
     # 将ref和query data进行编码
@@ -151,7 +156,25 @@ def transfer_labels():
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
-    ref_views, ref_gcn_models = self_supervised_train(ref_norm_data)
+    if parameter_config['model_exist_gcn']:
+        ref_gcn_models = []
+        for i in range(4):
+            model = torch.load('result/gcn_model_' + str(i) + '.pt')
+            ref_gcn_models.append(model)
+        # 构造Query data的Graph
+        ref_sm_arr = [read_similarity_mat_h5(data_config['data_path'], "ref/sm_" + str(i + 1))
+                        for i in range(4)]
+        ref_graphs = [construct_graph(ref_norm_data, ref_sm_arr[i], parameter_config['k'])
+                        for i in range(len(ref_sm_arr))]
+
+        # 获得Embedding
+        ref_views = []
+        for i in range(len(ref_gcn_models)):
+            # 并做一个归一化
+            ref_views.append(torch.from_numpy(z_score_normalization(ref_gcn_models[i].get_embedding(ref_graphs[i]).detach().cpu().numpy())).float().to(device))
+    else:
+        # 模型不存在的话就训练，否则为了节省时间，我们训练CPM的时候（调参），保存之前的模型
+        ref_views, ref_gcn_models = self_supervised_train(ref_norm_data)
 
     '''
         Reference Data Embeddings  
@@ -164,9 +187,8 @@ def transfer_labels():
         ref_view_feat_len.append(ref_views[i].shape[1])
 
     # 把所有的view连接在一起, 并做一个归一化
-    ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
+    # ref_data_embeddings_tensor = torch.from_numpy(z_score_normalization(concat_views(ref_views))).float().to(device)
     ref_label_tensor = torch.from_numpy(ref_label).view(1, ref_label.shape[0]).long().to(device)
-
 
     '''
         对ref data进行训练
@@ -179,15 +201,22 @@ def transfer_labels():
 
     # 开始训练
 
-    cpm_model.train_ref_h(ref_data_embeddings_tensor, ref_label_tensor)
+    cpm_model.train_ref_h(ref_views, ref_label_tensor)
 
     # 得到最后的embeddings (ref和query)
     ref_h = cpm_model.get_h_train()
     query_h = train_query(ref_gcn_models, cpm_model, query_data)
     # cpm_model.train_classifier(ref_h, ref_label)
     # pred = cpm_model.classify(query_h)
-    pred = cpm_classify(ref_h, query_h, ref_label)
+
     # pred = cpm_classify(ref_h, query_h, ref_label)
+    # pred = cpm_classify(ref_h, query_h, ref_label)
+    pred = cpm_model.classify(query_h).detach().cpu().numpy().reshape(-1)
+    query_label = query_label.reshape(-1)
+    ref_h = ref_h.detach().cpu().numpy()
+    query_h = query_h.detach().cpu().numpy()
+
+
     acc = accuracy_score(pred, query_label)
     # 还原label
     ref_label = enc.inverse_transform(ref_label)
@@ -243,10 +272,10 @@ def show_result(ret):
     all_true_labels = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
     all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
 
-    if not parameter_config['model_exist']:
+    if not parameter_config['model_exist_gcn']:
         raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
 
-        raw_data_2d = runUMAP(raw_data)  # 对PCA之后的数据进行UMAP可视化
+        raw_data_2d = runUMAP(raw_data)
 
         np.save('result/raw_data_2d.npy', raw_data_2d)
         show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
@@ -268,7 +297,7 @@ def save_models(gcn_models, cpm_model):
 def load_models():
     gcn_models = []
     for i in range(4):
-        model = torch.load('result/gcn_model_'+ str(i) + '.pt')
+        model = torch.load('result/gcn_model_' + str(i) + '.pt')
         gcn_models.append(model)
     cpm_model = torch.load('result/cpm_model.pt')
 
@@ -283,17 +312,18 @@ def main_process():
                      reinit=True)
     ret = transfer_labels()
 
-    # 保存模型, 利用pickle
-    if not parameter_config['model_exist']:
+
+    if not parameter_config['model_exist_gcn']:
         save_models(ret['gcn_models'], ret['cpm_model'])
     # 查看结果
-    show_result(ret)
+    print(ret['acc'])
+    # show_result(ret)
     run.finish()
 
 
 # 数据配置
 data_config = {
-    'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1_plus\\data.h5',
+    'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
     'ref_name': 'GSE84133: mouse',
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'GSE84133: human',
@@ -303,19 +333,20 @@ data_config = {
 # ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
 parameter_config = {
-    'epoch_GCN': 3000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 500,
-    'epoch_CPM_test': 500,
+    'epoch_GCN': 2500,  # Huang model 训练的epoch
+    'epoch_CPM_train': 300,
+    'epoch_CPM_test': 3000,
     'epoch_classify': 1,
     'batch_size_cpm': 256,
-    'lsd_dim': 128,  # CPM_net latent space dimension
+    'lsd_dim': 256,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 2048,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'middle_out': 1024,  # GCN中间层维数
+    'w_classify': 100,  # classfication loss的权重
     'mask_rate': 0.3,
-    'model_exist': False,  # 如果事先已经有了模型,则为True
-    'layer_size': 256,     # 中间层中的layer 大小（假定为两层）
-    'step': [5, 5]         # 分别是net和h在一个epoch中的迭代的次数
+    'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
+    'model_exist_cpm': False,
+    'layer_size': 512,       # 中间层中的layer 大小（假定为两层）
+    'step': [10, 10]         # 分别是net和h在一个epoch中的迭代的次数
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
