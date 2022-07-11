@@ -1,2 +1,5 @@
 /result
 /wandb
+/.idea
+/__pycache__
+

@@ -23,6 +23,7 @@ class MultiViewDataSet(Dataset):
         :param latent_representation: 相当于h
         :param view_dim_arr:
         '''
+        super(MultiViewDataSet, self).__init__()
         self.multi_view_data = multi_view_data
         self.labels = labels.view(-1)
         self.latent_representation = latent_representation
@@ -40,9 +41,9 @@ class MultiViewDataSet(Dataset):
     def __len__(self):
         return self.multi_view_data[0].shape[0]
 
-class FocalLoss(torch.nn.Module):
-
+class FocalLoss(nn.Module):
     def __init__(self, gamma):
+        super(FocalLoss, self).__init__()
         self.gamma = gamma
 
     def forward(self, logits, gt):
@@ -50,11 +51,10 @@ class FocalLoss(torch.nn.Module):
         preds_logsoft = F.log_softmax(logits, dim=1)
         preds_softmax = torch.exp(preds_logsoft)    # 这里对上面的log做一次exp，得到只计算softmax的数值
 
-        preds_logsoft = preds_logsoft.gather(preds_logsoft, gt.view(-1, 1))
-        preds_softmax = preds_softmax.gather(preds_softmax, gt.view(-1, 1))
+        preds_logsoft = preds_logsoft.gather(1, gt.view(-1, 1))
+        preds_softmax = preds_softmax.gather(1, gt.view(-1, 1))
 
         loss = -torch.mul(torch.pow((1-preds_softmax), self.gamma), preds_logsoft)
-
 
         return loss.mean()
 
@@ -158,7 +158,7 @@ class CPMNets(torch.nn.Module):
         optimizer_for_h = optim.Adam(params=[self.h_train])
         optimizer_for_classifier = optim.Adam(params=self.classifier.parameters())
         # criterion = nn.CrossEntropyLoss()   #暂时考虑用CrossEntropy，如果样本不太均衡就用Focal loss
-        criterion = FocalLoss(gamma=2)
+        criterion = FocalLoss(gamma=1)
         # 数据准备
         dataset = MultiViewDataSet(multi_view_data, labels, self.h_train, self.view_num)
         dataloader = DataLoader(dataset, shuffle=True, batch_size=self.config['batch_size_cpm'])
