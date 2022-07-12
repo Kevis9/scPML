@@ -78,7 +78,7 @@ def self_supervised_train(data):
     return embeddings_arr, gcn_models
 
 
-def train_query(gcn_models, cpm_model, query_data):
+def train_query(gcn_models, cpm_model, query_data, query_labels):
     # 数据预处理
     query_norm_data = sc_normalization(query_data)
 
@@ -96,9 +96,9 @@ def train_query(gcn_models, cpm_model, query_data):
     query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
 
     # query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
-    # query_label_tensor = torch.from_numpy(query_labels).view(1, query_labels.shape[0]).long().to(device)
+    query_label_tensor = torch.from_numpy(query_labels).view(1, query_labels.shape[0]).long().to(device)
 
-    query_h = cpm_model.train_query_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'])
+    query_h = cpm_model.train_query_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'], query_label_tensor)
     return query_h
 
 
@@ -115,7 +115,7 @@ def transfer_labels():
 
         ref_label, query_label, enc = encode_label(ref_label, query_label)
 
-        query_h = train_query(gcn_models, cpm_model, query_data)
+        query_h = train_query(gcn_models, cpm_model, query_data, query_label)
 
         pred = cpm_classify(ref_h, query_h, ref_label)
         acc = (pred == query_label).sum()
@@ -205,7 +205,7 @@ def transfer_labels():
 
     # 得到最后的embeddings (ref和query)
     ref_h = cpm_model.get_h_train()
-    query_h = train_query(ref_gcn_models, cpm_model, query_data)
+    query_h = train_query(ref_gcn_models, cpm_model, query_data, query_label)
     # cpm_model.train_classifier(ref_h, ref_label)
     # pred = cpm_model.classify(query_h)
 
@@ -316,8 +316,8 @@ def main_process():
     if not parameter_config['model_exist_gcn']:
         save_models(ret['gcn_models'], ret['cpm_model'])
     # 查看结果
-    print(ret['acc'])
-    # show_result(ret)
+    # print(ret['acc'])
+    show_result(ret)
     run.finish()
 
 
@@ -333,18 +333,17 @@ data_config = {
 # ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
 parameter_config = {
-    'epoch_GCN': 2500,  # Huang model 训练的epoch
+    'epoch_GCN': 1000,  # Huang model 训练的epoch
     'epoch_CPM_train': 300,
-    'epoch_CPM_test': 2500,
-    'batch_size_cpm': 128,  # CPM中重构和分类的batch size
-    'lsd_dim': 128,  # CPM_net latent space dimension
+    'epoch_CPM_test': 1000,
+    'batch_size_cpm': 256,  # CPM中重构和分类的batch size
+    'lsd_dim': 2048,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 1024,  # GCN中间层维数
-    'w_classify': 10,  # classfication loss的权重
+    'middle_out': 4096,  # GCN中间层维数
+    'w_classify': 1,  # classfication loss的权重
     'mask_rate': 0.3,
-    'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
+    'model_exist_gcn': False,  # 如果事先已经有了模型,则为True
     'model_exist_cpm': False,
-    'step': [10, 10]         # 分别是net和h在一个epoch中的迭代的次数
 }
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -364,7 +363,12 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # data_config['ref_name']  = 'PBMC: cel-seq'
 # data_config['query_name'] = 'PBMC: seq-well'
 # data_config['query_key'] = 'query/query_4'
+
+
+
 main_process()
+
+
 
 # parameter_config['model_exist'] = True
 # data_config['query_name'] = 'PBMC: indrop'

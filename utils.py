@@ -155,10 +155,10 @@ def read_data_label_h5(data_path, key):
 
 
 def read_similarity_mat_h5(path, key):
-    print("reading graph...")
+    # print("reading graph...")
     mat_df = pd.read_hdf(path, key)
     similarity_mat = mat_df.to_numpy()
-    print("Finish")
+    # print("Finish")
     return similarity_mat.astype(np.float64)
 
 

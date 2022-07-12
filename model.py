@@ -10,6 +10,7 @@ from utils import cpm_classify
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
+
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
@@ -42,9 +43,18 @@ class MultiViewDataSet(Dataset):
         return self.multi_view_data[0].shape[0]
 
 class FocalLoss(nn.Module):
-    def __init__(self, gamma):
+    def __init__(self, gamma, alpha):
+        '''
+        :param gamma: (1-pt)**gamma
+        :param alpha:  权重list
+        :param class_num:
+        '''
         super(FocalLoss, self).__init__()
         self.gamma = gamma
+        if not isinstance(alpha, torch.Tensor):
+            self.alpha = torch.FloatTensor(alpha).to(device)
+        else:
+            self.alpha = alpha
 
     def forward(self, logits, gt):
         # 先做一个softmax归一化， 然后计算log，这样得到了 log(p)
@@ -53,9 +63,10 @@ class FocalLoss(nn.Module):
 
         preds_logsoft = preds_logsoft.gather(1, gt.view(-1, 1))
         preds_softmax = preds_softmax.gather(1, gt.view(-1, 1))
+        self.alpha = self.alpha.gather(0, gt.view(-1))
 
         loss = -torch.mul(torch.pow((1-preds_softmax), self.gamma), preds_logsoft)
-
+        loss = torch.mul(self.alpha, loss.t())
         return loss.mean()
 
 
@@ -89,6 +100,7 @@ class CPMNets(torch.nn.Module):
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
                 nn.Linear(self.lsd_dim, view_dim_arr[i], device=device),
+
             )
 
         self.classnum = len(set(ref_labels))
@@ -158,7 +170,13 @@ class CPMNets(torch.nn.Module):
         optimizer_for_h = optim.Adam(params=[self.h_train])
         optimizer_for_classifier = optim.Adam(params=self.classifier.parameters())
         # criterion = nn.CrossEntropyLoss()   #暂时考虑用CrossEntropy，如果样本不太均衡就用Focal loss
-        criterion = FocalLoss(gamma=1)
+        # 确定各类别的比例，用 (1-x) / (1-x).sum() 归一
+        alpha = torch.unique(labels, return_counts=True)[1]
+        alpha = alpha / alpha.sum()
+
+        alpha = (1-alpha) / (1-alpha).sum()
+        # Gamma = 0退化为带平衡因子的CE
+        criterion = FocalLoss(gamma=0, alpha=alpha)
         # 数据准备
         dataset = MultiViewDataSet(multi_view_data, labels, self.h_train, self.view_num)
         dataloader = DataLoader(dataset, shuffle=True, batch_size=self.config['batch_size_cpm'])
@@ -192,7 +210,7 @@ class CPMNets(torch.nn.Module):
 
             # 更新h
             # 这里没有选择用batch的方式去更新h，觉得h在这里作为参数，不适合用batch的方式去更新
-            for step in range(5):
+            for step in range(10):
                 data_tensor = torch.concat(multi_view_data, dim=1)
                 r_loss = 0
                 for i in range(self.view_num):
@@ -216,14 +234,15 @@ class CPMNets(torch.nn.Module):
                 # 'CPM train: center loss': cen_loss.detach().item()
             })
 
-    def train_query_h(self, data, n_epochs):
+    def train_query_h(self, data, n_epochs, labels):
         '''
         :param data: query data, not a list
         :param n_epochs:
+        :param labels, 用来测试acc，选择最好的
         :return:
         '''
         data = data.to(device)
-
+        labels = labels.to(device)
         h_test = torch.zeros((data.shape[0], self.lsd_dim), dtype=torch.float).to(device)
         h_test.requires_grad = True
         nn.init.xavier_uniform_(h_test)
@@ -231,12 +250,13 @@ class CPMNets(torch.nn.Module):
 
         # 变成eval模式，不更新参数，以及可以去掉dropout层的计算
         for v in range(self.view_num):
-            self.net[str(v)] = self.net[str(v)].eval()
+            self.net[str(v)].eval()
 
         # 数据准备
         # dataset = MultiViewDataSet(multi_view_data, None, h_test, self.view_num)
         # dataloader = DataLoader(dataset, shuffle=False, batch_size=128)
-
+        max_acc = 0
+        max_iter = 0
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
@@ -244,10 +264,18 @@ class CPMNets(torch.nn.Module):
             optimizer_for_query_h.zero_grad()
             r_loss.backward()
             optimizer_for_query_h.step()
+            acc = self.evaluate(h_test, labels)
+            if max_acc < acc:
+                max_acc = acc
+                max_iter = epoch
+
             print('Train query h: epoch %d: Reconstruction loss = %.3f' % (epoch, r_loss.detach().item()))
+
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
             })
+        print("Max Acc is {:.3f}, epoch: {:}".format(max_acc, max_iter))
+
         return h_test
 
     def evaluate(self, val_data, val_labels):
@@ -255,7 +283,8 @@ class CPMNets(torch.nn.Module):
         with torch.no_grad():
             logits = self.classifier(val_data)
             pred = logits.argmax(dim=1)
-            acc = (pred == val_labels).sum().item()
+
+            acc = (pred == val_labels).sum().item() / val_data.shape[0]
             return acc
 
     def classify(self, data):
