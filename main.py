@@ -202,7 +202,8 @@ def transfer_labels():
     # 开始训练
 
     cpm_model.train_ref_h(ref_views, ref_label_tensor)
-
+    # 训练完之后保存了模型，然后加载保存的模型
+    cpm_model = torch.load('result/cpm_model.pt')
     # 得到最后的embeddings (ref和query)
     ref_h = cpm_model.get_h_train()
     query_h = train_query(ref_gcn_models, cpm_model, query_data, query_label)
@@ -316,8 +317,8 @@ def main_process():
     if not parameter_config['model_exist_gcn']:
         save_models(ret['gcn_models'], ret['cpm_model'])
     # 查看结果
-    # print(ret['acc'])
-    show_result(ret)
+    print(ret['acc'])
+    # show_result(ret)
     run.finish()
 
 
@@ -333,16 +334,16 @@ data_config = {
 # ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
 parameter_config = {
-    'epoch_GCN': 1000,  # Huang model 训练的epoch
-    'epoch_CPM_train': 300,
-    'epoch_CPM_test': 1000,
+    'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'epoch_CPM_train': 500,
+    'epoch_CPM_test': 2000,
     'batch_size_cpm': 256,  # CPM中重构和分类的batch size
-    'lsd_dim': 2048,  # CPM_net latent space dimension
+    'lsd_dim': 1024,  # CPM_net latent space dimension
     'k': 2,  # 图构造的时候k_neighbor参数
     'middle_out': 4096,  # GCN中间层维数
-    'w_classify': 1,  # classfication loss的权重
+    'w_classify': 100,  # classfication loss的权重
     'mask_rate': 0.3,
-    'model_exist_gcn': False,  # 如果事先已经有了模型,则为True
+    'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
     'model_exist_cpm': False,
 }
 

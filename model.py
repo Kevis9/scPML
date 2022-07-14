@@ -9,7 +9,7 @@ from scipy.spatial.distance import pdist
 from utils import cpm_classify
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset,TensorDataset
 
 '''
     CPM-Nets, 改写为Pytroch形式
@@ -88,11 +88,12 @@ class CPMNets(torch.nn.Module):
 
         self.h_train = torch.zeros((self.train_len, self.lsd_dim), dtype=torch.float).to(device)
         self.h_train.requires_grad = True  # 先放在GPU上再设置requires_grad
+        nn.init.xavier_uniform_(self.h_train)
         # self.class_num = config['ref_class_num']
 
         self.ref_label_name = ref_labels
         # 初始化
-        nn.init.xavier_uniform_(self.h_train)
+
 
         # 模型的搭建
         # net的输入是representation h ---> 重构成 X
@@ -100,7 +101,6 @@ class CPMNets(torch.nn.Module):
         for i in range(view_num):
             self.net[str(i)] = nn.Sequential(
                 nn.Linear(self.lsd_dim, view_dim_arr[i], device=device),
-
             )
 
         self.classnum = len(set(ref_labels))
@@ -152,7 +152,7 @@ class CPMNets(torch.nn.Module):
         '''
         这个函数直接对模型进行训练
         随着迭代，更新两个部分: net参数和h_train
-        :param multi_view_data: training data , type: Tensor , (cell * views)
+        :param multi_view_data: training data , type: list
         :param labels: training labels
         :param n_epochs: epochs
         :param lr: 学习率，是一个数组，0 for net， 1 for h
@@ -166,22 +166,51 @@ class CPMNets(torch.nn.Module):
             for p in self.net[str(v)].parameters():
                 netParams.append(p)
 
+        # 将数据分为traing和valid
+        data = torch.concat(multi_view_data, dim=1)
+        labels = labels.view(-1)
+
+        train_data, val_data, train_label, val_label = train_test_split(data.detach().cpu().numpy(),
+                                                                        labels.detach().cpu().numpy(),
+                                                                        test_size=0.1,
+                                                                        shuffle=True,
+                                                                        random_state=32,
+                                                                        stratify=labels.detach().cpu().numpy())
+        train_data, train_label = torch.from_numpy(train_data).float().to(device), torch.from_numpy(train_label).long().to(device)
+        val_data, val_label = torch.from_numpy(val_data).float().to(device), torch.from_numpy(val_label).long().to(device)
+        train_h = torch.zeros((train_data.shape[0], self.lsd_dim), dtype=torch.float).to(device)
+        train_h.requires_grad = True  # 先放在GPU上再设置requires_grad
+        nn.init.xavier_uniform_(train_h)
+
+        # val_h = torch.zeros((val_data.shape[0], self.lsd_dim), dtype=torch.float).to(device)
+        # val_h.requires_grad = True  # 先放在GPU上再设置requires_grad
+        # nn.init.xavier_uniform_(val_h)
+
         optimizer_for_net = optim.Adam(params=netParams)
-        optimizer_for_h = optim.Adam(params=[self.h_train])
+        optimizer_for_train_h = optim.Adam(params=[train_h])
         optimizer_for_classifier = optim.Adam(params=self.classifier.parameters())
         # criterion = nn.CrossEntropyLoss()   #暂时考虑用CrossEntropy，如果样本不太均衡就用Focal loss
         # 确定各类别的比例，用 (1-x) / (1-x).sum() 归一
-        alpha = torch.unique(labels, return_counts=True)[1]
-        alpha = alpha / alpha.sum()
+        # alpha = torch.unique(labels, return_counts=True)[1]
+        # alpha = alpha / alpha.sum()
 
-        alpha = (1-alpha) / (1-alpha).sum()
+        # alpha = (1-alpha) / (1-alpha).sum()
         # Gamma = 0退化为带平衡因子的CE
-        criterion = FocalLoss(gamma=0, alpha=alpha)
+        # criterion = FocalLoss(gamma=0, alpha=alpha)
+        criterion = nn.CrossEntropyLoss()
         # 数据准备
-        dataset = MultiViewDataSet(multi_view_data, labels, self.h_train, self.view_num)
+        train_data_arr = [train_data[:, self.view_idx[i]] for i in range(self.view_num)]
+        dataset = MultiViewDataSet(train_data_arr, train_label, train_h, self.view_num)
         dataloader = DataLoader(dataset, shuffle=True, batch_size=self.config['batch_size_cpm'])
-        labels = labels.view(-1)
+        train_label = train_label.view(-1)
+        val_max_acc = 0
+        stop = 0
+        threshold = 100
         for epoch in range(self.config['epoch_CPM_train']):
+            # 设置model为train模式
+            for i in range(self.view_num):
+                self.net[str(i)].train()
+            self.classifier.train()
 
             # 更新reconstruction net
             for batch in dataloader:
@@ -195,44 +224,94 @@ class CPMNets(torch.nn.Module):
                 r_loss.backward()
                 optimizer_for_net.step()
 
+            # 更新h
+            # 这里没有选择用batch的方式去更新h，觉得h在这里作为参数，不适合用batch的方式去更新
+            for step in range(5):
+                # data_tensor = torch.concat(multi_view_data, dim=1)
+                r_loss = 0
+                for i in range(self.view_num):
+                    r_loss += self.reconstrution_loss(self.net[str(i)](train_h), train_data[:, self.view_idx[i]])
+                # logits = self.classifier(self.h_train)
+                # criterion(logits, labels) +
+                # c_loss = self.classification_loss(train_h, train_label)
+                # total_loss = r_loss + self.config['w_classify'] * c_loss
+                total_loss = r_loss
+                optimizer_for_train_h.zero_grad()
+                total_loss.backward()
+                optimizer_for_train_h.step()
+
             # 更新classifier
             for batch in dataloader:
                 b_data, b_h, b_label = batch
-                b_data = b_data.to(device)
                 b_h = b_h.to(device)
                 b_label = b_label.to(device)
-
                 logits = self.classifier(b_h)
                 c_loss = criterion(logits, b_label)
                 optimizer_for_classifier.zero_grad()
                 c_loss.backward()
                 optimizer_for_classifier.step()
 
-            # 更新h
-            # 这里没有选择用batch的方式去更新h，觉得h在这里作为参数，不适合用batch的方式去更新
-            for step in range(10):
-                data_tensor = torch.concat(multi_view_data, dim=1)
-                r_loss = 0
-                for i in range(self.view_num):
-                    r_loss += self.reconstrution_loss(self.net[str(i)](self.h_train), data_tensor[:, self.view_idx[i]])
-                logits = self.classifier(self.h_train)
+            # 测试val data
+            val_h = self.train_query_h(val_data, n_epochs=2000, labels=val_label)
+            acc = self.evaluate(val_h, val_label)
+            if val_max_acc < acc:
+                val_max_acc = acc
+                stop = 0
+                print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f, max acc is %.3f, save the model.' % (
+                    epoch, r_loss.detach().item(), c_loss.detach().item(), val_max_acc))
+                torch.save(self, 'result/cpm_model.pt')
+            else:
+                stop += 1
+                if stop > threshold:
+                    print("CPM net stop at epoch {:}".format(epoch))
+                    break
 
-                c_loss = criterion(logits, labels)
-
-                total_loss = r_loss + self.config['w_classify'] * c_loss
-                optimizer_for_h.zero_grad()
-                total_loss.backward()
-                optimizer_for_h.step()
-
-
-            print('epoch %d: Reconstruction loss = %.3f, classification loss = %.3f' % (
-                epoch, r_loss.detach().item(), c_loss.detach().item()))
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item(),
-                # 'CPM train: fisher loss': f_loss.detach().item()
-                # 'CPM train: center loss': cen_loss.detach().item()
             })
+
+        # train_h, val_h, train_label, val_label = train_test_split(self.h_train.detach().cpu().numpy(),
+        #                                                           labels.detach().cpu().numpy(),
+        #                                                           test_size=0.2,
+        #                                                           stratify=labels.detach().cpu().numpy(),
+        #                                                           shuffle=True,
+        #                                                           random_state=32)
+        # train_h, train_label = torch.from_numpy(train_h).float().to(device), torch.from_numpy(train_label).long().to(device)
+        # val_h, val_label = torch.from_numpy(val_h).float().to(device), torch.from_numpy(val_label).long().to(
+        #     device)
+        #
+        # max_acc = 0
+        # threshold = 100
+        # stop = 0
+        # dataset = TensorDataset(train_h, train_label)
+        # dataloader = DataLoader(dataset, shuffle=True, batch_size=self.config['batch_size_cpm'])
+        # for epoch in range(self.config['epoch_CPM_train']):
+        #     # 更新classifier
+        #     for batch in dataloader:
+        #         b_h, b_label = batch
+        #         b_h = b_h.to(device)
+        #         b_label = b_label.to(device)
+        #
+        #         logits = self.classifier(b_h)
+        #         c_loss = criterion(logits, b_label)
+        #         optimizer_for_classifier.zero_grad()
+        #         c_loss.backward()
+        #         optimizer_for_classifier.step()
+        #     acc = self.evaluate(val_h, val_label)
+        #     if acc > max_acc:
+        #         max_acc = acc
+        #         print("Classifier: Epoch {:}, max acc is {:.3f}, save the model".format(epoch, max_acc))
+        #         torch.save(self.classifier, 'result/classifier.pt')
+        #         stop = 0
+        #     else:
+        #         stop += 1
+        #         if stop > threshold:
+        #             print("Classifier training stop at epoch {:}".format(epoch))
+        #             self.classifier = torch.load('result/classifier.pt')
+        #             break
+
+
 
     def train_query_h(self, data, n_epochs, labels):
         '''
@@ -257,6 +336,9 @@ class CPMNets(torch.nn.Module):
         # dataloader = DataLoader(dataset, shuffle=False, batch_size=128)
         max_acc = 0
         max_iter = 0
+        max_acc_test_h = 0
+        stop = 0
+        threshold = 300
         for epoch in range(n_epochs):
             r_loss = 0
             for v in range(self.view_num):
@@ -268,15 +350,20 @@ class CPMNets(torch.nn.Module):
             if max_acc < acc:
                 max_acc = acc
                 max_iter = epoch
-
-            print('Train query h: epoch %d: Reconstruction loss = %.3f' % (epoch, r_loss.detach().item()))
-
+                max_acc_test_h = h_test.detach().clone()
+                stop = 0
+                # print("Epoch {:}, train query h max acc is {:.3f}, save test h".format(epoch, max_acc))
+                # print('Train query h: epoch %d: Reconstruction loss = %.3f' % (epoch, r_loss.detach().item()))
+            else:
+                stop += 1
+                if stop > threshold:
+                    # print("Train query h, stop at epoch {:}".format(epoch))
+                    break
             wandb.log({
                 'CPM query h: reconstruction loss': r_loss.detach().item()
             })
-        print("Max Acc is {:.3f}, epoch: {:}".format(max_acc, max_iter))
-
-        return h_test
+        # print("Max Acc is {:.3f}, epoch: {:}".format(max_acc, max_iter))
+        return max_acc_test_h
 
     def evaluate(self, val_data, val_labels):
         self.classifier.eval()
@@ -288,6 +375,7 @@ class CPMNets(torch.nn.Module):
             return acc
 
     def classify(self, data):
+        # self.classifier = torch.load('result/classifier.pt')
         self.classifier.eval()
         with torch.no_grad():
             logits = self.classifier(data)
@@ -300,8 +388,8 @@ class CPMNets(torch.nn.Module):
     def get_ref_labels(self):
         return self.ref_label_name
 
-    def forward(self):
-        pass
+    def forward(self, data):
+        return self.classifier(data)
 
 
 class scGNN(torch.nn.Module):
