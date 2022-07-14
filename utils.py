@@ -11,6 +11,7 @@ from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
 import umap
+from sklearn.metrics import silhouette_score, adjusted_rand_score, accuracy_score
 import seaborn as sns
 import wandb
 import scipy.spatial as spt
@@ -43,7 +44,6 @@ def z_score_normalization(data):
     '''
     means = np.mean(data, axis=0)
     standard = np.std(data, axis=0)
-
 
     return (data - means)/standard
 
@@ -250,7 +250,58 @@ def batch_mixing_entropy(ref_data, query_data, L=100, M=300, K=500):
     return entropy
 
 def encode_label(ref_label, query_label):
+    '''
+    :param ref_label: ref的label
+    :param query_label:  query的label
+    :return:
+    '''
     enc = LabelEncoder()
     all_label = np.concatenate([ref_label, query_label])
     all_label = enc.fit_transform(all_label)
     return all_label[:len(ref_label)], all_label[len(ref_label):], enc
+
+
+def show_result(ret):
+    embedding = np.concatenate([ret['ref_out'], ret['query_out']], axis=0)
+    # embedding_h_pca = runPCA(embedding_h)
+
+    ref_h = embedding[:ret['ref_out'].shape[0], :]
+    query_h = embedding[ret['ref_out'].shape[0]:, :]
+
+    # evaluation metrics
+    total_s_score = silhouette_score(embedding, list(ret['ref_label']) + list(ret['pred']))
+    ref_s_score = silhouette_score(ref_h, ret['ref_label'])
+    q_s_score = silhouette_score(query_h, ret['pred'])
+
+    ari = adjusted_rand_score(ret['query_label'], ret['pred'])
+    bme = batch_mixing_entropy(ref_h, query_h)
+    bme = sum(bme) / len(bme)
+    acc = accuracy_score(ret['query_label'], ret['pred'])
+    print("Prediction Accuracy is {:.3f}".format(acc))
+    print('Prediction ARI is {:.3f}'.format(ari))
+
+    # 数据上报
+    wandb.log({
+        'Prediction Acc': acc,
+        'ref Silhouette ': ref_s_score,
+        'query Silhouette ': q_s_score,
+        'total Silhouette ': total_s_score,
+        'ARI': ari,
+        'Batch Mixing Entropy Mean': bme
+    })
+
+    all_true_labels = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
+    all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
+
+    raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
+
+    raw_data_2d = runUMAP(raw_data)
+    np.save('result/raw_data_2d.npy', raw_data_2d)
+    show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
+
+    h_data_2d = runUMAP(embedding)
+    np.save('result/h_data_2d.npy', h_data_2d)
+    np.save('result/all_true_labels.npy', all_true_labels)
+    np.save('result/all_pred_labels.npy', all_pred_labels)
+    show_cluster(h_data_2d, all_true_labels, 'reference-query h true label')
+    show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label')

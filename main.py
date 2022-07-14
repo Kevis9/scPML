@@ -17,7 +17,7 @@ import wandb
 
 # 训练scGNN，得到每个Pathway的embedding
 def train_scGCN(model, G_data, optimizer,
-                index_pair, masking_idx, norm_data, loss_title):
+                index_pair, masking_idx, data, loss_title):
     '''
     :param model: 待训练的模型
     :param n_epochs:
@@ -25,7 +25,7 @@ def train_scGCN(model, G_data, optimizer,
     :param optimizer:
     :param index_pair: 做过mask元素的index pair
     :param masking_idx: mask元素的index
-    :param norm_data: mask之后的norm_data
+    :param data: mask之后的norm_data
     :return:
     '''
     model = model.to(device)
@@ -36,7 +36,7 @@ def train_scGCN(model, G_data, optimizer,
 
         # 得到预测的droout
         dropout_pred = pred[index_pair[0][masking_idx], index_pair[1][masking_idx]]
-        dropout_true = norm_data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
+        dropout_true = data[index_pair[0][masking_idx], index_pair[1][masking_idx]]
         loss_fct = nn.MSELoss()
         loss = loss_fct(dropout_pred.view(1, -1), torch.tensor(dropout_true, dtype=torch.float).to(device).view(1, -1))
         wandb.log({
@@ -64,7 +64,7 @@ def self_supervised_train(data):
 
     # 训练ref data in scGNN
     for i in range(len(graphs)):
-        model = scGNN(graphs[i], parameter_config['middle_out'])
+        model = scGNN(graphs[i].num_features, parameter_config['middle_out'])
         optimizer = torch.optim.Adam(model.parameters())
         model = train_scGCN(model, graphs[i], optimizer, index_pair, masking_idx,
                             data, 'GCN: view' + str(i + 1) + ' loss')
@@ -98,7 +98,7 @@ def train_query(gcn_models, cpm_model, query_data, query_labels):
     # query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
     query_label_tensor = torch.from_numpy(query_labels).view(1, query_labels.shape[0]).long().to(device)
 
-    query_h = cpm_model.train_query_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'], query_label_tensor)
+    query_h = cpm_model.test_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'], query_label_tensor)
     return query_h
 
 
@@ -143,12 +143,9 @@ def transfer_labels():
     '''
     # data_path = os.path.join(data_config['data_path'], 'data.h5')
     ref_data, ref_label = read_data_label_h5(data_config['data_path'], "ref")
-
-
-    ref_data = ref_data.astype(np.float64)
-
     query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_key'])
 
+    ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
 
     # 将ref和query data进行编码
@@ -156,6 +153,7 @@ def transfer_labels():
 
     # 数据预处理
     ref_norm_data = sc_normalization(ref_data)
+    # 如果GCN model已经存在
     if parameter_config['model_exist_gcn']:
         ref_gcn_models = []
         for i in range(4):
@@ -200,12 +198,12 @@ def transfer_labels():
                         parameter_config)
 
     # 开始训练
-
-    cpm_model.train_ref_h(ref_views, ref_label_tensor)
+    cpm_model.train_h(ref_views, ref_label_tensor)
     # 训练完之后保存了模型，然后加载保存的模型
     cpm_model = torch.load('result/cpm_model.pt')
     # 得到最后的embeddings (ref和query)
     ref_h = cpm_model.get_h_train()
+
     query_h = train_query(ref_gcn_models, cpm_model, query_data, query_label)
     # cpm_model.train_classifier(ref_h, ref_label)
     # pred = cpm_model.classify(query_h)
@@ -222,7 +220,6 @@ def transfer_labels():
     # 还原label
     ref_label = enc.inverse_transform(ref_label)
     query_label = enc.inverse_transform(query_label)
-
     pred = enc.inverse_transform(pred)
 
     ret = {
@@ -311,9 +308,8 @@ def main_process():
                      config={"config": parameter_config, "data_config": data_config},
                      tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']],
                      reinit=True)
+
     ret = transfer_labels()
-
-
     if not parameter_config['model_exist_gcn']:
         save_models(ret['gcn_models'], ret['cpm_model'])
     # 查看结果
@@ -334,15 +330,19 @@ data_config = {
 # ['gamma', 'alpha', 'endothelial', 'macrophage', 'ductal', 'delta', 'beta', 'quiescent_stellate']
 
 parameter_config = {
+    # GCN部分
     'epoch_GCN': 3000,  # Huang model 训练的epoch
+    'k': 2,  # 图构造的时候k_neighbor参数
+    'middle_out': 4096,  # GCN中间层维数
+    'mask_rate': 0.3,
+    # CPM 部分
     'epoch_CPM_train': 500,
     'epoch_CPM_test': 2000,
     'batch_size_cpm': 256,  # CPM中重构和分类的batch size
     'lsd_dim': 1024,  # CPM_net latent space dimension
-    'k': 2,  # 图构造的时候k_neighbor参数
-    'middle_out': 4096,  # GCN中间层维数
     'w_classify': 100,  # classfication loss的权重
-    'mask_rate': 0.3,
+
+
     'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
     'model_exist_cpm': False,
 }
