@@ -98,7 +98,7 @@ def train_query(gcn_models, cpm_model, query_data, query_labels):
     # query_data_embeddings_tensor = torch.from_numpy(concat_views(query_views)).float().to(device)
     query_label_tensor = torch.from_numpy(query_labels).view(1, query_labels.shape[0]).long().to(device)
 
-    query_h = cpm_model.test_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'], query_label_tensor)
+    query_h = cpm_model.train_query_h(query_data_embeddings_tensor, parameter_config['epoch_CPM_test'], query_label_tensor)
     return query_h
 
 
@@ -198,7 +198,7 @@ def transfer_labels():
                         parameter_config)
 
     # 开始训练
-    cpm_model.train_h(ref_views, ref_label_tensor)
+    cpm_model.train_ref_h(ref_views, ref_label_tensor)
     # 训练完之后保存了模型，然后加载保存的模型
     cpm_model = torch.load('result/cpm_model.pt')
     # 得到最后的embeddings (ref和query)

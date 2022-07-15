@@ -75,14 +75,14 @@ def main_process():
     mvvcmodel.fit(ref_norm_data, ref_sm_arr, ref_label)
 
     pred = mvvcmodel.predict(query_norm_data, query_sm_arr)
-    ref_out = mvvcmodel.get_train_embeddings()
-    query_out = mvvcmodel.get_test_embeddings()
-    # ref_out, query_out = mvvcmodel.get_embeddings()
-    ref_out = ref_out.detach().cpu().numpy()
-    query_out = query_out.detach().cpu().numpy()
-    print((pred==query_label).sum()/pred.shape[0])
+    ref_out, ref_label = mvvcmodel.get_ref_embeddings_and_labels()
 
-    exit()
+    query_out = mvvcmodel.get_query_embeddings()
+    ref_out = ref_out.detach().cpu().numpy()
+    ref_label = ref_label.detach().cpu().numpy()
+    query_out = query_out.detach().cpu().numpy()
+
+    print((pred==query_label).sum()/pred.shape[0])
 
     ret = {
         'ref_out': ref_out,

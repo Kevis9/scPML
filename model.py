@@ -141,7 +141,7 @@ class CPMNets(torch.nn.Module):
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_h(self, multi_view_data, labels, batch_size, epochs):
+    def train_ref_h(self, multi_view_data, labels, batch_size, epochs):
 
         '''
         这个函数直接对模型进行训练
@@ -207,6 +207,7 @@ class CPMNets(torch.nn.Module):
         val_max_acc = 0
         stop = 0
         threshold = 50
+        val_max_acc_h = None
         for epoch in range(epochs):
             # 设置model为train模式
             for i in range(self.view_num):
@@ -255,7 +256,7 @@ class CPMNets(torch.nn.Module):
                 optimizer_for_classifier.step()
 
             # 测试val data
-            acc, max_val_epoch = self.valid_h(val_data, n_epochs=2000, labels=val_label)
+            acc, max_val_epoch, val_max_acc_h = self.train_valid_h(val_data, n_epochs=2000, labels=val_label)
             if val_max_acc < acc:
                 val_max_acc = acc
                 stop = 0
@@ -272,9 +273,10 @@ class CPMNets(torch.nn.Module):
                 'CPM train: reconstruction loss': r_loss.detach().item(),
                 'CPM train: classification loss': c_loss.detach().item(),
             })
-        return train_h
 
-    def valid_h(self, data, n_epochs, labels):
+        return torch.concat([train_h, val_max_acc_h], dim=0), torch.concat([train_label, val_label])
+
+    def train_valid_h(self, data, n_epochs, labels):
         '''
         validation data的预测
         :param data:
@@ -300,6 +302,7 @@ class CPMNets(torch.nn.Module):
         max_acc = 0
         stop = 0
         max_acc_epoch = 0
+        max_acc_h = None
         threshold = 50
         for epoch in range(n_epochs):
             r_loss = 0
@@ -313,16 +316,18 @@ class CPMNets(torch.nn.Module):
             if max_acc < acc:
                 max_acc = acc
                 max_acc_epoch = epoch
+                max_acc_h = h_val.detach().clone()
                 stop = 0
+
             else:
                 stop += 1
                 if stop > threshold:
                     # 可以大概确定test h的epoch选择
                     # print("valid h, stop at epoch {:}, max val acc is {:.3f}".format(epoch, max_acc))
                     break
-        return max_acc, max_acc_epoch
+        return max_acc, max_acc_epoch, max_acc_h
 
-    def test_h(self, data, n_epochs):
+    def train_query_h(self, data, n_epochs):
         '''
         :param data: query data, not a list
         :param n_epochs: epochs for reconstruction
@@ -465,6 +470,7 @@ class MVCCModel:
         # 两个参数用于保存一次运行时候的embedding
         self.ref_h = None
         self.query_h = None
+        self.ref_labels = None #这里要记录下ref data进来之后的labels（因为分成train和val的时候打乱了）
         self.gcn_models = []
 
         if self.gcn_exist:
@@ -535,7 +541,7 @@ class MVCCModel:
         labels = torch.from_numpy(labels).view(-1).long().to(device)
 
         # 训练cpm net
-        self.ref_h = self.cpm_model.train_h(ref_views, labels, self.batch_size_cpm, self.epoch_cpm_train)
+        self.ref_h, self.ref_labels = self.cpm_model.train_ref_h(ref_views, labels, self.batch_size_cpm, self.epoch_cpm_train)
         # 这里要重新加载cpm_model, 使用早停法保留下来的泛化误差最好的模型 (后面考虑加入一个不用早停法的选项）
         self.cpm_model = torch.load('model/cpm_model.pt')
 
@@ -557,19 +563,41 @@ class MVCCModel:
             query_views.append(torch.from_numpy(z_score_normalization(self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy())))
 
         query_data = torch.concat(query_views, dim=1).float().to(device)
-        self.query_h = self.cpm_model.test_h(query_data, self.epoch_cpm_test)
+        self.query_h = self.cpm_model.train_query_h(query_data, self.epoch_cpm_test)
 
         pred = self.cpm_model.classify(self.query_h)
 
         return pred.detach().cpu().numpy().reshape(-1)
 
-    def get_train_embeddings(self):
-        return self.cpm_model(self.ref_h)
-    def get_test_embeddings(self):
-        return self.cpm_model(self.query_h)
-    # def get_embeddings(self):
-    #     # 返回classifier给出的一个概率向量，方便后面的结果展示
-    #     return self.cpm_model(self.ref_h), self.cpm_model(self.query_h)
+    def get_embeddings_with_data(self, data, sm_arr, epochs):
+        # 这里提供一个接口，给一个data拿到相应的embeddings
+        '''
+            data: list, 含有multiple-view的list
+        '''
+        # 获得Embedding
+        graphs = [construct_graph(data, sm_arr[i], self.k)
+                  for i in range(self.view_num)]
+        query_views = []
+        for i in range(self.view_num):
+            query_views.append(torch.from_numpy(
+                z_score_normalization(self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy())))
 
+        query_data = torch.concat(query_views, dim=1).float().to(device)
+        query_h = self.cpm_model.train_query_h(query_data, epochs)
+        return self.cpm_model(query_h)
+
+
+    def get_ref_embeddings_and_labels(self):
+        '''
+            提供这个函数的目的是为了获取reconstruction中最好的epoch时的train h (这里包含了train和val）
+            因为fit函数打乱了原来的labels，所以这里提供train时候的labels
+        '''
+        return self.cpm_model(self.ref_h), self.ref_labels
+
+    def get_query_embeddings(self):
+        '''
+            这个和get_embeddings_with_data一样，只不过用起来更方便
+        '''
+        return self.cpm_model(self.query_h)
 
 
