@@ -29,7 +29,7 @@ parameter_config = {
     'lsd': 2049,  # CPM_net latent space dimension
     'lamb': 1,  # classfication loss的权重
     'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
-    'model_exist_cpm': True,
+    'model_exist_cpm': False,
 }
 
 
@@ -40,8 +40,6 @@ def main_process():
                      config={"config": parameter_config, "data_config": data_config},
                      tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']],
                      reinit=True)
-
-
     # 数据准备
     ref_data, ref_label = read_data_label_h5(data_config['data_path'], data_config['ref_key'])
     query_data, query_label = read_data_label_h5(data_config['data_path'], data_config['query_key'])
@@ -74,16 +72,18 @@ def main_process():
                           epoch_cpm_test=parameter_config['epoch_CPM_test'],
                           batch_size_cpm=parameter_config['batch_size_cpm'],
                           lamb=parameter_config['lamb'])
-    # mvvcmodel.fit(ref_norm_data, ref_sm_arr, ref_label)
+    mvvcmodel.fit(ref_norm_data, ref_sm_arr, ref_label)
 
     pred = mvvcmodel.predict(query_norm_data, query_sm_arr)
-
-    ref_out, query_out = mvvcmodel.get_embeddings()
+    ref_out = mvvcmodel.get_train_embeddings()
+    query_out = mvvcmodel.get_test_embeddings()
+    # ref_out, query_out = mvvcmodel.get_embeddings()
     ref_out = ref_out.detach().cpu().numpy()
     query_out = query_out.detach().cpu().numpy()
     print((pred==query_label).sum()/pred.shape[0])
 
     exit()
+
     ret = {
         'ref_out': ref_out,
         'query_out': query_out,

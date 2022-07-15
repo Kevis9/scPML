@@ -263,6 +263,8 @@ def encode_label(ref_label, query_label):
 
 def show_result(ret):
     embedding = np.concatenate([ret['ref_out'], ret['query_out']], axis=0)
+    print(embedding.shape)
+    exit()
     # embedding_h_pca = runPCA(embedding_h)
 
     ref_h = embedding[:ret['ref_out'].shape[0], :]

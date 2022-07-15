@@ -563,10 +563,13 @@ class MVCCModel:
 
         return pred.detach().cpu().numpy().reshape(-1)
 
-
-    def get_embeddings(self):
-        # 返回classifier给出的一个概率向量，方便后面的结果展示
-        return self.cpm_model(self.ref_h), self.cpm_model(self.query_h)
+    def get_train_embeddings(self):
+        return self.cpm_model(self.ref_h)
+    def get_test_embeddings(self):
+        return self.cpm_model(self.query_h)
+    # def get_embeddings(self):
+    #     # 返回classifier给出的一个概率向量，方便后面的结果展示
+    #     return self.cpm_model(self.ref_h), self.cpm_model(self.query_h)
 
 
 

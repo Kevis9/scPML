@@ -341,8 +341,6 @@ parameter_config = {
     'batch_size_cpm': 256,  # CPM中重构和分类的batch size
     'lsd_dim': 1024,  # CPM_net latent space dimension
     'w_classify': 100,  # classfication loss的权重
-
-
     'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
     'model_exist_cpm': False,
 }
