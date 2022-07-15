@@ -141,7 +141,7 @@ class CPMNets(torch.nn.Module):
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_h(self, multi_view_data, labels):
+    def train_h(self, multi_view_data, labels, batch_size, epochs):
 
         '''
         这个函数直接对模型进行训练
@@ -170,9 +170,9 @@ class CPMNets(torch.nn.Module):
                                                                         random_state=32,
                                                                         stratify=labels.detach().cpu().numpy())
 
-        # 打印下各个类别的比例
-        print(val_label / np.sum(val_label))
-        print(train_label / np.sum(train_label))
+        # # 打印下各个类别的比例
+        # print(val_label / np.sum(val_label))
+        # print(train_label / np.sum(train_label))
 
         train_data, train_label = torch.from_numpy(train_data).float().to(device), torch.from_numpy(
             train_label).long().to(device)
@@ -200,14 +200,14 @@ class CPMNets(torch.nn.Module):
         # 数据准备
         train_data_arr = [train_data[:, i * self.view_dim: (i + 1) * self.view_dim] for i in range(self.view_num)]
         dataset = MultiViewDataSet(train_data_arr, train_label, train_h, self.view_num)
-        dataloader = DataLoader(dataset, shuffle=True, batch_size=self.config['batch_size_cpm'])
+        dataloader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
         train_label = train_label.view(-1)
 
         # 早停的参数，当acc不变大的次数超过了threshold的话，就停止
         val_max_acc = 0
         stop = 0
         threshold = 50
-        for epoch in range(self.config['epoch_CPM_train']):
+        for epoch in range(epochs):
             # 设置model为train模式
             for i in range(self.view_num):
                 self.net[i].train()
@@ -255,7 +255,7 @@ class CPMNets(torch.nn.Module):
                 optimizer_for_classifier.step()
 
             # 测试val data
-            acc = self.valid_h(val_data, n_epochs=2000, labels=val_label)
+            acc, max_val_epoch = self.valid_h(val_data, n_epochs=2000, labels=val_label)
             if val_max_acc < acc:
                 val_max_acc = acc
                 stop = 0
@@ -266,7 +266,7 @@ class CPMNets(torch.nn.Module):
             else:
                 stop += 1
                 if stop > threshold:
-                    print("CPM train h stop at epoch {:}".format(epoch))
+                    print("CPM train h stop at train epoch {:}, val epoch is {:}, val max acc is {:.3f}".format(epoch, max_val_epoch, val_max_acc))
                     break
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
@@ -299,6 +299,7 @@ class CPMNets(torch.nn.Module):
         # 这里不确定什么时候的重构epoch是最好的，所以引入早停法，找到最大acc的epoch
         max_acc = 0
         stop = 0
+        max_acc_epoch = 0
         threshold = 50
         for epoch in range(n_epochs):
             r_loss = 0
@@ -311,14 +312,15 @@ class CPMNets(torch.nn.Module):
             acc = self.evaluate(h_val, labels)
             if max_acc < acc:
                 max_acc = acc
+                max_acc_epoch = epoch
                 stop = 0
             else:
                 stop += 1
                 if stop > threshold:
                     # 可以大概确定test h的epoch选择
-                    print("valid h, stop at epoch {:}, max val acc is {:.3f}".format(epoch, max_acc))
+                    # print("valid h, stop at epoch {:}, max val acc is {:.3f}".format(epoch, max_acc))
                     break
-        return max_acc
+        return max_acc, max_acc_epoch
 
     def test_h(self, data, n_epochs):
         '''
@@ -416,9 +418,19 @@ class scGNN(torch.nn.Module):
 
 class MVCCModel:
 
-    def __init__(self, gcn_middle_out, gcn_input_dim, lsd, class_num,
-                 view_num, cpm_exist, gcn_exist, view_dim=4, epoch_gcn=3000, k_neighbor=2,
-                 epoch_cpm_train=500, epoch_cpm_test=3000, batch_size_cpm=256,
+    def __init__(self,
+                 gcn_middle_out,
+                 gcn_input_dim,
+                 lsd,
+                 class_num,
+                 cpm_exist,
+                 gcn_exist,
+                 view_num=4,
+                 epoch_gcn=3000,
+                 k_neighbor=2,
+                 epoch_cpm_train=500,
+                 epoch_cpm_test=3000,
+                 batch_size_cpm=256,
                  lamb=1):
         '''
         :param pretrained:
@@ -448,7 +460,7 @@ class MVCCModel:
         self.lamb = lamb
         # self.val_size = val_size
         self.view_num = view_num
-        self.view_dim = view_dim
+        self.view_dim = gcn_middle_out
         self.gcn_input_dim = gcn_input_dim
         # 两个参数用于保存一次运行时候的embedding
         self.ref_h = None
@@ -460,12 +472,11 @@ class MVCCModel:
                 self.gcn_models.append(torch.load('model/gcn_model_' + str(i) + '.pt'))
         else:
             for i in range(self.view_num):
-                self.gcn_models.append(scGNN(self.gcn_input_dim, self.gcn_middle_out))
-
+                self.gcn_models.append(scGNN(self.gcn_input_dim, self.gcn_middle_out).to(device))
         if self.cpm_exist:
-            self.cpm_model = torch.load('model/cmp_model.pt')
+            self.cpm_model = torch.load('model/cpm_model.pt')
         else:
-            self.cpm_model = CPMNets(self.view_num, self.view_dim, self.lsd, self.class_num)
+            self.cpm_model = CPMNets(self.view_num, self.view_dim, self.lsd, self.class_num).to(device)
 
     def fit(self, data, sm_arr, labels):
         '''
@@ -505,6 +516,10 @@ class MVCCModel:
 
                 ref_views.append(
                     torch.from_numpy(z_score_normalization(embedding.detach().cpu().numpy())).float().to(device))
+
+            print("Save gcn models.")
+            for j in range(self.view_num):
+                torch.save(self.gcn_models[j], 'model/gcn_model_'+str(j)+'.pt')
         else:
             # gcn model 存在
             # 构造Query data的Graph
@@ -520,7 +535,7 @@ class MVCCModel:
         labels = torch.from_numpy(labels).view(-1).long().to(device)
 
         # 训练cpm net
-        self.ref_h = self.cpm_model.train_h(ref_views, labels)
+        self.ref_h = self.cpm_model.train_h(ref_views, labels, self.batch_size_cpm, self.epoch_cpm_train)
         # 这里要重新加载cpm_model, 使用早停法保留下来的泛化误差最好的模型 (后面考虑加入一个不用早停法的选项）
         self.cpm_model = torch.load('model/cpm_model.pt')
 

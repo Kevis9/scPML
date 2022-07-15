@@ -24,12 +24,12 @@ parameter_config = {
     'mask_rate': 0.3,
     # CPM 部分
     'epoch_CPM_train': 500,
-    'epoch_CPM_test': 2000,
+    'epoch_CPM_test': 1000,
     'batch_size_cpm': 256,  # CPM中重构和分类的batch size
-    'lsd': 1024,  # CPM_net latent space dimension
+    'lsd': 2049,  # CPM_net latent space dimension
     'lamb': 1,  # classfication loss的权重
     'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
-    'model_exist_cpm': False,
+    'model_exist_cpm': True,
 }
 
 
@@ -61,7 +61,9 @@ def main_process():
                     range(4)]
 
 
-    mvvcmodel = MVCCModel(gcn_middle_out=parameter_config['epoch_gcn'],
+    mvvcmodel = MVCCModel(cpm_exist=parameter_config['model_exist_cpm'],
+                          gcn_exist=parameter_config['model_exist_gcn'],
+                          gcn_middle_out=parameter_config['middle_out'],
                           gcn_input_dim=ref_data.shape[1],
                           lsd=parameter_config['lsd'],
                           class_num=len(set(ref_label)),
@@ -72,11 +74,16 @@ def main_process():
                           epoch_cpm_test=parameter_config['epoch_CPM_test'],
                           batch_size_cpm=parameter_config['batch_size_cpm'],
                           lamb=parameter_config['lamb'])
-    mvvcmodel.fit(ref_norm_data, ref_sm_arr, ref_label)
+    # mvvcmodel.fit(ref_norm_data, ref_sm_arr, ref_label)
+
     pred = mvvcmodel.predict(query_norm_data, query_sm_arr)
 
     ref_out, query_out = mvvcmodel.get_embeddings()
+    ref_out = ref_out.detach().cpu().numpy()
+    query_out = query_out.detach().cpu().numpy()
+    print((pred==query_label).sum()/pred.shape[0])
 
+    exit()
     ret = {
         'ref_out': ref_out,
         'query_out': query_out,
