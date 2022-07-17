@@ -1,3 +1,5 @@
+import os.path
+
 from utils import sc_normalization,\
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result
 from model import  MVCCModel
@@ -6,7 +8,7 @@ import wandb
 
 # 数据配置
 data_config = {
-    'data_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1\\data.h5',
+    'path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1',
     'ref_name': 'GSE84133: mouse',
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'GSE84133: human',
@@ -31,7 +33,6 @@ parameter_config = {
     'model_exist_gcn': True,  # 如果事先已经有了模型,则为True
     'model_exist_cpm': False,
 }
-
 
 
 def main_process():
@@ -71,7 +72,9 @@ def main_process():
                           epoch_cpm_train=parameter_config['epoch_CPM_train'],
                           epoch_cpm_test=parameter_config['epoch_CPM_test'],
                           batch_size_cpm=parameter_config['batch_size_cpm'],
-                          lamb=parameter_config['lamb'])
+                          lamb=parameter_config['lamb'],
+                          save_path=data_config['path']
+                          )
     mvvcmodel.fit(ref_norm_data, ref_sm_arr, ref_label)
 
     pred = mvvcmodel.predict(query_norm_data, query_sm_arr)
@@ -79,10 +82,11 @@ def main_process():
 
     query_out = mvvcmodel.get_query_embeddings()
     ref_out = ref_out.detach().cpu().numpy()
-    ref_label = ref_label.detach().cpu().numpy()
+    ref_label = enc.inverse_transform(ref_label.detach().cpu().numpy())
     query_out = query_out.detach().cpu().numpy()
+    query_label = enc.inverse_transform(query_label)
 
-    print((pred==query_label).sum()/pred.shape[0])
+    # print((pred==query_label).sum()/pred.shape[0])
 
     ret = {
         'ref_out': ref_out,
@@ -93,7 +97,7 @@ def main_process():
         'query_label': query_label,
         'pred': pred,
     }
-    show_result(ret)
+    show_result(ret, os.path.join(data_config['path'], 'result'))
 
     run.finish()
 

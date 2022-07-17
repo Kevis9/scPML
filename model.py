@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import torch.nn as nn
 import torch
@@ -9,7 +11,7 @@ from scipy.spatial.distance import pdist
 from utils import cpm_classify, mask_data, construct_graph, z_score_normalization
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.model_selection import train_test_split
-
+from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, TensorDataset
 
 '''
@@ -74,7 +76,7 @@ class FocalLoss(nn.Module):
 
 
 class CPMNets(torch.nn.Module):
-    def __init__(self, view_num, view_dim, lsd, class_num):
+    def __init__(self, view_num, view_dim, lsd, class_num, save_path):
         '''
         :param view_num:
         :param view_dim: 每个view的维度，在这里我们的view的维度一致
@@ -86,6 +88,7 @@ class CPMNets(torch.nn.Module):
         self.view_num = view_num
         self.lsd = lsd
         self.view_dim = view_dim
+        self.save_path = save_path
         # net的输入是representation h ---> 重构成 X
         # 重构的网络
         self.net = []
@@ -141,13 +144,13 @@ class CPMNets(torch.nn.Module):
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_ref_h(self, multi_view_data, labels, batch_size, epochs):
+    def train_ref_h(self, ref_data, labels, batch_size, epochs):
 
         '''
         这个函数直接对模型进行训练
         随着迭代，更新net，h以及classifier
         在更新h的时候，可以考虑加入原论文的classification loss
-        :param multi_view_data: training data , list
+        :param ref_data: training data, ndarray, not a list
         :param labels:
         :param n_epochs: epochs
         :param lr: 学习率，是一个数组，0 for net， 1 for h
@@ -160,10 +163,9 @@ class CPMNets(torch.nn.Module):
                 net_params.append(p)
 
         # 将数据分为train和valid data
-        data = torch.concat(multi_view_data, dim=1)
         labels = labels.view(-1)
 
-        train_data, val_data, train_label, val_label = train_test_split(data.detach().cpu().numpy(),
+        train_data, val_data, train_label, val_label = train_test_split(ref_data.detach().cpu().numpy(),
                                                                         labels.detach().cpu().numpy(),
                                                                         test_size=0.2,
                                                                         shuffle=True,
@@ -203,10 +205,10 @@ class CPMNets(torch.nn.Module):
         dataloader = DataLoader(dataset, shuffle=True, batch_size=batch_size)
         train_label = train_label.view(-1)
 
-        # 早停的参数，当acc不变大的次数超过了threshold的话，就停止
+        # 早停的参数，当acc不变大的次数超过了patience的话，就停止
         val_max_acc = 0
         stop = 0
-        threshold = 50
+        patience = 10
         val_max_acc_h = None
         for epoch in range(epochs):
             # 设置model为train模式
@@ -261,13 +263,17 @@ class CPMNets(torch.nn.Module):
                 val_max_acc = acc
                 stop = 0
                 print(
-                    'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f, val max acc is %.3f, save the model.' % (
+                    'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f, val max acc is %.3f, save the '
+                    'model.' % (
                         epoch, r_loss.detach().item(), c_loss.detach().item(), val_max_acc))
-                torch.save(self, 'model/cpm_model.pt')
+                torch.save(self, os.path.join(self.save_path, 'cpm_model.pt'))
             else:
                 stop += 1
-                if stop > threshold:
-                    print("CPM train h stop at train epoch {:}, val epoch is {:}, val max acc is {:.3f}".format(epoch, max_val_epoch, val_max_acc))
+                if stop > patience:
+                    print("CPM train h stop at train epoch {:}, val epoch is {:}, val max acc is {:.3f}".format(epoch,
+                                                                                                                max_val_epoch,
+                                                                                                                val_max_acc))
+
                     break
             wandb.log({
                 'CPM train: reconstruction loss': r_loss.detach().item(),
@@ -378,12 +384,12 @@ class CPMNets(torch.nn.Module):
 
         return h_test
 
-    def evaluate(self, val_data, val_labels):
+    def evaluate(self, val_h, val_labels):
         self.classifier.eval()
         with torch.no_grad():
-            logits = self.classifier(val_data)
+            logits = self.classifier(val_h)
             pred = logits.argmax(dim=1)
-            acc = (pred == val_labels).sum().item() / val_data.shape[0]
+            acc = (pred == val_labels).sum().item() / val_h.shape[0]
             return acc
 
     def classify(self, h):
@@ -436,6 +442,7 @@ class MVCCModel:
                  epoch_cpm_train=500,
                  epoch_cpm_test=3000,
                  batch_size_cpm=256,
+                 save_path='',
                  lamb=1):
         '''
         :param pretrained:
@@ -470,19 +477,20 @@ class MVCCModel:
         # 两个参数用于保存一次运行时候的embedding
         self.ref_h = None
         self.query_h = None
-        self.ref_labels = None #这里要记录下ref data进来之后的labels（因为分成train和val的时候打乱了）
+        self.ref_labels = None  # 这里要记录下ref data进来之后的labels（因为分成train和val的时候打乱了）
         self.gcn_models = []
-
+        self.model_path = os.path.join(save_path, 'model')
+        self.scaler = None  # 数据标准化的scaler
         if self.gcn_exist:
             for i in range(self.view_num):
-                self.gcn_models.append(torch.load('model/gcn_model_' + str(i) + '.pt'))
+                self.gcn_models.append(torch.load(os.path.join(self.model_path, 'gcn_model_' + str(i) + '.pt')))
         else:
             for i in range(self.view_num):
                 self.gcn_models.append(scGNN(self.gcn_input_dim, self.gcn_middle_out).to(device))
         if self.cpm_exist:
-            self.cpm_model = torch.load('model/cpm_model.pt')
+            self.cpm_model = torch.load(os.path.join(self.model_path, 'cpm_model.pt'))
         else:
-            self.cpm_model = CPMNets(self.view_num, self.view_dim, self.lsd, self.class_num).to(device)
+            self.cpm_model = CPMNets(self.view_num, self.view_dim, self.lsd, self.class_num, self.model_path).to(device)
 
     def fit(self, data, sm_arr, labels):
         '''
@@ -496,7 +504,7 @@ class MVCCModel:
         masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), 0.3)
         masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
         graphs = [construct_graph(masked_data, sm_arr[i], self.k) for i in range(len(sm_arr))]
-
+        self.scaler = StandardScaler()
         if not self.gcn_exist:
             # 如果gcn_model不存在，进行gcn训练
             for i in range(self.view_num):
@@ -518,14 +526,12 @@ class MVCCModel:
                     if epoch % 200 == 0:
                         print('Epoch: {}, Training Loss {:.4f}'.format(epoch, loss.item()))
 
-                embedding = self.gcn_models[i].get_embedding(graphs[i])
-
-                ref_views.append(
-                    torch.from_numpy(z_score_normalization(embedding.detach().cpu().numpy())).float().to(device))
+                embedding = self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy()
+                ref_views.append(embedding)
 
             print("Save gcn models.")
             for j in range(self.view_num):
-                torch.save(self.gcn_models[j], 'model/gcn_model_'+str(j)+'.pt')
+                torch.save(self.gcn_models[j], os.path.join(self.model_path, 'gcn_model_' + str(j) + '.pt'))
         else:
             # gcn model 存在
             # 构造Query data的Graph
@@ -533,18 +539,22 @@ class MVCCModel:
             # 获得Embedding
             for i in range(self.view_num):
                 # 并做一个归一化
-                ref_views.append(torch.from_numpy(z_score_normalization(
-                    self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy())).float().to(device))
+                ref_views.append(self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy())
+
+        # 在这里对ref_views做一个标准化, 并且转为tensor
+        ref_data = np.concatenate(ref_views, axis=1)
+        self.scaler.fit(ref_data)
+        ref_data = torch.from_numpy(self.scaler.transform(ref_data)).float().to(device)
 
         # ref_views就是经过多个Similarity matrix图卷积之后的不同embeddings
         # 之后开始训练cpm net
         labels = torch.from_numpy(labels).view(-1).long().to(device)
-
         # 训练cpm net
-        self.ref_h, self.ref_labels = self.cpm_model.train_ref_h(ref_views, labels, self.batch_size_cpm, self.epoch_cpm_train)
-        # 这里要重新加载cpm_model, 使用早停法保留下来的泛化误差最好的模型 (后面考虑加入一个不用早停法的选项）
-        self.cpm_model = torch.load('model/cpm_model.pt')
+        self.ref_h, self.ref_labels = self.cpm_model.train_ref_h(ref_data, labels, self.batch_size_cpm,
+                                                                 self.epoch_cpm_train)
 
+        # 这里要重新加载cpm_model, 使用早停法保留下来的泛化误差最好的模型 (后面考虑加入一个不用早停法的选项）
+        self.cpm_model = torch.load(os.path.join(self.model_path, 'cpm_model.pt'))
 
     def predict(self, data, sm_arr):
         '''
@@ -557,14 +567,19 @@ class MVCCModel:
 
         # 获得Embedding
         graphs = [construct_graph(data, sm_arr[i], self.k)
-                        for i in range(self.view_num)]
+                  for i in range(self.view_num)]
         query_views = []
+
         for i in range(self.view_num):
-            query_views.append(torch.from_numpy(z_score_normalization(self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy())))
+            query_views.append(self.gcn_models[i].get_embedding(graphs[i]).detach().cpu().numpy())
 
-        query_data = torch.concat(query_views, dim=1).float().to(device)
+
+        # 这里query的标准化要用train的scaler!
+        query_data = self.scaler.transform(np.concatenate(query_views, axis=1))
+        query_data = torch.from_numpy(query_data).float().to(device)
+
+
         self.query_h = self.cpm_model.train_query_h(query_data, self.epoch_cpm_test)
-
         pred = self.cpm_model.classify(self.query_h)
 
         return pred.detach().cpu().numpy().reshape(-1)
@@ -586,7 +601,6 @@ class MVCCModel:
         query_h = self.cpm_model.train_query_h(query_data, epochs)
         return self.cpm_model(query_h)
 
-
     def get_ref_embeddings_and_labels(self):
         '''
             提供这个函数的目的是为了获取reconstruction中最好的epoch时的train h (这里包含了train和val）
@@ -599,5 +613,3 @@ class MVCCModel:
             这个和get_embeddings_with_data一样，只不过用起来更方便
         '''
         return self.cpm_model(self.query_h)
-
-

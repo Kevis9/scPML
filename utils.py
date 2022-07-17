@@ -18,19 +18,20 @@ import scipy.spatial as spt
 from random import sample
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
-RESULT_PATH = os.path.join(os.getcwd(), 'result')
+
 hue = []
+
 
 def sc_normalization(data):
     '''
-    scGCN中的归一化处理，对表达矩阵的每一个表达量做一个平均加权
+    scGCN中的标准化处理，对表达矩阵的每一个表达量做一个平均加权
     :param data: 矩阵 (cells * genes)
     :return: 返回归一化的矩阵
     '''
     row_sum = np.sum(data, axis=1)
     mean_transcript = np.mean(row_sum)
     # 防止出现除0的问题
-    row_sum[np.where(row_sum==0)] = 1
+    row_sum[np.where(row_sum == 0)] = 1
     data_norm = (data / row_sum.reshape(-1, 1)) * mean_transcript
 
     return data_norm
@@ -45,7 +46,7 @@ def z_score_normalization(data):
     means = np.mean(data, axis=0)
     standard = np.std(data, axis=0)
 
-    return (data - means)/standard
+    return (data - means) / standard
 
 
 def mask_data(data, masked_prob):
@@ -112,18 +113,19 @@ def construct_graph(data, similarity_mat, k):
     return g_data
 
 
-def read_data_label_h5(data_path, key):
+def read_data_label_h5(path, key):
     print('Reading data...')
-
-    data_df = pd.read_hdf(data_path, key+'/data')
+    data_path = os.path.join(path, 'data.h5')
+    data_df = pd.read_hdf(data_path, key + '/data')
     data = data_df.to_numpy()
 
-    label_df = pd.read_hdf(data_path, key+'/label')
+    label_df = pd.read_hdf(data_path, key + '/label')
     label = label_df.to_numpy().reshape(-1)
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
     print('label的shape为 : {}'.format(label.shape))
     return data, label
+
 
 # def read_data_label(data_path, label_path):
 #     '''
@@ -156,7 +158,8 @@ def read_data_label_h5(data_path, key):
 
 def read_similarity_mat_h5(path, key):
     # print("reading graph...")
-    mat_df = pd.read_hdf(path, key)
+    data_path = os.path.join(path, 'data.h5')
+    mat_df = pd.read_hdf(data_path, key)
     similarity_mat = mat_df.to_numpy()
     # print("Finish")
     return similarity_mat.astype(np.float64)
@@ -180,17 +183,20 @@ def cpm_classify(lsd1, lsd2, label):
     F_h_h_mean = F_h_h_sum / label_num
     label_pre = np.argmax(F_h_h_mean, axis=1)
     return label_pre
-    
+
+
 def runUMAP(data):
     umap_model = umap.UMAP(random_state=0)
     data_2d = umap_model.fit_transform(data)
     return data_2d
 
+
 def runPCA(data):
     pca = PCA(n_components=32)
     return pca.fit_transform(data)
 
-def show_cluster(data, label, title):
+
+def show_cluster(data, label, title, save_path):
     '''
     可视化聚类的函数
     :param data: 降维之后的数据(2d)
@@ -198,30 +204,31 @@ def show_cluster(data, label, title):
     :param title: 可视化窗口的titleplt.scatter
     '''
     data = {
-        'x':data[:,0],
-        'y':data[:,1],
-        'label':label
+        'x': data[:, 0],
+        'y': data[:, 1],
+        'label': label
     }
-    
+
     df = pd.DataFrame(data=data)
     # 去掉部分数据(为了更好的可视化)
     # df = df[~((df['x']>10) | (df['y']>10))]
 
     plt.figure(figsize=(8, 6))
     sns.scatterplot(data=df, x='x', y='y', hue='label', palette='deep', s=3)
-    plt.legend(loc=3, bbox_to_anchor=(1, 0)) # 设置图例位置
+    plt.legend(loc=3, bbox_to_anchor=(1, 0))  # 设置图例位置
     plt.xlabel('UMAP1')
     plt.ylabel('UMAP2')
-    plt.title(title)    
-    plt.savefig(os.path.join(RESULT_PATH, "_".join(title.split())+'.png'), bbox_inches='tight') # dpi可以设置
-    
+    plt.title(title)
+    plt.savefig(os.path.join(save_path, "_".join(title.split()) + '.png'), bbox_inches='tight')  # dpi可以设置
+
     # 数据上报
-    wandb.save(os.path.join(RESULT_PATH, "_".join(title.split())+'.png'))
+    wandb.save(os.path.join(save_path, "_".join(title.split()) + '.png'))
     # plt.show()
 
 
 def concat_views(views):
     return np.concatenate(views, axis=1).astype(np.float64)
+
 
 def batch_mixing_entropy(ref_data, query_data, L=100, M=300, K=500):
     '''
@@ -244,10 +251,11 @@ def batch_mixing_entropy(ref_data, query_data, L=100, M=300, K=500):
         _, neighbor_idx = kdtree.query(data[rand_samples_idx, :], k=K)
         for i in range(len(rand_samples_idx)):
             for j in range(nbatchs):
-                xi = max(1, (batch0[neighbor_idx[i]]==j).sum())
+                xi = max(1, (batch0[neighbor_idx[i]] == j).sum())
                 entropy[boot] += xi * math.log(xi)
     entropy = [-(x / M) for x in entropy]
     return entropy
+
 
 def encode_label(ref_label, query_label):
     '''
@@ -261,7 +269,7 @@ def encode_label(ref_label, query_label):
     return all_label[:len(ref_label)], all_label[len(ref_label):], enc
 
 
-def show_result(ret):
+def show_result(ret, save_path):
     embedding = np.concatenate([ret['ref_out'], ret['query_out']], axis=0)
 
     # embedding_h_pca = runPCA(embedding_h)
@@ -295,14 +303,14 @@ def show_result(ret):
     all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
 
     raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-
     raw_data_2d = runUMAP(raw_data)
-    np.save('result/raw_data_2d.npy', raw_data_2d)
-    show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label')
-
     h_data_2d = runUMAP(embedding)
-    np.save('result/h_data_2d.npy', h_data_2d)
-    np.save('result/all_true_labels.npy', all_true_labels)
-    np.save('result/all_pred_labels.npy', all_pred_labels)
-    show_cluster(h_data_2d, all_true_labels, 'reference-query h true label')
-    show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label')
+
+    np.save(os.path.join(save_path, 'raw_data_2d.npy'), raw_data_2d)
+    np.save(os.path.join(save_path, 'embeddings_2d.npy'), h_data_2d)
+    np.save(os.path.join(save_path, 'all_true_labels.npy'), all_true_labels)
+    np.save(os.path.join(save_path, 'all_pred_labels.npy'), all_pred_labels)
+
+    show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label', save_path)
+    show_cluster(h_data_2d, all_true_labels, 'reference-query h true label', save_path)
+    show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label', save_path)
