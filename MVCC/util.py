@@ -11,7 +11,7 @@ from sklearn.preprocessing import OneHotEncoder
 import matplotlib.pyplot as plt
 import pandas as pd
 import umap
-from sklearn.metrics import silhouette_score, adjusted_rand_score, accuracy_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score, accuracy_score, f1_score
 import seaborn as sns
 import wandb
 import scipy.spatial as spt
@@ -20,8 +20,6 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
 
 hue = []
-
-
 def sc_normalization(data):
     '''
     scGCN中的标准化处理，对表达矩阵的每一个表达量做一个平均加权
@@ -30,14 +28,18 @@ def sc_normalization(data):
     '''
     row_sum = np.sum(data, axis=1)
     mean_transcript = np.mean(row_sum)
+
     # 防止出现除0的问题
+    # row_sum = np.power(row_sum, -1)
+    # row_sum[np.isinf(row_sum)] = 0.
     row_sum[np.where(row_sum == 0)] = 1
     data_norm = (data / row_sum.reshape(-1, 1)) * mean_transcript
+    # data_norm = (data / row_sum.reshape(-1, 1))
 
     return data_norm
 
 
-def z_score_normalization(data):
+def z_score_scale(data):
     '''
     利用z-score方法做一个batch normalization
     :param data: 矩阵，（样本 * 特征）, 二维数组
@@ -79,7 +81,7 @@ def construct_graph(data, similarity_mat, k):
 
     # 要对similarity_mat取前K个最大的weight作为neighbors
     k_idxs = []
-    # 现将对角线部分全部设为0, 避免自己做自己的邻居
+    # 将对角线部分全部设为0, 避免自己做自己的邻居
     similarity_mat[np.diag_indices_from(similarity_mat)] = 0
 
     for i in range(similarity_mat.shape[0]):
@@ -222,7 +224,7 @@ def show_cluster(data, label, title, save_path):
     plt.savefig(os.path.join(save_path, "_".join(title.split()) + '.png'), bbox_inches='tight')  # dpi可以设置
 
     # 数据上报
-    wandb.save(os.path.join(save_path, "_".join(title.split()) + '.png'))
+    # wandb.save(os.path.join(save_path, "_".join(title.split()) + '.png'))
     # plt.show()
 
 
@@ -270,6 +272,9 @@ def encode_label(ref_label, query_label):
 
 
 def show_result(ret, save_path):
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
     embedding = np.concatenate([ret['ref_out'], ret['query_out']], axis=0)
 
     # embedding_h_pca = runPCA(embedding_h)
@@ -286,9 +291,12 @@ def show_result(ret, save_path):
     bme = batch_mixing_entropy(ref_h, query_h)
     bme = sum(bme) / len(bme)
     acc = accuracy_score(ret['query_label'], ret['pred'])
+    f1 = f1_score(ret['query_label'], ret['pred'], average='macro')
     print("Prediction Accuracy is {:.3f}".format(acc))
+    print('f1-score is {:.3f}'.format(f1))
     print('Prediction ARI is {:.3f}'.format(ari))
-
+    print('total silhouette score is {:.3f}'.format(total_s_score))
+    print('batch mixing score is {:.3f}'.format(bme))
     # 数据上报
     wandb.log({
         'Prediction Acc': acc,
@@ -299,8 +307,9 @@ def show_result(ret, save_path):
         'Batch Mixing Entropy Mean': bme
     })
 
-    all_true_labels = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
-    all_pred_labels = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
+    raw_trues = np.concatenate([ret['ref_raw_label'], ret['query_label']]).reshape(-1)
+    trues_after_shuffle = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
+    preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
 
     raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
     raw_data_2d = runUMAP(raw_data)
@@ -308,9 +317,10 @@ def show_result(ret, save_path):
 
     np.save(os.path.join(save_path, 'raw_data_2d.npy'), raw_data_2d)
     np.save(os.path.join(save_path, 'embeddings_2d.npy'), h_data_2d)
-    np.save(os.path.join(save_path, 'all_true_labels.npy'), all_true_labels)
-    np.save(os.path.join(save_path, 'all_pred_labels.npy'), all_pred_labels)
+    np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
+    np.save(os.path.join(save_path, 'preds.npy'), preds)
+    np.save(os.path.join(save_path, 'trues_after_shuffle.npy'), trues_after_shuffle)
 
-    show_cluster(raw_data_2d, all_true_labels, 'reference-query raw true label', save_path)
-    show_cluster(h_data_2d, all_true_labels, 'reference-query h true label', save_path)
-    show_cluster(h_data_2d, all_pred_labels, 'reference-query h pred label', save_path)
+    show_cluster(raw_data_2d, raw_trues, 'reference-query raw true label', save_path)
+    show_cluster(h_data_2d, trues_after_shuffle, 'reference-query h true label', save_path)
+    show_cluster(h_data_2d, preds, 'reference-query h pred label', save_path)

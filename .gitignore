@@ -1,5 +1,7 @@
-/result
+/experiment/species/task1/result
 /wandb
-/model
+/experiment/species/task1/model
 /.idea
 /__pycache__
+/experiment
+/experiment2

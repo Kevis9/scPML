@@ -7,20 +7,24 @@ import os
 import pandas as pd
 import argparse
 
-parser = argparse.ArgumentParser(description='[MVCC]')
-parser.add_argument('--path', type=str, required=True, help='实验工作目录')
-args = parser.parse_args()
 
+parser = argparse.ArgumentParser(description='[MVCC]')
+parser.add_argument('--path', type=str, required=False, help='实验工作目录')
+args = parser.parse_args()
+args.path = r'F:\yuanhuang\kevislin\Cell_Classification\experiment2\platform\task1'
 data_path = os.path.join(args.path, 'data')
 ref_path = os.path.join(data_path, 'ref')
 query_path = os.path.join(data_path, 'query')
 
-# model_path = os.path.join(args.path, 'model')
+
+# model_path = os.path.join(args.path, 'MVCC')
 # result_path = os.path.join(args.path, 'result')
 
 '''
     ref部分
 '''
+print("path is "+args.path)
+print("Start to process ref data")
 assert len(os.listdir(ref_path)) != 0
 data_file_arr = []
 label_file_arr = []
@@ -46,18 +50,19 @@ for i in range(len(label_file_arr)):
     df = pd.read_csv(os.path.join(ref_path, label_file_arr[i]))
     df.to_hdf(os.path.join(args.path, 'data.h5'), 'ref_'+str(i+1)+'/label')
 
+
 for i in range(len(sm_file_arr)):
     df = pd.read_csv(os.path.join(ref_path, sm_file_arr[i]), index_col=0)
-    # sm的命名规则为 sm_1_1 , 中间的1代表是ref_1, 后面的1代表的是view 1
+    # sm的命名规则为 sm_1_1.csv , 中间的1代表是ref_1, 后面的1代表的是view 1
     name = sm_file_arr[i]
-    name = name.split('_')
+    name = name.split('.')[0].split('_')
     df.to_hdf(os.path.join(args.path, 'data.h5'), 'ref_'+name[1]+'/sm_'+name[2])
 
 
 '''
-    query 部分
+    query
 '''
-print("Start to process reference data")
+print("Start to process query data")
 assert len(os.listdir(query_path)) != 0
 data_file_arr = []
 label_file_arr = []
@@ -74,7 +79,6 @@ data_file_arr.sort()
 label_file_arr.sort()
 sm_file_arr.sort()
 
-print("Start to process query data")
 # 读取csv数据，然后转为h5
 for i in range(len(data_file_arr)):
     df = pd.read_csv(os.path.join(query_path, data_file_arr[i]), index_col=0)
@@ -88,9 +92,18 @@ for i in range(len(sm_file_arr)):
     df = pd.read_csv(os.path.join(query_path, sm_file_arr[i]), index_col=0)
     # sm的命名规则为 sm_1_1 , 中间的1代表是ref_1, 后面的1代表的是view 1
     name = sm_file_arr[i]
-    name = name.split('_')
+    name = name.split('.')[0].split('_')
     df.to_hdf(os.path.join(args.path, 'data.h5'), 'query_' + name[1] + '/sm_' + name[2])
 
 
+import h5py
+print("data.h5中的keys为:")
+f = h5py.File(os.path.join(args.path,'data.h5'), 'r')
 
+def print_attrs(name, obj):
+    if isinstance(obj, h5py.Dataset):
+        pass
+    else:
+        print(name)
 
+f.visititems(print_attrs)

@@ -8,9 +8,7 @@
 
 import scipy.io as spio
 import pandas as pd
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_classif
-from utils import show_cluster
+
 rna_data = spio.mmread('/home/zhianhuang/yuanhuang/kevislin/data/raw_data/omics_data/A549/RNA/GSM3271040_RNA_sciCAR_A549_gene_count.txt')
 rna_data = rna_data.todense().T
 
