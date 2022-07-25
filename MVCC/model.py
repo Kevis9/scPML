@@ -363,27 +363,27 @@ class CPMNets(torch.nn.Module):
                 早停处理 (这里只是为了训练出更好的classifier)
             '''
             val_acc = self.evaluate(dataloader_val)
-            if early_stop:
-                if val_max_acc < val_acc:
-                    val_max_acc = val_acc
-                    stop = 0
+            # if early_stop:
+            if val_max_acc < val_acc:
+                val_max_acc = val_acc
+                stop = 0
 
-                    print(
-                        'epoch {:}: train classification loss = {:.3f}, train acc is {:.3f}, val max acc is {:.3f}, save the model.'.format(
-                            epoch, c_loss_total, train_acc, val_max_acc))
+                print(
+                    'epoch {:}: train classification loss = {:.3f}, train acc is {:.3f}, val max acc is {:.3f}, save the model.'.format(
+                        epoch, c_loss_total, train_acc, val_max_acc))
 
-                    torch.save(self, os.path.join(self.save_path, 'cpm_model.pt'))
-                else:
-                    stop += 1
-                    if stop > patience:
-                        print("CPM train h stop at train epoch {:}, train acc is {:.3f}, val max acc is {:.3f}".format(
-                            epoch, train_acc, val_max_acc))
-                        break
+                torch.save(self, os.path.join(self.save_path, 'cpm_model.pt'))
             else:
-                if epoch % 20 == 0:
-                    print(
-                        'epoch {:}: classification loss = {:.3f}. train acc is {:.3f}, val acc is {:.3f}'.format(
-                            epoch, c_loss_total, train_acc, val_acc))
+                stop += 1
+                if stop > patience:
+                    print("CPM train h stop at train epoch {:}, train acc is {:.3f}, val max acc is {:.3f}".format(
+                        epoch, train_acc, val_max_acc))
+                    break
+            # else:
+            #     if epoch % 20 == 0:
+            #         print(
+            #             'epoch {:}: classification loss = {:.3f}. train acc is {:.3f}, val acc is {:.3f}'.format(
+            #                 epoch, c_loss_total, train_acc, val_acc))
             # wandb.log({
             #     # 'CPM train: reconstruction loss': r_loss.detach().item(),
             #     'CPM train: classification loss': c_loss_total.detach().item(),
@@ -514,10 +514,11 @@ class MVCCModel:
                  epoch_cpm_test=3000,
                  batch_size_cpm=256,
                  save_path='',
-                 patience=50,
+                 patience_for_ref=50,
+                 patience_for_gcn=30,
                  early_stop=True,
                  mask_rate=0.3,
-                 patience_for_query = 500,
+                 patience_for_query =500,
                  lamb=1):
         '''
         :param pretrained:
@@ -549,8 +550,9 @@ class MVCCModel:
         self.view_num = view_num
         self.view_dim = gcn_middle_out
         self.gcn_input_dim = gcn_input_dim
-        self.patience = patience
+        self.patience_for_ref = patience_for_ref
         self.patience_for_query = patience_for_query
+        self.patience_for_gcn = patience_for_gcn
         self.early_stop = early_stop
         # 两个参数用于保存一次运行时候的embedding
         self.ref_h = None
@@ -592,7 +594,7 @@ class MVCCModel:
             # 如果gcn_model不存在，进行gcn训练
             for i in range(self.view_num):
                 self.gcn_models[i].train()
-                optimizer = torch.optim.Adam(self.gcn_models[i].parameters(), lr=1e-4)
+                optimizer = torch.optim.Adam(self.gcn_models[i].parameters())
                 loss_fct = nn.MSELoss()
 
                 for epoch in range(self.epoch_gcn):
@@ -634,7 +636,7 @@ class MVCCModel:
         labels = torch.from_numpy(labels).view(-1).long().to(device)
         # 训练cpm net
         self.ref_h, self.ref_labels = self.cpm_model.train_ref_h(ref_data, labels, self.batch_size_cpm,
-                                                                 self.epoch_cpm_train, self.patience, self.early_stop)
+                                                                 self.epoch_cpm_train, self.patience_for_ref, self.early_stop)
 
         # 这里要重新加载cpm_model, 使用早停法保留下来的泛化误差最好的模型 (后面考虑加入一个不用早停法的选项）
         if self.early_stop:

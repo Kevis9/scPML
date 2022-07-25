@@ -116,7 +116,7 @@ main<-function(paName, scName,s, paPath, save_path){
 scName= 'yan'
 paPath = "F:\\yuanhuang\\kevislin\\data\\pathway"
 # ref
-data_path = 'F:\\yuanhuang\\kevislin\\Cell_Classification\\experiment3\\platform\\task4\\data\\ref'
+data_path = 'F:\\yuanhuang\\kevislin\\Cell_Classification\\experiment3\\platform\\task6\\data\\ref'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
@@ -124,11 +124,11 @@ main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
 main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
 main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
 main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-
+q()
 # query_1
 # mat_name = 'mouse_data.csv'
 # scName= 'biase'
-data_path = 'F:\\yuanhuang\\kevislin\\Cell_Classification\\experiment3\\platform\\task4\\data\\query'
+data_path = 'F:\\yuanhuang\\kevislin\\Cell_Classification\\experiment3\\platform\\task6\\data\\query'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
@@ -138,7 +138,7 @@ main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep=
 main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 
 q()
-data_path = 'F:\\yuanhuang\\kevislin\\Cell_Classification\\experiment\\platform\\task6\\data\\ref'
+data_path = 'F:\\yuanhuang\\kevislin\\Cell_Classification\\experiment\\platform\\task5\\data\\ref'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
 main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
