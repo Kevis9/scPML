@@ -1,10 +1,6 @@
-/experiment/species/task1/result
-/wandb
-/experiment/species/task1/model
 /.idea
 /__pycache__
 /experiment
-/experiment2
-/experiment3
 /MVCC/__pycache__
+/best_exp
 

@@ -3,7 +3,7 @@ import os.path
 import random
 import numpy as np
 import copy
-# from sklearn.neighbors import kneighbors_graph
+from sklearn.neighbors import kneighbors_graph
 import torch
 from torch_geometric.data import Data as geoData
 import networkx as nx
@@ -71,6 +71,20 @@ def mask_data(data, masked_prob):
 
     return X, index_pair, masking_idx
 
+def construct_graph_with_self(data, k):
+    A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
+    G = nx.from_numpy_matrix(A.todense())
+    edges = []
+    # 把有向图转为无向图
+    for (u, v) in G.edges():
+        edges.append([u, v])
+        edges.append([v, u])
+    edges = np.array(edges).T
+    edges = torch.tensor(edges, dtype=torch.long)
+    feat = torch.tensor(data, dtype=torch.float)
+    # 将节点信息和边的信息放入特定类中
+    g_data = geoData(x=feat, edge_index=edges)
+    return g_data
 
 def construct_graph(data, similarity_mat, k):
     '''
@@ -118,10 +132,13 @@ def construct_graph(data, similarity_mat, k):
 def read_data_label_h5(path, key):
     print('Reading data...')
     data_path = os.path.join(path, 'data.h5')
+
     data_df = pd.read_hdf(data_path, key + '/data')
     data = data_df.to_numpy()
 
     label_df = pd.read_hdf(data_path, key + '/label')
+    # print(label_df['type'].value_counts())
+
     label = label_df.to_numpy().reshape(-1)
 
     print('表达矩阵的shape为 :{}'.format(data.shape))  # (samples,genes)
@@ -266,9 +283,9 @@ def encode_label(ref_label, query_label):
     :return:
     '''
     enc = LabelEncoder()
-    all_label = np.concatenate([ref_label, query_label])
-    all_label = enc.fit_transform(all_label)
-    return all_label[:len(ref_label)], all_label[len(ref_label):], enc
+    enc.fit(ref_label)
+
+    return enc.transform(ref_label), enc.transform(query_label), enc
 
 
 def show_result(ret, save_path):
