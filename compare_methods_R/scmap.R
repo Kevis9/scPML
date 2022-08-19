@@ -5,13 +5,13 @@ library(Seurat)
 path = '../experiment/platform/task_seq_all/data'
 print(path)
 data1 = t(as.data.frame(read.csv(paste(path, 'ref', 'data_1.csv', sep='/'), row.names=1))) # 变为gene * cell
-data2 = t(as.data.frame(read.csv(paste(path, 'query', 'data_3.csv', sep='/'), row.names=1)))
+data2 = t(as.data.frame(read.csv(paste(path, 'query', 'data_1.csv', sep='/'), row.names=1)))
 print(dim(data1))
 print(dim(data2))
 
 label1 = as.data.frame(read.csv(paste(path, 'ref', 'label_1.csv', sep='/')))
 rownames(label1) = colnames(data1)
-label2 = as.data.frame(read.csv(paste(path, 'query', 'label_3.csv', sep='/')))
+label2 = as.data.frame(read.csv(paste(path, 'query', 'label_1.csv', sep='/')))
 rownames(label2) = colnames(data2)
 
 rownames(data1) = rownames(data2)
@@ -84,7 +84,8 @@ scmapCluster_results <- scmapCluster(projection = query_sce, index_list = list(r
 pred <- scmapCluster_results$scmap_cluster_labs
 
 print(length(pred))
-match <- (pred==label2)
+print(length(query_obj$type))
+match <- (pred==query_obj$type)
 print('acc')
 print(sum(match)/length(match))
 

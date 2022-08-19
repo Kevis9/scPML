@@ -60,11 +60,16 @@ query_obj <- objs1[[2]]
 
 # singler
 ref_se <- SummarizedExperiment(assays=list(counts = ref_obj@assays$RNA@counts, logcounts = ref_obj@assays$RNA@data))
-ref_se@colData$label.main <- label1
+ref_se@colData$label.main <- as.matrix(label1)
 query_sce <- SingleCellExperiment(assays=list(counts=query_obj@assays$RNA@counts, logcounts=query_obj@assays$RNA@data))
 # query_sce <- logNormCounts(query_sce)
 
-query_pred <- SingleR(test = query_sce, ref = ref_se, labels = label1)
+print(dim(ref_se))
+print(dim(label1))
+query_pred <- SingleR(test = query_sce, ref = ref_se, labels = ref_se@colData$label.main)
+print("Single R finish")
 pred <- query_pred$labels
-match <- (pred==label2)
+print(length(pred))
+print(query_obj$type)
+match <- (pred==query_obj$type)
 print(sum(match)/length(match))
