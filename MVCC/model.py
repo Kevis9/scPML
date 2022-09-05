@@ -92,7 +92,7 @@ class CNNClassifier(torch.nn.Module):
         self.fcn = nn.Sequential(
             nn.Linear(middle_out, 2048),
             nn.ReLU(),
-            nn.Linear(2048 , class_num)
+            nn.Linear(2048, class_num)
         )
 
     def forward(self, data):
@@ -114,6 +114,7 @@ class FCClassifier(torch.nn.Module):
         x = self.fcn(data)
         return x
 
+
 class GCNClassifier(torch.nn.Module):
     def __init__(self, input_dim, output_dim):
         super(GCNClassifier, self).__init__()
@@ -126,6 +127,7 @@ class GCNClassifier(torch.nn.Module):
         x = F.relu(self.conv1(x, edge_index))
         x = self.conv2(x, edge_index)
         return x
+
 
 class CPMNets(torch.nn.Module):
     def __init__(self, view_num, view_dim, lsd, class_num, save_path):
@@ -140,6 +142,7 @@ class CPMNets(torch.nn.Module):
         self.view_num = view_num
         self.lsd = lsd
         self.view_dim = view_dim
+        # model save path
         self.save_path = save_path
         # net的输入是representation h ---> 重构成 X
         # 重构的网络
@@ -202,11 +205,17 @@ class CPMNets(torch.nn.Module):
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
-    def train_ref_h(self, ref_data, labels,
-                    batch_size_classifier, epochs_cpm_ref,
-                    epochs_classifier, epochs_multi_ref,
-                    multi_ref=False, gamma=1, patience_for_classifier=100,
-                    test_size=0.2, lamb=500, patience_for_cpm_ref=100
+    def train_ref_h(self,
+                    ref_data,
+                    ref_label,
+                    batch_size_classifier,
+                    epochs_cpm_ref,
+                    epochs_classifier,
+                    gamma=1,
+                    patience_for_classifier=100,
+                    patience_for_cpm_ref=100,
+                    test_size=0.2,
+                    lamb=500,
                     ):
 
         '''
@@ -214,7 +223,7 @@ class CPMNets(torch.nn.Module):
         随着迭代，更新net，h以及classifier
         在更新h的时候，可以考虑加入原论文的classification loss
         :param ref_data: training data, ndarray, not a list
-        :param labels:
+        :param ref_label:
         :param n_epochs: epochs
         :param lr: 学习率，是一个数组，0 for net， 1 for h
         :return:
@@ -228,7 +237,7 @@ class CPMNets(torch.nn.Module):
 
         # 将数据分为train和valid data
         train_data = ref_data
-        train_label = labels.view(-1)
+        train_label = ref_label.view(-1)
         # 只为train data创建h, val h由后面的评估生成
         # print(labels.shape)
         train_h = torch.zeros((train_data.shape[0], self.lsd), dtype=torch.float).to(device)
@@ -240,7 +249,7 @@ class CPMNets(torch.nn.Module):
         optimizer_for_classifier = optim.Adam(params=self.classifier.parameters())
 
         # 确定各类别的比例，用 (1-x) / (1-x).sum() 归一
-        alpha = torch.unique(labels, return_counts=True)[1]
+        alpha = torch.unique(ref_label, return_counts=True)[1]
         alpha = alpha / alpha.sum()
         alpha = (1 - alpha) / (1 - alpha).sum()
         # gamma=0, 退化为带平衡因子的CE
@@ -248,31 +257,8 @@ class CPMNets(torch.nn.Module):
         # criterion = FocalLoss(gamma=gamma, alpha=alpha)
         criterion = nn.CrossEntropyLoss()
 
-        if multi_ref:
-            # 直接类似于query得到融合的embeding用于classifier训练
-            for i in range(self.view_num):
-                self.net[i].eval()
-            for epoch in range(epochs_multi_ref):
-                train_h.requires_grad = True
-                for i in range(self.view_num):
-                    for param in self.net[i].parameters():
-                        param.requires_grad = False
-                r_loss = 0
-                for i in range(self.view_num):
-                    r_loss += self.reconstrution_loss(self.net[i](train_h),
-                                                      train_data[:, i * self.view_dim: (i + 1) * self.view_dim])
-                optimizer_for_train_h.zero_grad()
-                r_loss.backward()
-                optimizer_for_train_h.step()
-                if epoch % 100 == 0:
-                    print(
-                        'Multi ref: epoch {:}: Reconstruction loss = {:.3f}'.format(
-                            epoch, r_loss.detach().item()))
-            # min_c_loss_train_h = train_h
-
         # 训练net和h
         # 设置model为train模式
-
         for i in range(self.view_num):
             self.net[i].train()
 
@@ -516,6 +502,7 @@ class CPMNets(torch.nn.Module):
         # return self.classifier(data.view(data.shape[0], 1, -1))
         return self.classifier(g_data)
 
+
 class scGNN(torch.nn.Module):
     def __init__(self, input_dim, middle_out):
         super(scGNN, self).__init__()
@@ -586,7 +573,7 @@ class MVCCModel(nn.Module):
         loss_fct = nn.MSELoss()
 
         stop = 0
-        min_r_loss = 999999999999
+        min_r_loss = 999999999
         best_model = None
         for epoch in range(epoch_gcn):
             optimizer.zero_grad()
@@ -624,84 +611,99 @@ class MVCCModel(nn.Module):
 
     def fit(self, data, sm_arr, labels,
             gcn_input_dim, gcn_middle_out,
-            multi_ref=False, gcn_model_exist=False,
-            epoch_gcn=3000, k_neighbor=2, lamb=500,
-            epoch_cpm_ref=3000, epoch_classifier=1000,
+            exp_mode=2,
+            epoch_gcn=3000,
+            k_neighbor=2,
+            lamb=500,
+            epoch_cpm_ref=3000,
+            epoch_classifier=1000,
             patience_for_classifier=100,
-            batch_size_classifier=256, mask_rate=0.3,
-            gamma=1, epoch_multi_ref=300, test_size=0.2,
-            patience_for_cpm_ref=200, patience_for_gcn=200
+            batch_size_classifier=256,
+            mask_rate=0.3,
+            gamma=1,
+            test_size=0.2,
+            patience_for_cpm_ref=200,
+            patience_for_gcn=200,
             ):
 
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
 
-        if not multi_ref:
-            self.cpm_model = CPMNets(self.view_num, gcn_middle_out, self.lsd, self.class_num, self.model_path).to(
-                device)
-            if not gcn_model_exist:
-                for i in range(self.view_num):
-                    self.gcn_models.append(scGNN(gcn_input_dim, gcn_middle_out).to(device))
-            # 为单个视图的实验准备的一段代码
-            else:
-                gcn_model_paths = ['gcn_model_0.pt',
-                                   'gcn_model_1.pt',
-                                   'gcn_model_2.pt',
-                                   'gcn_model_3.pt']
-                for i in range(self.view_num):
-                    self.gcn_models.append(torch.load(os.path.join(self.model_path, gcn_model_paths[i])))
+        # 初始化内部的类
+        if exp_mode == 1:
+            # start from scratch
+            self.cpm_model = CPMNets(self.view_num,
+                                     gcn_middle_out,
+                                     self.lsd,
+                                     self.class_num,
+                                     self.model_path).to(device)
+            for i in range(self.view_num):
+                self.gcn_models.append(scGNN(gcn_input_dim, gcn_middle_out).to(device))
+
+        elif exp_mode == 2:
+            # Multi reference
+            pass
+        elif exp_mode == 3:
+            # MVCC model exist, GCN exist, cpm not (to test rest part)
+            self.cpm_model = CPMNets(self.view_num,
+                                     gcn_middle_out,
+                                     self.lsd,
+                                     self.class_num,
+                                     self.model_path).to(device)
+            gcn_model_paths = ['gcn_model_0.pt',
+                               'gcn_model_1.pt',
+                               'gcn_model_2.pt',
+                               'gcn_model_3.pt']
+            for i in range(self.view_num):
+                self.gcn_models.append(torch.load(os.path.join(self.model_path, gcn_model_paths[i])))
+
+        '''
+            训练自监督GCN, 获取ref views
+        '''
         ref_views = []
         masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), mask_rate)
-        # masked_prob = max(masked_prob, self.min_mask_rate)
+
         print("gcn mask prob is {:.3f}".format(masked_prob))
 
         masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
 
-        if multi_ref and gcn_model_exist:
-            # 多ref，再次train gcn(相当于预训练了)
+        if exp_mode == 1:
+            # start from sratch
             for i in range(self.view_num):
-                # 不用mask data（类似于query）
-                graph_data = construct_graph(data, sm_arr[i], k_neighbor)
+                graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
+
+                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
+                                            index_pair, masking_idx, i,
+                                            epoch_gcn, patience_for_gcn, self.model_path)
+                ref_views.append(embeddings)
+        elif exp_mode == 2:
+            # multi ref
+            for i in range(self.view_num):
+                graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
+
+                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
+                                            index_pair, masking_idx, i,
+                                            epoch_gcn, patience_for_gcn, self.model_path)
+                ref_views.append(embeddings)
+
+        elif exp_mode == 3:
+            # GCN exist, only to test rest part of experiment (CPM net, classifier)
+            for i in range(self.view_num):
+                graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
                 ref_views.append(z_score_scale(self.gcn_models[i].get_embedding(graph_data).detach().cpu().numpy()))
-
-        else:
-            # 不用多ref
-            if not gcn_model_exist:
-                # 如果gcn_model不存在，进行gcn训练
-                # torch.cuda.empty_cache()
-                for i in range(self.view_num):
-                    graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
-
-                    embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
-                                                index_pair, masking_idx, i,
-                                                epoch_gcn, patience_for_gcn, self.model_path)
-                    ref_views.append(embeddings)
-            else:
-                # gcn 存在
-                # 获得Embedding
-                for i in range(self.view_num):
-                    graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
-                    ref_views.append(z_score_scale(self.gcn_models[i].get_embedding(graph_data).detach().cpu().numpy()))
-
-        # 这里是为了做一个实验
-        # query_views = []
-        # for i in range(len(ref_views)):
-        #     query_views.append(ref_views[i][1841:, :])
-        #     ref_views[i] = ref_views[i][:1841, :]
 
         ref_data = np.concatenate(ref_views, axis=1)
         ref_data = torch.from_numpy(ref_data).float().to(device)
-
-        # ref_views就是经过多个Similarity matrix图卷积之后的不同embeddings
-        # 之后开始训练cpm net
         ref_labels = torch.from_numpy(labels).view(-1).long().to(device)
-        # 训练cpm net
-        self.ref_h, self.ref_labels = self.cpm_model.train_ref_h(ref_data, ref_labels,
+        '''
+            训练CPM net
+        '''
+
+        self.ref_h, self.ref_labels = self.cpm_model.train_ref_h(ref_data,
+                                                                 ref_labels,
                                                                  batch_size_classifier,
                                                                  epochs_cpm_ref=epoch_cpm_ref,
                                                                  epochs_classifier=epoch_classifier,
-                                                                 epochs_multi_ref=epoch_multi_ref,
-                                                                 multi_ref=multi_ref,
                                                                  gamma=gamma,
                                                                  patience_for_classifier=patience_for_classifier,
                                                                  test_size=test_size,
