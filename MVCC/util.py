@@ -71,7 +71,8 @@ def mask_data(data, masked_prob):
 
     return X, index_pair, masking_idx
 
-def construct_graph_with_self(data, k):
+def construct_graph_with_self(data):
+    k = 3
     A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
     G = nx.from_numpy_matrix(A.todense())
     edges = []
@@ -341,3 +342,5 @@ def show_result(ret, save_path):
     show_cluster(raw_data_2d, raw_trues, 'reference-query raw true label', save_path)
     show_cluster(h_data_2d, trues_after_shuffle, 'reference-query h true label', save_path)
     show_cluster(h_data_2d, preds, 'reference-query h pred label', save_path)
+    # show_cluster(raw_data_2d[:ret['ref_raw_data'].shape[0],:], ret['ref_raw_label'], "raw reference data", save_path)
+    # show_cluster(raw_data_2d[ret['ref_raw_data'].shape[0]:,], ret['query_raw_label'], "raw query data", save_path)
