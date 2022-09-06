@@ -20,33 +20,6 @@ from torch.utils.data import Dataset, TensorDataset
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-class MultiViewDataSet(Dataset):
-    def __init__(self, multi_view_data, labels, latent_representation, view_num):
-        '''
-        :param multi_view_data: list类型，保存每个view ，每个元素都是tensor
-        :param labels:
-        :param latent_representation: 相当于h
-        :param view_dim_arr:
-        '''
-        super(MultiViewDataSet, self).__init__()
-        self.multi_view_data = multi_view_data
-        self.labels = labels.view(-1)
-        self.latent_representation = latent_representation
-        self.view_num = view_num
-
-    def __getitem__(self, item):
-        data = []
-        for i in range(self.view_num):
-            data.append(self.multi_view_data[i][item].view(1, -1))
-        if self.labels is not None:
-            return torch.concat(data, dim=1).view(-1), self.latent_representation[item], self.labels[item]
-        else:
-            return torch.concat(data, dim=1).view(-1), self.latent_representation[item]
-
-    def __len__(self):
-        return self.multi_view_data[0].shape[0]
-
-
 class FocalLoss(nn.Module):
     def __init__(self, gamma, alpha):
         '''
@@ -130,9 +103,15 @@ class GCNClassifier(torch.nn.Module):
         return x
 
 
-
 class CPMNets(torch.nn.Module):
-    def __init__(self, view_num, view_dim, lsd, class_num, save_path):
+    def __init__(self,
+                 view_num,
+                 view_dim,
+                 lsd,
+                 class_num,
+                 save_path,
+                 classifier_name="GCN"
+                 ):
         '''
         :param view_num:
         :param view_dim: 每个view的维度，在这里我们的view的维度一致
@@ -163,11 +142,16 @@ class CPMNets(torch.nn.Module):
 
         # 分类的网络
         self.class_num = class_num
-        # self.classifier = FCClassifier(self.lsd, self.class_num)
-        # self.classifier = GCNClassifier(self.lsd, self.class_num)
-        # self.classifier = self.classifier.to(device)
-        self.classifier = CNNClassifier(self.lsd, self.class_num)
+
+        if classifier_name == "GCN":
+            self.classifier = GCNClassifier(self.lsd, self.class_num)
+        elif classifier_name == "CNN":
+            self.classifier = CNNClassifier(self.lsd, self.class_num)
+        elif classifier_name == "FC":
+            self.classifier = FCClassifier(self.lsd, self.class_num)
+
         self.classifier = self.classifier.to(device)
+
     def reconstrution_loss(self, r_x, x):
         '''
         :param r_x: 由 h 重构出来的x
@@ -625,6 +609,7 @@ class MVCCModel(nn.Module):
             test_size=0.2,
             patience_for_cpm_ref=200,
             patience_for_gcn=200,
+            classifier_name="GCN",
             ):
 
         if not os.path.exists(self.model_path):
@@ -637,7 +622,9 @@ class MVCCModel(nn.Module):
                                      gcn_middle_out,
                                      self.lsd,
                                      self.class_num,
-                                     self.model_path).to(device)
+                                     self.model_path,
+                                     classifier_name=classifier_name
+                                     ).to(device)
             for i in range(self.view_num):
                 self.gcn_models.append(scGNN(gcn_input_dim, gcn_middle_out).to(device))
 
@@ -650,7 +637,8 @@ class MVCCModel(nn.Module):
                                      gcn_middle_out,
                                      self.lsd,
                                      self.class_num,
-                                     self.model_path).to(device)
+                                     self.model_path,
+                                     classifier_name=classifier_name).to(device)
             gcn_model_paths = ['gcn_model_0.pt',
                                'gcn_model_1.pt',
                                'gcn_model_2.pt',
