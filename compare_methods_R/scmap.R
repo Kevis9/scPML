@@ -111,7 +111,7 @@ main <- function(path, ref_key, query_key){
 #     # colData(query_sce)$scmap_cell <- scmap_cell_labs
 #     pred <- scmap_cell_labs
 
-    scmapCluster_results <- scmapCluster(projection = query_sce, index_list = list(ref = metadata(ref_sce)$scmap_cluster_index),threshold=0.7)
+    scmapCluster_results <- scmapCluster(projection = query_sce, index_list = list(ref = metadata(ref_sce)$scmap_cluster_index),threshold=0.6)
     pred <- scmapCluster_results$scmap_cluster_labs
 #
 #     print(length(pred))

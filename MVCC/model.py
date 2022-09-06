@@ -90,9 +90,9 @@ class CNNClassifier(torch.nn.Module):
         )
         middle_out = int((input_dim - 4) * 16)
         self.fcn = nn.Sequential(
-            nn.Linear(middle_out, 2048),
+            nn.Linear(middle_out, 1024),
             nn.ReLU(),
-            nn.Linear(2048, class_num)
+            nn.Linear(1024, class_num)
         )
 
     def forward(self, data):
