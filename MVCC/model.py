@@ -96,6 +96,7 @@ class CNNClassifier(torch.nn.Module):
         )
 
     def forward(self, data):
+        data = data.view(data.shape[0], 1, -1)
         x = self.conv(data)
         x = self.fcn(x)
         return x
@@ -121,12 +122,13 @@ class GCNClassifier(torch.nn.Module):
         self.conv1 = GCNConv(input_dim, 1024)
         self.conv2 = GCNConv(1024, output_dim)
 
-    def forward(self, g_data):
-        # g_data = g_data.to
+    def forward(self, data):
+        g_data = construct_graph_with_self(data.detach().cpu().numpy()).to(device)
         x, edge_index = g_data.x.to(device), g_data.edge_index.to(device)
         x = F.relu(self.conv1(x, edge_index))
         x = self.conv2(x, edge_index)
         return x
+
 
 
 class CPMNets(torch.nn.Module):
@@ -365,8 +367,7 @@ class CPMNets(torch.nn.Module):
                 # FCN
                 # logits = self.classifier(b_h)
                 # GCN
-                g_data = construct_graph_with_self(b_h.detach().cpu().numpy()).to(device)
-                logits = self.classifier(g_data)
+                logits = self.classifier(b_h)
                 c_loss = criterion(logits, b_label)
 
                 optimizer_for_classifier.zero_grad()
@@ -465,8 +466,8 @@ class CPMNets(torch.nn.Module):
             true_list = []
             for b_data, b_label in val_dataloader:
                 # logits = model(b_data)
-                g_data = construct_graph_with_self(b_data.detach().cpu().numpy()).to(device)
-                logits = self.classifier(g_data)
+
+                logits = self.classifier(b_data)
                 # logits = model(b_data.view(b_data.shape[0], 1, -1))
                 pred = logits.argmax(dim=1)
                 pred_list.append(pred)
@@ -485,8 +486,7 @@ class CPMNets(torch.nn.Module):
         # dataset = TensorDataset(h)
         # logits_arr = []
         with torch.no_grad():
-            g_data = construct_graph_with_self(h.detach().cpu().numpy()).to(device)
-            logits = self.classifier(g_data)
+            logits = self.classifier(h)
             # logits = self.classifier(h.view(h.shape[0], 1, -1))
             # logits = self.classifier(h)
 
@@ -498,9 +498,9 @@ class CPMNets(torch.nn.Module):
 
     def forward(self, data):
         # return self.classifier(data)
-        g_data = construct_graph_with_self(data.detach().cpu().numpy()).to(device)
+        # g_data = construct_graph_with_self(data.detach().cpu().numpy()).to(device)
         # return self.classifier(data.view(data.shape[0], 1, -1))
-        return self.classifier(g_data)
+        return self.classifier(data)
 
 
 class scGNN(torch.nn.Module):
