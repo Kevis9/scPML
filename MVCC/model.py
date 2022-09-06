@@ -164,9 +164,10 @@ class CPMNets(torch.nn.Module):
         # 分类的网络
         self.class_num = class_num
         # self.classifier = FCClassifier(self.lsd, self.class_num)
-        self.classifier = GCNClassifier(self.lsd, self.class_num)
+        # self.classifier = GCNClassifier(self.lsd, self.class_num)
+        # self.classifier = self.classifier.to(device)
+        self.classifier = CNNClassifier(self.lsd, self.class_num)
         self.classifier = self.classifier.to(device)
-
     def reconstrution_loss(self, r_x, x):
         '''
         :param r_x: 由 h 重构出来的x
