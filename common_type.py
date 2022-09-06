@@ -3,10 +3,10 @@ from calendar import c
 from operator import index
 import pandas as pd
 
-ref_save_path = 'experiment/species/emtab_gsemouse/data/ref'
-query_save_path = 'experiment/species/emtab_gsemouse/data/query'
+ref_save_path = 'experiment/platform/emtab5016_gse84133/data/ref'
+query_save_path = 'experiment/platform/emtab5016_gse84133/data/query'
 
-ref_path = 'H:/yuanhuang/kevislin/data/species/E-MTAB-5061/'
+ref_path = 'E:/yuanhuang/kevislin/data/species/E-MTAB-5061/'
 # query1_path = 'H:/yuanhuang/kevislin/data/species/E-MTAB-5061'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query3_path = 'H:/yuanhuang/kevislin/data/platform/Seq_Well'
@@ -14,7 +14,7 @@ ref_path = 'H:/yuanhuang/kevislin/data/species/E-MTAB-5061/'
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'H:/yuanhuang/kevislin/data/species/GSE84133/example_data_from_scGCN/mouse',
+    'E:/yuanhuang/kevislin/data/species/GSE84133/example_data_from_scGCN/human',
     # 'H:/yuanhuang/kevislin/data/platform/InDrop',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
     # 'H:/yuanhuang/kevislin/data/platform/Smart_seq2',
