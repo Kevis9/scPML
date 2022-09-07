@@ -159,7 +159,7 @@ class CNNClassifier(Classifier):
         return x
 
 
-class FCClassifier(torch.nn.Module):
+class FCClassifier(Classifier):
     def __init__(self, input_dim, class_num):
         super(FCClassifier, self).__init__()
         self.fcn = nn.Sequential(
@@ -173,7 +173,7 @@ class FCClassifier(torch.nn.Module):
         return x
 
 
-class GCNClassifier(torch.nn.Module):
+class GCNClassifier(Classifier):
     def __init__(self, input_dim, output_dim):
         super(GCNClassifier, self).__init__()
         self.conv1 = GCNConv(input_dim, 1024)

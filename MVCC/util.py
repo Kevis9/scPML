@@ -84,8 +84,8 @@ def construct_graph_with_self(data):
         edges.append([u, v])
         edges.append([v, u])
     edges = np.array(edges).T
-    edges = SparseTensor.from_dense(torch.tensor(edges, dtype=torch.long))
-    feat = SparseTensor.from_dense(torch.tensor(data, dtype=torch.float))
+    edges = torch.tensor(edges, dtype=torch.long())
+    feat = torch.tensor(data, dtype=torch.float)
     # 将节点信息和边的信息放入特定类中
     g_data = geoData(x=feat, edge_index=edges)
     return g_data
@@ -127,8 +127,8 @@ def construct_graph(data, similarity_mat, k):
         edges.append([v, u])
 
     edges = np.array(edges).T
-    edges = SparseTensor.from_dense(torch.tensor(edges, dtype=torch.long))
-    feat = SparseTensor.from_dense(torch.tensor(data, dtype=torch.float))
+    edges = torch.tensor(edges, dtype=torch.long)
+    feat = torch.tensor(data, dtype=torch.float)
     # 将节点信息和边的信息放入特定类中
     g_data = geoData(x=feat, edge_index=edges)
     return g_data

@@ -1,86 +1,19 @@
 import os.path
-import copy
 import numpy as np
 import torch.nn as nn
 import torch
-import wandb
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
-from scipy.spatial.distance import pdist
 from MVCC.util import cpm_classify, mask_data, construct_graph, z_score_scale, construct_graph_with_self
 from MVCC.classifiers import FocalLoss, GCNClassifier, FCClassifier, CNNClassifier
-from torch.utils.data import TensorDataset, DataLoader
-from sklearn.model_selection import train_test_split, StratifiedKFold
-from sklearn.metrics import silhouette_score
-from torch.utils.data import Dataset, TensorDataset
+
 
 '''
     CPM-Nets, 改写为Pytroch形式
 '''
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-
-
-
-
-class CNNClassifier(torch.nn.Module):
-    def __init__(self, input_dim, class_num):
-        super(CNNClassifier, self).__init__()
-        self.conv = nn.Sequential(
-            nn.Conv1d(in_channels=1, out_channels=8, kernel_size=3, stride=1),
-            nn.ReLU(),
-            # nn.MaxPool1d(2, 2),
-            nn.Conv1d(8, 16, 3, 1),
-            nn.ReLU(),
-            # nn.Conv1d(16, 32, 3, 1),
-            # nn.ReLU(),
-            nn.Flatten()
-        )
-        middle_out = int((input_dim - 4) * 16)
-        self.fcn = nn.Sequential(
-            nn.Linear(middle_out, 2048),
-            nn.ReLU(),
-            nn.Linear(2048, class_num)
-        )
-
-    def forward(self, data):
-        data = data.view(data.shape[0], 1, -1)
-        x = self.conv(data)
-        x = self.fcn(x)
-        return x
-
-
-class FCClassifier(torch.nn.Module):
-    def __init__(self, input_dim, class_num):
-        super(FCClassifier, self).__init__()
-        self.fcn = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, class_num)
-        )
-
-    def forward(self, data):
-        x = self.fcn(data)
-        return x
-
-
-class GCNClassifier(torch.nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(GCNClassifier, self).__init__()
-        self.conv1 = GCNConv(input_dim, 1024)
-        self.conv2 = GCNConv(1024, output_dim)
-
-    def forward(self, data):
-        g_data = construct_graph_with_self(data.detach().cpu().numpy()).to(device)
-        x, edge_index = g_data.x.to(device), g_data.edge_index.to(device)
-        x = F.relu(self.conv1(x, edge_index))
-        x = self.conv2(x, edge_index)
-        return x
-
-
-=======
->>>>>>> 3f2b89b9d13f1947fdf8ff23962d9c494b99dbc9
 class CPMNets(torch.nn.Module):
     def __init__(self,
                  view_num,
