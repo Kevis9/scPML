@@ -19,7 +19,11 @@ from random import sample
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
 
+
 hue = []
+
+
+
 def sc_normalization(data):
     '''
     scGCN中的标准化处理，对表达矩阵的每一个表达量做一个平均加权
