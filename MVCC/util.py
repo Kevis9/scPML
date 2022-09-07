@@ -18,8 +18,7 @@ import scipy.spatial as spt
 from random import sample
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
-
-
+from torch_sparse import SparseTensor
 hue = []
 
 
@@ -85,8 +84,8 @@ def construct_graph_with_self(data):
         edges.append([u, v])
         edges.append([v, u])
     edges = np.array(edges).T
-    edges = torch.tensor(edges, dtype=torch.long)
-    feat = torch.tensor(data, dtype=torch.float)
+    edges = SparseTensor.from_dense(torch.tensor(edges, dtype=torch.long))
+    feat = SparseTensor.from_dense(torch.tensor(data, dtype=torch.float))
     # 将节点信息和边的信息放入特定类中
     g_data = geoData(x=feat, edge_index=edges)
     return g_data
@@ -126,9 +125,10 @@ def construct_graph(data, similarity_mat, k):
     for (u, v) in graph.edges():
         edges.append([u, v])
         edges.append([v, u])
+
     edges = np.array(edges).T
-    edges = torch.tensor(edges, dtype=torch.long)
-    feat = torch.tensor(data, dtype=torch.float)
+    edges = SparseTensor.from_dense(torch.tensor(edges, dtype=torch.long))
+    feat = SparseTensor.from_dense(torch.tensor(data, dtype=torch.float))
     # 将节点信息和边的信息放入特定类中
     g_data = geoData(x=feat, edge_index=edges)
     return g_data

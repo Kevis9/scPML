@@ -313,8 +313,8 @@ class scGNN(torch.nn.Module):
         self.conv1 = GCNConv(input_dim, middle_out)
         self.conv2 = GCNConv(middle_out, input_dim)
 
-    def forward(self, G_data):
-        x, edge_index = G_data.x.to(device), G_data.edge_index.to(device)
+    def forward(self, g_data):
+        x, edge_index = g_data.x.to(device), g_data.edge_index.to(device)
         # 中间夹了一层relu和一层dropout(避免过拟合的发生)
         # print(G_data.edge_index)
         x = F.relu(self.conv1(x, edge_index))
@@ -323,8 +323,8 @@ class scGNN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         return x
 
-    def get_embedding(self, G_data):
-        x, edge_index = G_data.x, G_data.edge_index
+    def get_embedding(self, g_data):
+        x, edge_index = g_data.x, g_data.edge_index
         return self.conv1(x.to(device), edge_index.to(device))
 
 
