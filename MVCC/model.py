@@ -63,9 +63,9 @@ class CNNClassifier(torch.nn.Module):
         )
         middle_out = int((input_dim - 4) * 16)
         self.fcn = nn.Sequential(
-            nn.Linear(middle_out, 1024),
+            nn.Linear(middle_out, 2048),
             nn.ReLU(),
-            nn.Linear(1024, class_num)
+            nn.Linear(2048, class_num)
         )
 
     def forward(self, data):
@@ -79,9 +79,9 @@ class FCClassifier(torch.nn.Module):
     def __init__(self, input_dim, class_num):
         super(FCClassifier, self).__init__()
         self.fcn = nn.Sequential(
-            nn.Linear(input_dim, 256),
+            nn.Linear(input_dim, 128),
             nn.ReLU(),
-            nn.Linear(256, class_num)
+            nn.Linear(128, class_num)
         )
 
     def forward(self, data):

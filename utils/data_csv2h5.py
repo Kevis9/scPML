@@ -11,7 +11,7 @@ import argparse
 parser = argparse.ArgumentParser(description='[MVCC]')
 parser.add_argument('--path', type=str, required=False, help='实验工作目录')
 args = parser.parse_args()
-args.path = r'..\experiment\platform\emtab5016_gse84133'
+args.path = r'..\experiment\platform\indrop_seqwell'
 data_path = os.path.join(args.path, 'data')
 ref_path = os.path.join(data_path, 'ref')
 query_path = os.path.join(data_path, 'query')

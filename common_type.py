@@ -3,10 +3,10 @@ from calendar import c
 from operator import index
 import pandas as pd
 
-ref_save_path = 'experiment/platform/emtab5016_gse84133/data/ref'
-query_save_path = 'experiment/platform/emtab5016_gse84133/data/query'
+ref_save_path = 'experiment/platform/indrop_seqwell/data/ref'
+query_save_path = 'experiment/platform/indrop_seqwell/data/query'
 
-ref_path = 'E:/yuanhuang/kevislin/data/species/E-MTAB-5061/'
+ref_path = 'E:/yuanhuang/kevislin/data/platform/InDrop/'
 # query1_path = 'H:/yuanhuang/kevislin/data/species/E-MTAB-5061'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query3_path = 'H:/yuanhuang/kevislin/data/platform/Seq_Well'
@@ -14,15 +14,15 @@ ref_path = 'E:/yuanhuang/kevislin/data/species/E-MTAB-5061/'
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/species/GSE84133/example_data_from_scGCN/human',
-    # 'H:/yuanhuang/kevislin/data/platform/InDrop',
+    'E:/yuanhuang/kevislin/data/platform/Seq_Well/',
+    'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
     # 'H:/yuanhuang/kevislin/data/platform/Smart_seq2',
     # 'H:/yuanhuang/kevislin/data/platform/DropSeq',
 ]
 flags = {
-    'PBMC':False,
-    'E-MTAB':True
+    'PBMC':True,
+    'E-MTAB':False
 }
 
 ref_label = pd.read_csv(os.path.join(ref_path, 'label.csv'))
@@ -32,8 +32,8 @@ for path in query_paths:
 # query1_label = pd.read_csv(os.path.join(query1_path, 'label.csv'))
 
 
-ref_label_key = 'type'
-query_label_key = 'type'
+ref_label_key = 'CellType'
+query_label_key = 'CellType'
 
 # For e-mtab-5061
 if flags['E-MTAB']:
