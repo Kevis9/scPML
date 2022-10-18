@@ -74,27 +74,19 @@ main <- function(path, ref_key, query_key){
     input <- CHETAHclassifier(input = input, ref_cells = reference)
     ## Extract celltypes:
     pred <- input$celltype_CHETAH
+    write.table(pred, file="chetah_preds.csv", sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
+
     match <- (pred==label2)
     acc <- sum(match)/length(match)
     return (acc)
 }
 
 final_acc <- c()
-path = '../experiment/platform/emtab5016_gse84133/data'
-acc = main(path, '1', '1')
-print(acc)
+path = '../experiment/platform/task_seq_all/data'
+acc = main(path, '1', '5')
 # final_acc<-append(final_acc, acc)
-# # path = '../experiment/species/gsehuman_gsemouse/data'
-# acc = main(path, '1', '2')
-# print(acc)
-# final_acc<-append(final_acc, acc)
-# # path = '../experiment/species/gsemouse_emtab/data'
-# acc = main(path, '1', '3')
-# print(acc)
-# final_acc<-append(final_acc, acc)
-# # path = '../experiment/species/emtab_gsemouse/data'
-# acc = main(path, '1', '4')
-# final_acc<-append(final_acc, acc)
-# acc = main(path, '1', '5')
-# final_acc<-append(final_acc, acc)
-# print(final_acc)
+# path = '../experiment/platform/85241_84133/data'
+# acc = main(path, '1', '1')
+final_acc<-append(final_acc, acc)
+
+print(final_acc)

@@ -5,7 +5,7 @@ from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
-from MVCC.util import construct_graph_with_self
+from MVCC.util import construct_graph_with_knn
 import numpy as np
 import os
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -69,7 +69,7 @@ class Classifier(torch.nn.Module):
         alpha = alpha / alpha.sum()
         alpha = (1 - alpha) / (1 - alpha).sum()
         criterion = nn.CrossEntropyLoss()
-
+        # criterion = FocalLoss(alpha=alpha, gamma=1)
         train_x, val_x, train_y, val_y = train_test_split(data,
                                                           labels,
                                                           shuffle=True,
@@ -136,20 +136,22 @@ class CNNClassifier(Classifier):
     def __init__(self, input_dim, class_num):
         super(CNNClassifier, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv1d(in_channels=1, out_channels=8, kernel_size=3, stride=1),
+            nn.Conv1d(in_channels=1, out_channels=4, kernel_size=2, stride=2),
             nn.ReLU(),
             # nn.MaxPool1d(2, 2),
-            nn.Conv1d(8, 16, 3, 1),
+            nn.Conv1d(4, 8, 2, 2),
             nn.ReLU(),
             # nn.Conv1d(16, 32, 3, 1),
             # nn.ReLU(),
             nn.Flatten()
         )
-        middle_out = int((input_dim - 4) * 16)
+        middle_out = 512
+
         self.fcn = nn.Sequential(
-            nn.Linear(middle_out, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, class_num)
+            nn.Linear(middle_out, class_num),
+            # nn.ReLU(),
+            # nn.Linear(64, class_num)
+            # nn.Linear(256, class_num),
         )
 
     def forward(self, data):
@@ -165,6 +167,12 @@ class FCClassifier(Classifier):
         self.fcn = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.ReLU(),
+            # nn.Linear(256, 512),
+            # nn.ReLU(),
+            # nn.Linear(512, 256),
+            # nn.ReLU(),
+            # nn.Dropout(0.2),
+            # nn.Linear(64, 32),
             nn.Linear(256, class_num)
         )
 
@@ -179,40 +187,10 @@ class GCNClassifier(Classifier):
         self.conv1 = GCNConv(input_dim, 1024)
         self.conv2 = GCNConv(1024, output_dim)
 
-    def forward(self, g_data):
+    def forward(self, data):
+        g_data = construct_graph_with_knn(data.detach().cpu().numpy())
         x, edge_index = g_data.x.to(device), g_data.edge_index.to(device)
         x = F.relu(self.conv1(x, edge_index))
         x = self.conv2(x, edge_index)
         return x
-
-    def train_classifier(self, data, labels, patience, save_path, test_size, batch_size=128, epochs=300):
-        print("Train  classifier")
-
-        optimizer_for_classifier = optim.Adam(params=self.parameters())
-
-        # 确定各类别的比例，用 (1-x) / (1-x).sum() 归一
-        alpha = np.unique(labels, return_counts=True)[1]
-        alpha = alpha / alpha.sum()
-        alpha = (1 - alpha) / (1 - alpha).sum()
-        criterion = nn.CrossEntropyLoss()
-
-        g_data = construct_graph_with_self(data).to(device)
-
-        trues = torch.from_numpy(labels).view(-1)
-        for epoch in range(epochs):
-            logits = self(g_data)
-            c_loss = criterion(logits, labels)
-
-            optimizer_for_classifier.zero_grad()
-            c_loss.backward()
-            optimizer_for_classifier.step()
-
-            preds = logits.detach().argmax(dim=1)
-            train_acc = (preds == trues).sum() / trues.shape[0]
-            if epoch % 10 == 0:
-                print(
-                    'epoch {:}: train classification loss = {:.3f}, train acc is {:.3f},, save the model.'.format(
-                        epoch, c_loss.detach().item(), train_acc))
-
-
 

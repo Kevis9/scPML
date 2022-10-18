@@ -1,28 +1,28 @@
 import os
-from calendar import c
-from operator import index
 import pandas as pd
 
-ref_save_path = 'experiment/platform/indrop_seqwell/data/ref'
-query_save_path = 'experiment/platform/indrop_seqwell/data/query'
+ref_save_path = 'experiment/species/gse_emtab_common_type/mouse_human/data/ref'
+query_save_path = 'experiment/species/gse_emtab_common_type/mouse_human/data/query'
 
-ref_path = 'E:/yuanhuang/kevislin/data/platform/InDrop/'
-# query1_path = 'H:/yuanhuang/kevislin/data/species/E-MTAB-5061'
+ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE/mouse'
+
+# query1_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query3_path = 'H:/yuanhuang/kevislin/data/platform/Seq_Well'
 # query4_path = 'H:/yuanhuang/kevislin/data/platform/Smart_seq2'
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/platform/Seq_Well/',
-    'E:/yuanhuang/kevislin/data/platform/10X_V3/',
+    'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE/human'
+    # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
     # 'H:/yuanhuang/kevislin/data/platform/Smart_seq2',
     # 'H:/yuanhuang/kevislin/data/platform/DropSeq',
 ]
 flags = {
-    'PBMC':True,
-    'E-MTAB':False
+    'PBMC': False,
+    'E-MTAB': False,
+    'E-MTAB query': False,
 }
 
 ref_label = pd.read_csv(os.path.join(ref_path, 'label.csv'))
@@ -32,22 +32,29 @@ for path in query_paths:
 # query1_label = pd.read_csv(os.path.join(query1_path, 'label.csv'))
 
 
-ref_label_key = 'CellType'
-query_label_key = 'CellType'
+ref_label_key = 'type'
+query_label_key = 'type'
+
+ref_label.columns = [ref_label_key]
+for label in query_labels:
+    label.columns = [query_label_key]
 
 # For e-mtab-5061
 if flags['E-MTAB']:
     ref_label[ref_label_key] = ref_label[ref_label_key].apply(lambda x: x.split()[0])
+if flags['E-MTAB query']:
+    query_labels[0][query_label_key] = query_labels[0][query_label_key].apply(lambda x: x.split()[0])
 
     # for i in range(len(query_labels)):
     #     query_labels[i][query_label_key] = query_labels[i][query_label_key].apply(lambda x: x.split()[0])
 
-ref_idx = (~ref_label[ref_label_key].isin(['Unassigned', 'not', 'co-expression', 'unclassified'])).tolist()
+ref_idx = (~ref_label[ref_label_key].isin(['Unassigned', 'unclear', 'not', 'co-expression', 'unclassified'])).tolist()
 ref_label_list = ref_label.iloc[ref_idx][ref_label_key].tolist()
+# 一对一情况 取交集(可选可不选)
 ref_label_list = list(set(ref_label_list) & set(query_labels[0][query_label_key].tolist()))
 query_indices = []
 ref_idx2 = ref_label[ref_label_key].isin(ref_label_list).tolist()
-ref_idx = [ref_idx[i]&ref_idx2[i] for i in range(len(ref_idx))]
+ref_idx = [ref_idx[i] & ref_idx2[i] for i in range(len(ref_idx))]
 # ref_label = ref_label.iloc[ref_idx, :]
 
 for label in query_labels:
@@ -56,7 +63,7 @@ for label in query_labels:
 
 # print("raw query")
 # print(set(query_labels[0][query_label_key].tolist()))
-ref_label = ref_label.iloc[ref_idx,:]
+ref_label = ref_label.iloc[ref_idx, :]
 for i in range(len(query_labels)):
     query_labels[i] = query_labels[i].iloc[query_indices[i], :]
 # query1_label = query1_label.iloc[query1_idx, :]
@@ -64,7 +71,7 @@ for i in range(len(query_labels)):
 print("ref label set :", sorted(list(set(ref_label[ref_label_key].tolist()))))
 
 for i, label in enumerate(query_labels):
-    print("query " + str(i+1) + " label set: ", sorted(list(set(query_labels[i][query_label_key].tolist()))))
+    print("query " + str(i + 1) + " label set: ", sorted(list(set(query_labels[i][query_label_key].tolist()))))
 # print("query 1 label set :", sorted(list(set(query1_label[query_label_key].tolist()))))
 
 ref_data = pd.read_csv(os.path.join(ref_path, 'data.csv'), index_col=0)
@@ -101,7 +108,6 @@ for x in datasets:
     gene_name -= gene_to_del
 gene_name = list(gene_name)
 
-
 ref_data = ref_data.iloc[ref_idx, :][gene_name]
 for i in range(len(query_datas)):
     query_datas[i] = query_datas[i].iloc[query_indices[i], :][gene_name]
@@ -109,16 +115,16 @@ for i in range(len(query_datas)):
 
 print("ref data shape ", ref_data.shape)
 for i, data in enumerate(query_datas):
-    print("query " + str(i+1) + " data shape", data.shape)
+    print("query " + str(i + 1) + " data shape", data.shape)
 
 ref_data.to_csv(os.path.join(ref_save_path, 'data_1.csv'))
 for i, data in enumerate(query_datas):
-    data.to_csv(os.path.join(query_save_path, 'data_' + str(i+1) + '.csv'))
+    data.to_csv(os.path.join(query_save_path, 'data_' + str(i + 1) + '.csv'))
 # query1_data.to_csv(os.path.join(query_save_path, 'data_1.csv'))
 
 
 ref_label.to_csv(os.path.join(ref_save_path, 'label_1.csv'), index=False)
 for i, label in enumerate(query_labels):
-    label.to_csv(os.path.join(query_save_path, 'label_' + str(i+1) +'.csv'), index=False)
+    label.to_csv(os.path.join(query_save_path, 'label_' + str(i + 1) + '.csv'), index=False)
 
 # query1_label.to_csv(os.path.join(query_save_path, 'label_1.csv'), index=False)

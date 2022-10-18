@@ -388,7 +388,7 @@ def process_gene_name(df1, df2):
 # rna_df = rna_df.iloc[cell_idx, gene_idx]
 # rna_cell = rna_cell['treatment_time'].iloc[cell_idx]
 #
-# rna_df.to_csv('rna_data.csv')
+# rna_df.to_csv('data_1.csv')
 # rna_cell.to_csv('label.csv')
 # exit()
 # 取ATAC和RNA的交集
@@ -399,7 +399,7 @@ def process_gene_name(df1, df2):
 # atac_df = atac_df.T
 # # atac_df.to_csv('atac_data.csv')
 #
-# rna_df = pd.read_csv('rna_data.csv', index_col=0)
+# rna_df = pd.read_csv('data_1.csv', index_col=0)
 #
 # c_gene_name = set(atac_df.columns.tolist()) & set(rna_df.columns.tolist())
 # c_cell_name = set(atac_df.index.tolist()) & set(rna_df.index.tolist())

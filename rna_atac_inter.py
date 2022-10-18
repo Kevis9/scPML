@@ -82,7 +82,7 @@ print(rna_df.shape)
 print(atac_df.shape)
 print(label_df.shape)
 
-rna_df.to_csv('rna_data.csv')
+rna_df.to_csv('data_1.csv')
 atac_df.to_csv('atac_data.csv')
 label_df.to_csv('label.csv', index=False)
 

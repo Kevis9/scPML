@@ -1,6 +1,12 @@
 /.idea
 /__pycache__
-/experiment
+*.csv
+*.h5
+*.pt
+*.png
+*.npy
+*.txt
+*.zip
 /MVCC/__pycache__
-/best_exp
+wandb
 

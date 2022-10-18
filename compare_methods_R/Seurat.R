@@ -66,14 +66,18 @@ main <- function(path, ref_key, query_key){
 
     reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30)
     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
-
+    write.table(predictions$predicted.id, file="seurat_preds.csv", sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
     prediction.match <- predictions$predicted.id == query.object$type
 
     acc = sum(prediction.match)/length(prediction.match)
     return (acc)
 }
-
 final_acc <- c()
-path = '../experiment/platform/emtab5016_gse84133/data'
+path = '../experiment/species/gse_mouse_human/data'
 acc = main(path, '1', '1')
-print(acc)
+# final_acc<-append(final_acc, acc)
+# path = '../experiment/platform/85241_84133/data'
+# acc = main(path, '1', '1')
+final_acc<-append(final_acc, acc)
+
+print(final_acc)
