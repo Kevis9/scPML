@@ -109,7 +109,7 @@ def construct_graph(data, similarity_mat, k):
     # print(k_idxs)
     similarity_mat = np.zeros(shape=similarity_mat.shape)
     # 原来这一步真的很离谱，这里构造图的时候一直都错了，下面的for循环才是对的
-    # similarity_mat[:, 1] = 1
+    # similarity_mat[:, k_idxs[i]] = 1
 
     for i in range(similarity_mat.shape[0]):
         similarity_mat[i, k_idxs[i]] = 1
@@ -188,7 +188,7 @@ def read_similarity_mat_h5(path, key):
     # print("Finish")
     return similarity_mat.astype(np.float64)
 
-def sel_feature(data1, data2, label1, label2, nf=3000):
+def sel_feature(data1, data2, label1, nf=3000):
     # 先去掉表达量为0的基因, 然后再做交集, 这里暂时不打算取HVG
     # sum1 = np.sum(data1, axis=0)
     # idx1 = set(np.where(sum1!=0)[0])
@@ -214,9 +214,9 @@ def sel_feature(data1, data2, label1, label2, nf=3000):
 
     return data1, data2
 
-def pre_process(data1, data2, label1, label2):
+def pre_process(data1, data2, label1, nf=3000):
     # Normalization: 减少测序深度的影响
-    data1, data2 = sel_feature(data1, data2, label1, label2)
+    data1, data2 = sel_feature(data1, data2, label1, nf=nf)
     # scaler = StandardScaler()
     data1 = sc_normalization(data1)
     data2 = sc_normalization(data2)

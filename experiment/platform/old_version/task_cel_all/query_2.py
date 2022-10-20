@@ -26,12 +26,12 @@ data_config = {
 }
 
 parameter_config = {
-    'gcn_middle_out': 4096,  # GCN中间层维数
+    'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 1000,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
-    'epoch_cpm_query': 50,
-    'exp_mode': 3, # 1: start from scratch,
+    'epoch_cpm_ref': 3000,
+    'epoch_cpm_query': 600,
+    'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':"FC",

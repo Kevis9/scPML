@@ -51,11 +51,14 @@ class CPMNets(torch.nn.Module):
             self.net.append(
                 nn.Sequential(
                     nn.Linear(self.lsd, self.view_dim, device=device),
-
                     # nn.Dropout(0.5),
-
                 )
             )
+
+            nn.init.xavier_uniform_(self.net[i][0].weight)
+            # nn.init.xavier_uniform_(self.net[i][0].bias)
+
+        # 初始化net
 
         # 分类的网络
         self.class_num = class_num
@@ -109,6 +112,52 @@ class CPMNets(torch.nn.Module):
 
         return torch.sum(F.relu(theta + (F_h_h_mean_max - F_h_hn_mean)))
 
+    def fisher_loss(self, h, gt):
+        '''
+            给出LDA中fisher_loss
+            :param gt:
+            :return:
+        '''
+        label_list = list(set(np.array(gt.cpu()).reshape(-1).tolist()))
+        idx = []  # 存储每一个类别所在行数
+
+        for label in label_list:
+            idx.append(torch.where(gt == label)[0])
+
+        v_arr = []
+        u_arr = []
+        for i in range(len(idx)):
+            data = h[idx[i], :]
+
+            u = torch.mean(data, dim=0, dtype=torch.float64)
+
+            v_arr.append((torch.diag(torch.mm(data - u, (data - u).T)).sum()).view(1, -1))
+            u_arr.append(u.reshape(1, -1))
+
+        Sw = torch.cat(v_arr, dim=1).sum()
+
+        # m 记录每个类的数目
+        m = []
+        for i in range(len(idx)):
+            m.append(len(idx[i]))
+
+        data_u = torch.mean(h, dim=0, dtype=torch.float64)
+        u_tensor = torch.cat(u_arr, dim=0)
+
+        Sb = torch.mm(u_tensor - data_u, (u_tensor - data_u).T)
+        Sb = torch.diag(Sb).view(1, -1)
+        m_tensor = torch.FloatTensor(m).view(1, -1).to(device)
+        Sb = torch.mul(Sb, m_tensor)
+        Sb = Sb.sum()
+
+
+        # 将对角线置为0
+        # u_diag = torch.diag(u_tensor)
+        # u_tensor = u_tensor - torch.diag_embed(u_diag)
+
+        # 簇之间的距离
+        # dist_loss = u_tensor.sum()
+        return Sw / Sb
 
     def train_ref_h(self,
                     ref_data,
@@ -168,6 +217,7 @@ class CPMNets(torch.nn.Module):
                 for param in self.net[i].parameters():
                     param.requires_grad = True
 
+
             r_loss = 0
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[i](train_h),
@@ -182,45 +232,50 @@ class CPMNets(torch.nn.Module):
             for i in range(self.view_num):
                 for param in self.net[i].parameters():
                     param.requires_grad = False
+
+
             r_loss = 0
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[i](train_h),
                                                   train_data[:, i * self.view_dim: (i + 1) * self.view_dim])
 
-            c_loss = self.class_loss(train_h, train_label)
-            # c_loss += self.fisher_loss(train_h, train_label)
+            # c_loss = self.class_loss(train_h, train_label)
+            c_loss = self.fisher_loss(train_h, train_label)
             total_loss = r_loss + lamb * c_loss
 
             optimizer_for_train_h.zero_grad()
             total_loss.backward()
             optimizer_for_train_h.step()
+
             if epoch % 100 == 0:
                 print(
                     'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
                         epoch, r_loss.detach().item(), c_loss.detach().item()))
 
-
+            min_c_loss = 99999999
+            min_c_loss_train_h = None
+            stop = 0
             # 早停法
-            # if c_loss < min_c_loss:
-            #     stop = 0
-            #     min_c_loss = c_loss
-            #     min_c_loss_train_h = train_h.detach().clone()
-            #     for i in range(self.view_num):
-            #         torch.save(self.net[i], os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
-            #     if epoch % 10 == 0:
-            #         print(
-            #             'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
-            #                 epoch, r_loss.detach().item(), c_loss.detach().item()))
-            # else:
-            #     stop += 1
-            #     if stop > patience_for_cpm_ref:
-            #         print("CPM train stop at epoch {:}, min classification loss is {:.3f}".format(epoch, min_c_loss))
-            #         break
+            if c_loss < min_c_loss:
+                stop = 0
+                min_c_loss = c_loss
+                min_c_loss_train_h = train_h.detach().clone()
+                for i in range(self.view_num):
+                    torch.save(self.net[i], os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
+                if epoch % 100 == 0:
+                    print(
+                        'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
+                            epoch, r_loss.detach().item(), c_loss.detach().item()))
+            else:
+                stop += 1
+                if stop > patience_for_cpm_ref:
+                    print("CPM train stop at epoch {:}, min classification loss is {:.3f}".format(epoch, min_c_loss))
+                    break
 
         # 重新加载保存好的reconstruction net以及最优的train_h
-        # for i in range(self.view_num):
-        #     self.net[i] = torch.load(os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
-        # train_h = min_c_loss_train_h.detach().clone()
+        for i in range(self.view_num):
+            self.net[i] = torch.load(os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
+        train_h = min_c_loss_train_h.detach().clone()
 
         '''
             classifier 训练
@@ -273,12 +328,10 @@ class CPMNets(torch.nn.Module):
             self.net[i].eval()
 
         # 数据准备
-        # dataset = MultiViewDataSet(multi_view_data, None, h_test, self.view_num)
-        # dataloader = DataLoader(dataset, shuffle=False, batch_size=128)
 
-        # min_r_loss = 999999999
-        # min_r_loss_test_h = None
-        # stop = 0
+        min_r_loss = 999999999
+        min_r_loss_test_h = None
+        stop = 0
         for epoch in range(n_epochs):
             r_loss = 0
             for i in range(self.view_num):
@@ -290,19 +343,19 @@ class CPMNets(torch.nn.Module):
             if epoch % 100 == 0:
                 print('epoch {:} CPM query h: reconstruction loss {:}'.format(epoch, r_loss.detach().item()))
 
-            # if r_loss < min_r_loss:
-            #     min_r_loss = r_loss
-            #     min_r_loss_test_h = h_test.detach().clone()
-            #     stop = 0
-            #     if epoch % 100 == 0:
-            #         print('epoch {:} CPM query h: reconstruction loss {:}'.format(epoch, r_loss.detach().item()))
-            #
-            # else:
-            #     stop += 1
-            #     if stop > patience_for_cpm_query:
-            #         print("train query h stop at epoch {:}, min r loss {:.3f}".format(epoch, min_r_loss))
-            #         break
-        # h_test = min_r_loss_test_h.detach().clone()
+            if r_loss < min_r_loss:
+                min_r_loss = r_loss
+                min_r_loss_test_h = h_test.detach().clone()
+                stop = 0
+                if epoch % 100 == 0:
+                    print('epoch {:} CPM query h: reconstruction loss {:}'.format(epoch, r_loss.detach().item()))
+
+            else:
+                stop += 1
+                if stop > patience_for_cpm_query:
+                    print("train query h stop at epoch {:}, min r loss {:.3f}".format(epoch, min_r_loss))
+                    break
+        h_test = min_r_loss_test_h.detach().clone()
         return h_test
 
 

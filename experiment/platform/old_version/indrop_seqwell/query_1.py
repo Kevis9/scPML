@@ -6,7 +6,7 @@ import os
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
 from MVCC.util import sc_normalization, \
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -32,7 +32,7 @@ parameter_config = {
     'lamb': 3000,  # classfication loss的权重
     'epoch_cpm_ref': 3000,
     'epoch_cpm_query': 600,
-    'exp_mode': 3, # 1: start from scratch,
+    'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name': 'FC',
@@ -67,8 +67,9 @@ def main_process():
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
 
-    ref_norm_data = sc_normalization(ref_data)
-    query_norm_data = sc_normalization(query_data)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
+    # ref_norm_data = sc_normalization(ref_data)
+    # query_norm_data = sc_normalization(query_data)
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
@@ -93,7 +94,7 @@ def main_process():
             label_encoder=enc,
         )
     mvccmodel.fit(ref_norm_data, ref_sm_arr, ref_label,
-                  gcn_input_dim=ref_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
+                  gcn_input_dim=ref_norm_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
                   lamb=parameter_config['lamb'], epoch_gcn=parameter_config['epoch_gcn'],
                   epoch_cpm_ref=parameter_config['epoch_cpm_ref'],
                   epoch_classifier=parameter_config['epoch_classifier'],

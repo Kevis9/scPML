@@ -90,8 +90,8 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label) {
 
     reference.object <- objs1[[1]];
     query.object <- objs1[[2]]
-    reference.object <- ScaleData(reference.object, verbose = FALSE)
-    reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
+#     reference.object <- ScaleData(reference.object, verbose = FALSE)
+#     reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
 
     reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30)
     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
@@ -102,9 +102,9 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label) {
 single_r_pred <- function(ref_data, query_data, ref_label) {
     # all input must be matrix
     # Single R can take matrix as input, reference data must be log-normalized
-    ref_sce = SingleCellExperiment(assays = list(normcounts = as.matrix(ref_data)))
+#     ref_sce = SingleCellExperiment(assays = list(normcounts = as.matrix(ref_data)))
 
-    ref_data <- as.matrix(log2(SingleCellExperiment::normcounts(ref_sce) + 1))
+#     ref_data <- as.matrix(log2(SingleCellExperiment::normcounts(ref_sce) + 1))
 
     # ref_data <- scater::logNormCounts(ref_data)
     pred <- SingleR(test = query_data, ref = ref_data, labels = ref_label)
@@ -170,7 +170,7 @@ main <- function(path, ref_key, query_key, method){
     ref_label = data[[3]]
     query_label = data[[4]]
 
-
+    print("数据读取完成")
     if(method == 'seurat') {
         pred = seurat_pca_pred(ref_data, query_data, ref_label, query_label)
 
@@ -192,41 +192,14 @@ main <- function(path, ref_key, query_key, method){
     return (acc)
 }
 final_acc = c()
-path = '../experiment/platform/task_dropseq_all/data'
+
+path = '../experiment/platform/new_version/84133_5061/raw_data'
 acc = c(
-        main(path, '1', '3', 'seurat'),
-        main(path, '1', '3', 'singler'),
-        main(path, '1', '3', 'scmap'),
-        main(path, '1', '3', 'chetah')
+        main(path, '1', '1', 'seurat'),
+        main(path, '1', '1', 'singler'),
+        main(path, '1', '1', 'scmap'),
+        main(path, '1', '1', 'chetah')
 )
 acc = setNames(acc, c('seurat', 'singler', 'scamp', 'chetah'))
 
 print(acc)
-
-final_acc = append(final_acc, acc)
-
-acc = c(
-        main(path, '1', '4', 'seurat'),
-        main(path, '1', '4', 'singler'),
-        main(path, '1', '4', 'scmap'),
-        main(path, '1', '4', 'chetah')
-)
-acc = setNames(acc, c('seurat', 'singler', 'scamp', 'chetah'))
-
-print(acc)
-final_acc = append(final_acc, acc)
-
-acc = c(
-        main(path, '1', '5', 'seurat'),
-        main(path, '1', '5', 'singler'),
-        main(path, '1', '5', 'scmap'),
-        main(path, '1', '5', 'chetah')
-)
-acc = setNames(acc, c('seurat', 'singler', 'scamp', 'chetah'))
-
-print(acc)
-final_acc = append(final_acc, acc)
-
-print(final_acc)
-
-

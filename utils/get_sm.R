@@ -38,7 +38,7 @@ pathway_scoring <- function(gSet, mat_gene){
 
 # 
 clean_sets <- function(gSet){
-  min.size = 10; max.size = 500
+  min.size = 5; max.size = 600
   len_s = sapply(gSet, function(x) length(geneIds(x))) 
   idx = (len_s > min.size)&(len_s<max.size)
   gSet = gSet[idx]
@@ -62,7 +62,7 @@ integrating_pathway <- function(mat_gene, mat_path){
 
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
-  print("xxxx")
+
   mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=400) # 并行的方式去加速计算dist 代表细胞间的correlation
 #   mat_path = (dist2(as.matrix(mat_path),as.matrix(mat_path)))^(1/2)
   mat_path = affinityMatrix(mat_path, K, alpha)
@@ -91,13 +91,16 @@ main<-function(paName, scName,s, paPath, save_path){
   }
 
   gSet = subsetGeneSets(gSet, rownames(mat_gene)) #AUCell
+
   gSet = clean_sets(gSet) # min.size = 5; max.size = 500
 
   # pathway scoring: AUCell
   mat_path = pathway_scoring(gSet, mat_gene)
 
-  W=integrating_pathway(mat_gene, mat_path)
+  # 去掉这一步骤，直接拿到 geneset * cell 的表达矩阵
+#   W=integrating_pathway(mat_gene, mat_path)
 
+  W = t(mat_path)
 
   print("Save the W (integrated) matrix")
 
@@ -117,7 +120,7 @@ main<-function(paName, scName,s, paPath, save_path){
 scName = 'yan'
 paPath = "E:\\yuanhuang\\kevislin\\data\\pathway"
 # ref 1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\species\\gse_emtab_common_type\\mouse_human\\data\\ref'
+data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\cel_seq\\cel_seq_smart_seq_test_gset\\data\\ref'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
@@ -127,7 +130,7 @@ main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep=
 main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 
 # query_1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\species\\gse_emtab_common_type\\mouse_human\\data\\query'
+data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\cel_seq\\cel_seq_smart_seq_test_gset\\data\\query'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置

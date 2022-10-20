@@ -1,10 +1,16 @@
 import os
 import pandas as pd
 
-ref_save_path = 'experiment/species/gse_emtab_common_type/mouse_human/data/ref'
-query_save_path = 'experiment/species/gse_emtab_common_type/mouse_human/data/query'
+'''
+1. 细胞类型取交集， 可以左连接(可选)
+2. 基因取交集，去掉表达为0的基因(可选)
+'''
+save_path = 'experiment/platform/new_version/seq_well_drop_seq/data'
 
-ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE/mouse'
+raw_data_save_path = 'experiment/platform/new_version/seq_well_drop_seq/raw_data'
+
+
+ref_path = 'E:/yuanhuang/kevislin/data/platform/Seq_Well'
 
 # query1_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
@@ -13,17 +19,26 @@ ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE/mouse'
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE/human'
+    'E:/yuanhuang/kevislin/data/platform/DropSeq',
+    # 'E:/yuanhuang/kevislin/data/platform/GSE85241',
     # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
-    # 'H:/yuanhuang/kevislin/data/platform/Smart_seq2',
-    # 'H:/yuanhuang/kevislin/data/platform/DropSeq',
+
+
 ]
 flags = {
-    'PBMC': False,
+    'PBMC query': True,
+    'PBMC ref' : True,
     'E-MTAB': False,
     'E-MTAB query': False,
+    'get_rid_of_gene':False,
 }
+# if flags['get_rid_of_gene']:
+ref_save_path = os.path.join(save_path, 'ref')
+query_save_path = os.path.join(save_path, 'query')
+# else:
+#     ref_save_path = os.path.join(raw_data_save_path, 'ref')
+#     query_save_path = os.path.join(raw_data_save_path, 'query')
 
 ref_label = pd.read_csv(os.path.join(ref_path, 'label.csv'))
 query_labels = []
@@ -81,10 +96,12 @@ for path in query_paths:
 # query1_data = pd.read_csv(os.path.join(query1_path, 'data.csv'), index_col=0)
 
 # For PBMC1 dataset
-if flags['PBMC']:
-    ref_data.columns = [x.split("_")[1] for x in ref_data.columns.tolist()]
+if flags['PBMC query']:
     for i in range(len(query_datas)):
         query_datas[i].columns = [x.split("_")[1] for x in query_datas[i].columns.tolist()]
+
+if flags['PBMC ref']:
+    ref_data.columns = [x.split("_")[1] for x in ref_data.columns.tolist()]
 
     # query1_data.columns = [x.split("_")[1] for x in query1_data.columns.tolist()]
 
@@ -95,19 +112,21 @@ gene_name = set(ref_data.columns.tolist())
 for x in query_datas:
     gene_name = set(x.columns.tolist()) & gene_name
 
+
 # 去掉表达量之和为0的基因
 # 记得加上ref_data
-datasets = []
-datasets.append(ref_data)
-datasets += query_datas
+if flags['get_rid_of_gene']:
+    datasets = []
+    datasets.append(ref_data)
+    datasets += query_datas
 
-for x in datasets:
-    df = x.sum(axis=0)
-    df = df[df == 0]
-    gene_to_del = set(df.index.tolist())
-    gene_name -= gene_to_del
+    for x in datasets:
+        df = x.sum(axis=0)
+        df = df[df == 0]
+        gene_to_del = set(df.index.tolist())
+        gene_name -= gene_to_del
+
 gene_name = list(gene_name)
-
 ref_data = ref_data.iloc[ref_idx, :][gene_name]
 for i in range(len(query_datas)):
     query_datas[i] = query_datas[i].iloc[query_indices[i], :][gene_name]
@@ -116,6 +135,11 @@ for i in range(len(query_datas)):
 print("ref data shape ", ref_data.shape)
 for i, data in enumerate(query_datas):
     print("query " + str(i + 1) + " data shape", data.shape)
+
+
+'''
+    save data
+'''
 
 ref_data.to_csv(os.path.join(ref_save_path, 'data_1.csv'))
 for i, data in enumerate(query_datas):
