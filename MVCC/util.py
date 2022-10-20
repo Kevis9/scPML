@@ -103,17 +103,17 @@ def construct_graph(data, similarity_mat, k):
     '''
 
     # 要对similarity_mat取前K个最大的weight作为neighbors
-    # k_idxs = []
-    # # 将对角线部分全部设为0, 避免自己做自己的邻居
-    # similarity_mat[np.diag_indices_from(similarity_mat)] = 0
-    # for i in range(similarity_mat.shape[0]):
-    #     top_k_idx = similarity_mat[i].argsort()[::-1][0:k]
-    #     k_idxs.append(top_k_idx)
-    #
-    # similarity_mat = np.zeros(shape=similarity_mat.shape)
-    # # 原来这一步真的很离谱，这里构造图的时候一直都错了，下面的for循环才是对的
-    # for i in range(similarity_mat.shape[0]):
-    #     similarity_mat[i, k_idxs[i]] = 1
+    k_idxs = []
+    # 将对角线部分全部设为0, 避免自己做自己的邻居
+    similarity_mat[np.diag_indices_from(similarity_mat)] = 0
+    for i in range(similarity_mat.shape[0]):
+        top_k_idx = similarity_mat[i].argsort()[::-1][0:k]
+        k_idxs.append(top_k_idx)
+
+    similarity_mat = np.zeros(shape=similarity_mat.shape)
+    # 原来这一步真的很离谱，这里构造图的时候一直都错了，下面的for循环才是对的
+    for i in range(similarity_mat.shape[0]):
+        similarity_mat[i, k_idxs[i]] = 1
 
     similarity_mat = similarity_mat.astype(np.int64)
     graph = nx.from_numpy_matrix(np.matrix(similarity_mat))
@@ -124,6 +124,7 @@ def construct_graph(data, similarity_mat, k):
     for (u, v) in graph.edges():
         edges.append([u, v])
         edges.append([v, u])
+
 
     edges = np.array(edges).T
     edges = torch.tensor(edges, dtype=torch.long)
@@ -180,9 +181,17 @@ def read_data_label_h5(path, key):
 
 
 def read_similarity_mat_h5(path, key):
+
     # print("reading graph...")
     data_path = os.path.join(path, 'data.h5')
     mat_df = pd.read_hdf(data_path, key)
+
+    # print(mat_df.isnull().any())
+    #
+    # print(np.isnan(mat_df).any())
+    # print(np.isinf(mat_df).all())
+    #
+    # print(np.isfinite(mat_df).all())
     similarity_mat = mat_df.to_numpy()
     # print("Finish")
     return similarity_mat.astype(np.float64)
@@ -198,7 +207,9 @@ def sel_feature(data1, data2, label1, nf=3000):
     # data2 = data2[:, idx]
     # print("After gene selction , ref data shape {:}, query data shape {:}".format(data1.shape, data2.shape))
     # return data1, data2
+
     sel_model = SelectKBest(k=nf)   #default score function is f_classif
+
     sel_model.fit(data1, label1)
     idx = sel_model.get_support(indices=True)
 

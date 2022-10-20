@@ -6,17 +6,17 @@
 library(parallelDist)
 library(SNFtool) # SNF;spectralClustering
 library(GSEABase) # getGmt, load pathway information
-library(AUCell) # AUCell, pathway scoring method 
+library(AUCell) # AUCell, pathway scoring method
 
 
 
 # 为GSE84133_RAW设置的load_matrix
 load_matrix_for_GSE <- function(path){
-  expr_matrix = read.csv(path,check.names=FALSE) # 去掉X  
-  # print(colnames(expr_matrix))  
+  expr_matrix = read.csv(path,check.names=FALSE) # 去掉X
+  # print(colnames(expr_matrix))
   # print(rownames(expr_matrix))
   expr_matrix = expr_matrix[,-1]#删掉第1列 cell id
-  expr_matrix = as.matrix(expr_matrix)  
+  expr_matrix = as.matrix(expr_matrix)
   return(expr_matrix)
 }
 
@@ -36,10 +36,10 @@ pathway_scoring <- function(gSet, mat_gene){
   return(aucMatrix)
 }
 
-# 
+#
 clean_sets <- function(gSet){
-  min.size = 5; max.size = 600
-  len_s = sapply(gSet, function(x) length(geneIds(x))) 
+  min.size = 10; max.size = 500
+  len_s = sapply(gSet, function(x) length(geneIds(x)))
   idx = (len_s > min.size)&(len_s<max.size)
   gSet = gSet[idx]
   return(gSet)
@@ -73,23 +73,23 @@ integrating_pathway <- function(mat_gene, mat_path){
 
 
 
-main<-function(paName, scName,s, paPath, save_path){
+main<-function(paName, scName,paPath, save_path){
 
-  demoDatas = c('yan','biase')
+#   demoDatas = c('yan','biase')
 
   original_paName = paName
   # load pathway
-  if(paName=='de novo pathway'){
-    if(scName %in% demoDatas){
-      paName=paste(scName,'150.gmt',sep='_')
-      gSet = load_pathway(paPath,paName)}
-    else{
-      gSet = create_denovo_pathway(mat_gene)}}
-  else{
-    paName=paste(paName,'_',s,'.gmt',sep='')
-    gSet = load_pathway(paPath,paName)
-  }
-
+#   if(paName=='de novo pathway'){
+#     if(scName %in% demoDatas){
+#       paName=paste(scName,'150.gmt',sep='_')
+#       gSet = load_pathway(paPath,paName)}
+#     else{
+#       gSet = create_denovo_pathway(mat_gene)}}
+#   else{
+#     paName=paste(paName,'_',s,'.gmt',sep='')
+#     gSet = load_pathway(paPath,paName)
+#   }
+  gSet = load_pathway(paPath, paste(paName,'.gmt',sep=''))
   gSet = subsetGeneSets(gSet, rownames(mat_gene)) #AUCell
 
   gSet = clean_sets(gSet) # min.size = 5; max.size = 500
@@ -98,47 +98,56 @@ main<-function(paName, scName,s, paPath, save_path){
   mat_path = pathway_scoring(gSet, mat_gene)
 
   # 去掉这一步骤，直接拿到 geneset * cell 的表达矩阵
-#   W=integrating_pathway(mat_gene, mat_path)
+  W=integrating_pathway(mat_gene, mat_path)
 
-  W = t(mat_path)
-
+#   W = t(mat_path)
+#   print(dim(W))
   print("Save the W (integrated) matrix")
 
-  if(original_paName=='de novo pathway'){
-       if(s=='human'){
-        original_paName='yan'
-       } else{
-        original_paName = 'biase'
-       }
-  }
+#   if(original_paName=='de novo pathway'){
+#        if(s=='human'){
+#         original_paName='yan'
+#        } else{
+#         original_paName = 'biase'
+#        }
+#   }
 #   filepath = paste(save_path, original_paName, '.csv',sep='')
 
-  write.table(W, file=save_path, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
+  write.csv(W, save_path)
+  # write.table可能会多出几列，不知道原因
+#   write.table(as.matrix(W), file=save_path, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
 
 }
 
 scName = 'yan'
-paPath = "E:\\yuanhuang\\kevislin\\data\\pathway"
+paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\new"
 # ref 1
 data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\cel_seq\\cel_seq_smart_seq_test_gset\\data\\ref'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
+main('KEGG', scName, paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
+main('Reactome2', scName, paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
+main('Wikipathways', scName, paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
+main('yan', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
+main('pathbank', scName, paPath, paste(data_path, 'sm_1_5.csv', sep='\\'))
+main('panther', scName, paPath, paste(data_path, 'sm_1_6.csv', sep='\\'))
+main('inoh', scName, paPath, paste(data_path, 'sm_1_7.csv', sep='\\'))
+
+# main('de novo pathway', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 
 # query_1
 data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\cel_seq\\cel_seq_smart_seq_test_gset\\data\\query'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-print(dim(mat_gene))
-main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
+main('KEGG', scName, paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
+main('Reactome2', scName, paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
+main('Wikipathways', scName, paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
+main('yan', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
+main('pathbank', scName, paPath, paste(data_path, 'sm_1_5.csv', sep='\\'))
+main('panther', scName, paPath, paste(data_path, 'sm_1_6.csv', sep='\\'))
+main('inoh', scName, paPath, paste(data_path, 'sm_1_7.csv', sep='\\'))
 
 # second
 # ref 1

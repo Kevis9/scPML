@@ -209,7 +209,7 @@ for i in range(cycle):
     acc_arr.append(acc)
     if acc > max_acc:
         max_acc = acc
-        torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['query_key'] + ".pt")
+        # torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['query_key'] + ".pt")
 
 print("After {:} cycle, mean acc is {:.3f}, max acc is {:.3f}".format(cycle, sum(acc_arr) / len(acc_arr), max_acc))
 print(acc_arr)

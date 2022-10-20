@@ -3,8 +3,9 @@ import torch
 
 sys.path.append('../../../..')
 import os
+
 os.system("wandb disabled")
-from MVCC.util import sc_normalization, construct_graph_with_knn,\
+from MVCC.util import sc_normalization, construct_graph_with_knn, \
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, get_similarity_matrix
 from MVCC.model import MVCCModel
 import numpy as np
@@ -14,7 +15,7 @@ import wandb
 
 # 数据配置
 data_config = {
-    'root_path': '.', # data.h5 path
+    'root_path': '.',  # data.h5 path
     'ref_name': 'cel_seq2',
     'query_name': 'smart_seq',
     'ref_key': 'ref_1',
@@ -23,28 +24,30 @@ data_config = {
 }
 
 parameter_config = {
-    'gcn_middle_out': [128, 128, 128, 128, 1024],  # GCN中间层维数
-    'lsd': 1024,  # CPM_net latent space dimension
+    'gcn_middle_out': 1024,  # GCN中间层维数
+    'lsd': 512,  # CPM_net latent space dimension
     'lamb': 1000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
-    'exp_mode': 3, # 1: start from scratch,
-                   # 2: multi ref ,
-                   # 3: gcn model exists, train cpm model and classifier
-    'classifier_name':"FC",
+    'exp_mode': 1,  # 1: start from scratch,
+                    # 2: multi ref ,
+                    # 3: gcn model exists, train cpm model and classifier
+    'classifier_name': "FC",
     # 不太重要参数
+    'nf': 3000,
     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
     'epoch_gcn': 1000,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
-    'patience_for_cpm_ref': 300, # cpm train ref 早停patience
-    'patience_for_cpm_query': 200, # query h 早停patience
+    'patience_for_cpm_ref': 300,  # cpm train ref 早停patience
+    'patience_for_cpm_query': 200,  # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.1,
+    'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':False,
+    'show_result': True,
+    'view_num': 4,
 }
 
 
@@ -59,27 +62,20 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
-    # ref_norm_data = sc_normalization(ref_data)
-    # query_norm_data = sc_normalization(query_data)
 
-    ref_data_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
+
+    ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(4)]
-    query_data_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
-                    i in
-                    range(4)]
+                  range(parameter_config['view_num'])]
 
-    ref_data_arr.append(ref_norm_data)
-    query_data_arr.append(query_norm_data)
+    query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for i
+                    in
+                    range(parameter_config['view_num'])]
 
-    ref_sm_arr = [get_similarity_matrix(data, parameter_config['k_neighbor']) for data in ref_data_arr]
-    query_sm_arr = [get_similarity_matrix(data, parameter_config['k_neighbor']) for data in query_data_arr]
-
-    
     if parameter_config['exp_mode'] == 2:
         # multi ref
-        mvccmodel = torch.load('model/mvccmodel_'+data_config['query_key']+".pt")
+        mvccmodel = torch.load('model/mvccmodel_' + data_config['query_key'] + ".pt")
         ref_label, query_label = mvccmodel.label_encoder.transform(ref_label), mvccmodel.label_encoder.transform(
             query_label)
         enc = mvccmodel.label_encoder
@@ -89,14 +85,13 @@ def main_process():
         mvccmodel = MVCCModel(
             lsd=parameter_config['lsd'],
             class_num=len(set(ref_label)),
-            view_num=len(ref_data_arr),
+            view_num=len(ref_sm_arr),
             save_path=data_config['root_path'],
             label_encoder=enc,
         )
-    gcn_input_dims = [data.shape[1] for data in ref_data_arr]
 
-    mvccmodel.fit(ref_data_arr, ref_sm_arr, ref_label,
-                  gcn_input_dim=gcn_input_dims, gcn_middle_out=parameter_config['gcn_middle_out'],
+    mvccmodel.fit(ref_norm_data, ref_sm_arr, ref_label,
+                  gcn_input_dim=ref_norm_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
                   lamb=parameter_config['lamb'], epoch_gcn=parameter_config['epoch_gcn'],
                   epoch_cpm_ref=parameter_config['epoch_cpm_ref'],
                   epoch_classifier=parameter_config['epoch_classifier'],
@@ -110,7 +105,7 @@ def main_process():
                   exp_mode=parameter_config['exp_mode'],
                   classifier_name=parameter_config['classifier_name']
                   )
-    pred = mvccmodel.predict(query_data_arr, query_sm_arr, parameter_config['epoch_cpm_query'],
+    pred = mvccmodel.predict(query_norm_data, query_sm_arr, parameter_config['epoch_cpm_query'],
                              parameter_config['k_neighbor'])
     pred_cpm = mvccmodel.predict_with_cpm()
 
@@ -125,7 +120,7 @@ def main_process():
     query_label = enc.inverse_transform(query_label)
     pred = enc.inverse_transform(pred)
     pred_cpm = enc.inverse_transform(pred_cpm)
-    cpm_acc = (pred_cpm==query_label).sum() / pred_cpm.shape[0]
+    cpm_acc = (pred_cpm == query_label).sum() / pred_cpm.shape[0]
     print("cpm acc is {:.3f}".format(cpm_acc))
     ret = {
         'ref_out': ref_out,

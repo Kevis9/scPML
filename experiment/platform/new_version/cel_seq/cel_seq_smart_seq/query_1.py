@@ -28,7 +28,7 @@ parameter_config = {
     'lamb': 1000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
-    'exp_mode': 3, # 1: start from scratch,
+    'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':"FC",
@@ -44,7 +44,7 @@ parameter_config = {
     'mask_rate': 0.1,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':False,
+    'show_result':True,
 }
 
 
@@ -59,7 +59,7 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=3000)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
