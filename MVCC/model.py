@@ -46,16 +46,17 @@ class CPMNets(torch.nn.Module):
         self.ref_labels = None
         self.query_h = None
         self.scaler = None
+        self.view_idx = [[i + sum(view_dim[:j]) for i in range(self.view_dim[j])] for j in range(len(self.view_num))]
         # self.classifiers = []
         for i in range(view_num):
             self.net.append(
                 nn.Sequential(
-                    nn.Linear(self.lsd, self.view_dim, device=device),
+                    nn.Linear(self.lsd, self.view_dim[i], device=device),
                     # nn.Dropout(0.5),
                 )
             )
 
-            nn.init.xavier_uniform_(self.net[i][0].weight)
+            # nn.init.xavier_uniform_(self.net[i][0].weight)
             # nn.init.xavier_uniform_(self.net[i][0].bias)
 
         # 初始化net
@@ -221,7 +222,7 @@ class CPMNets(torch.nn.Module):
             r_loss = 0
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[i](train_h),
-                                                  train_data[:, i * self.view_dim: (i + 1) * self.view_dim])
+                                                  train_data[:, self.view_idx[i]])
             # r_loss /= train_h.shape[0]
             optimizer_for_net.zero_grad()
             r_loss.backward()
@@ -237,7 +238,7 @@ class CPMNets(torch.nn.Module):
             r_loss = 0
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[i](train_h),
-                                                  train_data[:, i * self.view_dim: (i + 1) * self.view_dim])
+                                                  train_data[:, self.view_idx[i]])
 
             # c_loss = self.class_loss(train_h, train_label)
             c_loss = self.fisher_loss(train_h, train_label)
@@ -247,10 +248,10 @@ class CPMNets(torch.nn.Module):
             total_loss.backward()
             optimizer_for_train_h.step()
 
-            if epoch % 100 == 0:
-                print(
-                    'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
-                        epoch, r_loss.detach().item(), c_loss.detach().item()))
+            # if epoch % 100 == 0:
+            #     print(
+            #         'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
+            #             epoch, r_loss.detach().item(), c_loss.detach().item()))
 
             min_c_loss = 99999999
             min_c_loss_train_h = None
@@ -328,7 +329,6 @@ class CPMNets(torch.nn.Module):
             self.net[i].eval()
 
         # 数据准备
-
         min_r_loss = 999999999
         min_r_loss_test_h = None
         stop = 0
@@ -336,7 +336,7 @@ class CPMNets(torch.nn.Module):
             r_loss = 0
             for i in range(self.view_num):
                 r_loss += self.reconstrution_loss(self.net[i](h_test),
-                                                  data[:, i * self.view_dim: (i + 1) * self.view_dim])
+                                                  data[:, self.view_idx[i]])
             optimizer_for_query_h.zero_grad()
             r_loss.backward()
             optimizer_for_query_h.step()
@@ -487,7 +487,7 @@ class MVCCModel(nn.Module):
         embedding = model.get_embedding(graph_data).detach().cpu().numpy()
         return z_score_scale(embedding)
 
-    def fit(self, data, sm_arr, labels,
+    def fit(self, data_arr, sm_arr, labels,
             gcn_input_dim, gcn_middle_out,
             exp_mode=2,
             epoch_gcn=3000,
@@ -519,7 +519,7 @@ class MVCCModel(nn.Module):
                                      classifier_name=classifier_name
                                      ).to(device)
             for i in range(self.view_num):
-                self.gcn_models.append(scGNN(gcn_input_dim, gcn_middle_out).to(device))
+                self.gcn_models.append(scGNN(gcn_input_dim[i], gcn_middle_out[i]).to(device))
 
         elif exp_mode == 2:
             # Multi reference
@@ -545,28 +545,34 @@ class MVCCModel(nn.Module):
             训练自监督GCN, 获取ref views
         '''
         ref_views = []
-        masked_prob = min(len(data.nonzero()[0]) / (data.shape[0] * data.shape[1]), mask_rate)
 
-        print("gcn mask prob is {:.3f}".format(masked_prob))
-
-        masked_data, index_pair, masking_idx = mask_data(data, masked_prob)
 
         if exp_mode == 1:
             # start from sratch
             for i in range(self.view_num):
-                print(sm_arr[i].shape)
+                masked_prob = min(len(data_arr[i].nonzero()[0]) / (data_arr[i].shape[0] * data_arr[i].shape[1]), mask_rate)
+
+                print("gcn mask prob is {:.3f}".format(masked_prob))
+
+                masked_data, index_pair, masking_idx = mask_data(data_arr[i], masked_prob)
                 graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
 
-                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
+                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data_arr[i],
                                             index_pair, masking_idx, i,
                                             epoch_gcn, patience_for_gcn, self.model_path)
                 ref_views.append(embeddings)
         elif exp_mode == 2:
             # multi ref
             for i in range(self.view_num):
+                masked_prob = min(len(data_arr[i].nonzero()[0]) / (data_arr[i].shape[0] * data_arr[i].shape[1]),
+                                  mask_rate)
+
+                print("gcn mask prob is {:.3f}".format(masked_prob))
+
+                masked_data, index_pair, masking_idx = mask_data(data_arr[i], masked_prob)
                 graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
 
-                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
+                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data_arr[i],
                                             index_pair, masking_idx, i,
                                             epoch_gcn, patience_for_gcn, self.model_path)
                 ref_views.append(embeddings)
@@ -574,6 +580,11 @@ class MVCCModel(nn.Module):
         elif exp_mode == 3:
             # GCN exist, only to test rest part of experiment (CPM net, classifier)
             for i in range(self.view_num):
+                masked_prob = min(len(data_arr[i].nonzero()[0]) / (data_arr[i].shape[0] * data_arr[i].shape[1]),
+                                  mask_rate)
+                print("gcn mask prob is {:.3f}".format(masked_prob))
+                masked_data, index_pair, masking_idx = mask_data(data_arr[i], masked_prob)
+
                 graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
                 ref_views.append(z_score_scale(self.gcn_models[i].get_embedding(graph_data).detach().cpu().numpy()))
 
@@ -603,7 +614,7 @@ class MVCCModel(nn.Module):
         # pred = self.predict(None, None, query_views=query_views)
         # return pred
 
-    def predict(self, data, sm_arr, epoch_cpm_query=500, k_neighbor=3, patience_for_cpm_query=100):
+    def predict(self, data_arr, sm_arr, epoch_cpm_query=500, k_neighbor=3, patience_for_cpm_query=100):
         '''
             data: query(test)的表达矩阵（处理之后的，如mask，norm等）, ndarray
             sm_arr:
@@ -613,7 +624,7 @@ class MVCCModel(nn.Module):
         '''
         # trues = torch.from_numpy(trues).view(-1).float().to(device)
         # 获得Embedding
-        graphs = [construct_graph(data, sm_arr[i], k_neighbor)
+        graphs = [construct_graph(data_arr[i], sm_arr[i], k_neighbor)
                   for i in range(self.view_num)]
         query_views = []
 
@@ -630,11 +641,11 @@ class MVCCModel(nn.Module):
 
         self.query_h = self.cpm_model.train_query_h(query_data, epoch_cpm_query, patience_for_cpm_query)
 
-        query_h_numpy = self.query_h.detach().cpu().numpy()
-        self.scaler = self.cpm_model.scaler
-        query_h_numpy = self.scaler.transform(query_h_numpy)
+        # query_h_numpy = self.query_h.detach().cpu().numpy()
+        # self.scaler = self.cpm_model.scaler
+        # query_h_numpy = self.scaler.transform(query_h_numpy)
 
-        self.query_h = torch.from_numpy(query_h_numpy).float().to(device)
+        # self.query_h = torch.from_numpy(query_h_numpy).float().to(device)
         pred = self.cpm_model.classify(self.query_h)
 
         return pred.detach().cpu().numpy().reshape(-1)

@@ -90,33 +90,32 @@ def construct_graph_with_knn(data, k=2):
     g_data = geoData(x=feat, edge_index=edges)
     return g_data
 
+def get_similarity_matrix(data, k=2):
+    A = kneighbors_graph(data, k, mode='connectivity', include_self=False)  # 拿到Similarity矩阵
+    return A.todense()
+
+
 def construct_graph(data, similarity_mat, k):
     '''
     :param data: 表达矩阵 (被mask的矩阵)
     :param similarity_mat: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
-    # print(similarity_mat)
-    # print(np.sum(similarity_mat, axis=1))
+
     # 要对similarity_mat取前K个最大的weight作为neighbors
-    k_idxs = []
-    # 将对角线部分全部设为0, 避免自己做自己的邻居
-    similarity_mat[np.diag_indices_from(similarity_mat)] = 0
-    for i in range(similarity_mat.shape[0]):
-        top_k_idx = similarity_mat[i].argsort()[::-1][0:k]
-        k_idxs.append(top_k_idx)
-
-    # print(k_idxs)
-    similarity_mat = np.zeros(shape=similarity_mat.shape)
-    # 原来这一步真的很离谱，这里构造图的时候一直都错了，下面的for循环才是对的
-    # similarity_mat[:, k_idxs[i]] = 1
-
-    for i in range(similarity_mat.shape[0]):
-        similarity_mat[i, k_idxs[i]] = 1
+    # k_idxs = []
+    # # 将对角线部分全部设为0, 避免自己做自己的邻居
+    # similarity_mat[np.diag_indices_from(similarity_mat)] = 0
+    # for i in range(similarity_mat.shape[0]):
+    #     top_k_idx = similarity_mat[i].argsort()[::-1][0:k]
+    #     k_idxs.append(top_k_idx)
+    #
+    # similarity_mat = np.zeros(shape=similarity_mat.shape)
+    # # 原来这一步真的很离谱，这里构造图的时候一直都错了，下面的for循环才是对的
+    # for i in range(similarity_mat.shape[0]):
+    #     similarity_mat[i, k_idxs[i]] = 1
 
     similarity_mat = similarity_mat.astype(np.int64)
-    # print(np.sum(similarity_mat, axis=1))
-    # print(np.where(similarity_mat==1))
     graph = nx.from_numpy_matrix(np.matrix(similarity_mat))
 
 

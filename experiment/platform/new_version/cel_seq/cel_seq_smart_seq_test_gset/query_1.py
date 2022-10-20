@@ -5,7 +5,7 @@ sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
 from MVCC.util import sc_normalization, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, get_similarity_matrix
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -23,7 +23,7 @@ data_config = {
 }
 
 parameter_config = {
-    'gcn_middle_out': 1024,  # GCN中间层维数
+    'gcn_middle_out': [128, 128, 128, 128, 1024],  # GCN中间层维数
     'lsd': 1024,  # CPM_net latent space dimension
     'lamb': 1000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
@@ -63,12 +63,19 @@ def main_process():
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
-    ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
+    ref_data_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
                   range(4)]
-    query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
+    query_data_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     range(4)]
+
+    ref_data_arr.append(ref_norm_data)
+    query_data_arr.append(query_norm_data)
+
+    ref_sm_arr = [get_similarity_matrix(data, parameter_config['k_neighbor']) for data in ref_data_arr]
+    query_sm_arr = [get_similarity_matrix(data, parameter_config['k_neighbor']) for data in query_data_arr]
+
     
     if parameter_config['exp_mode'] == 2:
         # multi ref
@@ -82,13 +89,14 @@ def main_process():
         mvccmodel = MVCCModel(
             lsd=parameter_config['lsd'],
             class_num=len(set(ref_label)),
-            view_num=len(ref_sm_arr),
+            view_num=len(ref_data_arr),
             save_path=data_config['root_path'],
             label_encoder=enc,
-
         )
-    mvccmodel.fit(ref_norm_data, ref_sm_arr, ref_label,
-                  gcn_input_dim=ref_norm_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
+    gcn_input_dims = [data.shape[1] for data in ref_data_arr]
+
+    mvccmodel.fit(ref_data_arr, ref_sm_arr, ref_label,
+                  gcn_input_dim=gcn_input_dims, gcn_middle_out=parameter_config['gcn_middle_out'],
                   lamb=parameter_config['lamb'], epoch_gcn=parameter_config['epoch_gcn'],
                   epoch_cpm_ref=parameter_config['epoch_cpm_ref'],
                   epoch_classifier=parameter_config['epoch_classifier'],
@@ -102,7 +110,7 @@ def main_process():
                   exp_mode=parameter_config['exp_mode'],
                   classifier_name=parameter_config['classifier_name']
                   )
-    pred = mvccmodel.predict(query_norm_data, query_sm_arr, parameter_config['epoch_cpm_query'],
+    pred = mvccmodel.predict(query_data_arr, query_sm_arr, parameter_config['epoch_cpm_query'],
                              parameter_config['k_neighbor'])
     pred_cpm = mvccmodel.predict_with_cpm()
 
