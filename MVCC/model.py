@@ -631,11 +631,11 @@ class MVCCModel(nn.Module):
 
         self.query_h = self.cpm_model.train_query_h(query_data, epoch_cpm_query, patience_for_cpm_query)
 
-        # query_h_numpy = self.query_h.detach().cpu().numpy()
-        # self.scaler = self.cpm_model.scaler
-        # query_h_numpy = self.scaler.transform(query_h_numpy)
+        query_h_numpy = self.query_h.detach().cpu().numpy()
+        self.scaler = self.cpm_model.scaler
+        query_h_numpy = self.scaler.transform(query_h_numpy)
 
-        # self.query_h = torch.from_numpy(query_h_numpy).float().to(device)
+        self.query_h = torch.from_numpy(query_h_numpy).float().to(device)
         pred = self.cpm_model.classify(self.query_h)
 
         return pred.detach().cpu().numpy().reshape(-1)

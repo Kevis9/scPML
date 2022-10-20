@@ -64,7 +64,7 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=3000)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
