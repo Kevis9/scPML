@@ -5,12 +5,12 @@ import pandas as pd
 1. 细胞类型取交集， 可以左连接(可选)
 2. 基因取交集，去掉表达为0的基因(可选)
 '''
-save_path = 'experiment/platform/new_version/seq_well_drop_seq/data'
+save_path = 'experiment/species/gse_emtab_common_type/human_mouse/data'
 
-raw_data_save_path = 'experiment/platform/new_version/seq_well_drop_seq/raw_data'
+# raw_data_save_path= 'e/xperiment/platform/new_version/seq_well_drop_seq/raw_data'
 
 
-ref_path = 'E:/yuanhuang/kevislin/data/platform/Seq_Well'
+ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/human'
 
 # query1_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
@@ -19,7 +19,7 @@ ref_path = 'E:/yuanhuang/kevislin/data/platform/Seq_Well'
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/platform/DropSeq',
+    'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/mouse',
     # 'E:/yuanhuang/kevislin/data/platform/GSE85241',
     # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
@@ -27,9 +27,9 @@ query_paths = [
 
 ]
 flags = {
-    'PBMC query': True,
-    'PBMC ref' : True,
-    'E-MTAB': False,
+    'PBMC query': False,
+    'PBMC ref' : False,
+    'E-MTAB': False, #旧的EM用
     'E-MTAB query': False,
     'get_rid_of_gene':False,
 }

@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='[MVCC]')
 parser.add_argument('--path', type=str, required=False, help='实验工作目录')
 args = parser.parse_args()
 
-args.path = r'..\experiment\platform\new_version\cel_seq\cel_seq_smart_seq_test_gset'
+args.path = r'..\experiment\species\gse_emtab_common_type\human_mouse'
 
 data_path = os.path.join(args.path, 'data')
 ref_path = os.path.join(data_path, 'ref')

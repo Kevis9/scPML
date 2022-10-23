@@ -193,7 +193,7 @@ main <- function(path, ref_key, query_key, method){
 }
 final_acc = c()
 
-path = '../experiment/platform/new_version/84133_5061/raw_data'
+path = '../experiment/species/gse_emtab_common_type/human_mouse/data'
 acc = c(
         main(path, '1', '1', 'seurat'),
         main(path, '1', '1', 'singler'),

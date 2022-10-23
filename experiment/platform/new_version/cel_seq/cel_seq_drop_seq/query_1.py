@@ -25,24 +25,24 @@ data_config = {
 parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
-    'lamb': 3000,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
-    'epoch_cpm_query': 50,
-    'exp_mode': 1, # 1: start from scratch,
+    'lamb': 2000,  # classfication loss的权重
+    'epoch_cpm_ref': 3000,
+    'epoch_cpm_query': 2000,
+    'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'nf': 3000,
     'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
-    'epoch_gcn': 6000,  # Huang gcn 训练的epoch
+    'epoch_gcn': 1000,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 50, # cpm train ref 早停patience
     'patience_for_cpm_query': 50, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.1,
+    'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
     'show_result':False,

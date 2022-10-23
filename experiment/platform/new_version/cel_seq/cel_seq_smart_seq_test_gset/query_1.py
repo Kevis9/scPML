@@ -36,7 +36,7 @@ parameter_config = {
     # 不太重要参数
     'nf': 3000,
     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
-    'epoch_gcn': 1000,  # Huang gcn 训练的epoch
+    'epoch_gcn': 3000,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制

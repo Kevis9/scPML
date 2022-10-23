@@ -1,7 +1,7 @@
 import sys
 import torch
 
-sys.path.append('../..')
+sys.path.append('../../..')
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
@@ -17,29 +17,29 @@ import wandb
 data_config = {
     # 'root_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1',
     'root_path': '.',
-    'ref_name': 'mouse',
+    'ref_name': 'cel_seq2',
     # 'query_name': 'E_MTAB_5061: human',
-    'query_name': 'human',
+    'query_name': 'all',
     'ref_key': 'ref_1',
     'query_key': 'query_1',
-    'project': 'species',
+    'project': 'platform',
 }
 
 parameter_config = {
-    'gcn_middle_out': 512,  # GCN中间层维数
-    'lsd': 2048,  # CPM_net latent space dimension
-    'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 1000,
-    'epoch_cpm_query': 50,
-    'exp_mode': 3, # 1: start from scratch,
+    'gcn_middle_out': 1024,  # GCN中间层维数
+    'lsd': 512,  # CPM_net latent space dimension
+    'lamb': 3000,  # classfication loss的权重
+    'epoch_cpm_ref': 3000,
+    'epoch_cpm_query': 1000,
+    'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':"FC",
     # 不太重要参数
-    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 500,  # Huang gcn 训练的epoch
+    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+    'epoch_gcn': 1000,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
-    'patience_for_classifier': 10,
+    'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
     'patience_for_cpm_query': 200, # query h 早停patience
@@ -64,8 +64,7 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
@@ -76,8 +75,7 @@ def main_process():
                     i in
                     range(4)]
     # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
-    # query_sm_arr.append(construct_graph_with_knn(query_norm_data))
-
+    # query_sm_arr.append(construct_graph_with_knn(ref_norm_data))
     # ref_sm_arr = [ref_sm_arr[0], ref_sm_arr[2], ref_sm_arr[4]]
     # query_sm_arr = [query_sm_arr[0], query_sm_arr[2], query_sm_arr[4]]
     if parameter_config['exp_mode'] == 2:
@@ -95,6 +93,7 @@ def main_process():
             view_num=len(ref_sm_arr),
             save_path=data_config['root_path'],
             label_encoder=enc,
+
         )
     mvccmodel.fit(ref_norm_data, ref_sm_arr, ref_label,
                   gcn_input_dim=ref_norm_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
@@ -148,8 +147,10 @@ def predict():
     model = torch.load('model/mvccmodel_' + "query_1" + ".pt")
     max_acc = 0
     acc_arr = []
+    ref_data, ref_label = read_data_label_h5(data_config['root_path'], data_config['ref_key'])
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
-    query_norm_data = sc_normalization(query_data)
+    _, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
+    # query_norm_data = sc_normalization(query_data)
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     range(4)]
@@ -210,7 +211,8 @@ for i in range(cycle):
     acc_arr.append(acc)
     if acc > max_acc:
         max_acc = acc
-        # torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['query_key'] + ".pt")
+        print("save mvcc model")
+        torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['query_key'] + ".pt")
 
 print("After {:} cycle, mean acc is {:.3f}, max acc is {:.3f}".format(cycle, sum(acc_arr) / len(acc_arr), max_acc))
 print(acc_arr)

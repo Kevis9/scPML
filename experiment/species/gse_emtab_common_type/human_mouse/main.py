@@ -26,25 +26,25 @@ data_config = {
 }
 
 parameter_config = {
-    'gcn_middle_out': 512,  # GCN中间层维数
-    'lsd': 128,  # CPM_net latent space dimension
-    'lamb': 2000,  # classfication loss的权重
-    'epoch_cpm_ref': 400,
+    'gcn_middle_out': 256,  # GCN中间层维数
+    'lsd': 2048,  # CPM_net latent space dimension
+    'lamb': 3000,  # classfication loss的权重
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
-    'classifier_name':"FC",
+    'classifier_name':"GCN",
     # 不太重要参数
-    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
-    'epoch_gcn': 300,  # Huang gcn 训练的epoch
+    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
+    'epoch_gcn': 500,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 10,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
     'patience_for_cpm_query': 200, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.1,
+    'mask_rate': 0.01,
     'gamma': 1,
     'test_size': 0.2,
 }
@@ -63,16 +63,10 @@ def main_process():
     ref_data, ref_label = read_data_label_h5(data_config['root_path'], data_config['ref_key'])
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
-
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
-    # ref_norm_data = sc_normalization(ref_data)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)    # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
-    ref_norm_data = ref_data
-    query_norm_data = query_data
-    # np.savetxt('ref_data.csv', ref_norm_data, delimiter=',')
-    # np.savetxt('query_data.csv',query_norm_data, delimiter=',')
-    # exit()
+
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
                   range(4)]
@@ -130,10 +124,7 @@ def main_process():
     query_label = enc.inverse_transform(query_label)
     pred = enc.inverse_transform(pred)
     pred_cpm = enc.inverse_transform(pred_cpm)
-    # from sklearn.metrics import accuracy_score
-
     cpm_acc = (pred_cpm==query_label).sum() / pred_cpm.shape[0]
-    # cpm_acc = accuracy_score(query_label, pred)
     print("cpm acc is {:.3f}".format(cpm_acc))
     ret = {
         'ref_out': ref_out,
@@ -146,7 +137,7 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    show_result(ret, "result")
+    # show_result(ret, "result")
     run.finish()
     return ret
 

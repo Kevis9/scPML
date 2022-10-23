@@ -251,33 +251,33 @@ class CPMNets(torch.nn.Module):
             total_loss.backward()
             optimizer_for_train_h.step()
 
-            # if epoch % 100 == 0:
-            #     print(
-            #         'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
-            #             epoch, r_loss.detach().item(), c_loss.detach().item()))
+            if epoch % 100 == 0:
+                print(
+                    'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
+                        epoch, r_loss.detach().item(), c_loss.detach().item()))
 
 
             # 早停法
-            if c_loss < min_c_loss:
-                stop = 0
-                min_c_loss = c_loss
-                min_c_loss_train_h = train_h.detach().clone()
-                for i in range(self.view_num):
-                    torch.save(self.net[i], os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
-                if epoch % 100 == 0:
-                    print(
-                        'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
-                            epoch, r_loss.detach().item(), c_loss.detach().item()))
-            else:
-                stop += 1
-                if stop > patience_for_cpm_ref:
-                    print("CPM train stop at epoch {:}, min classification loss is {:.3f}".format(epoch, min_c_loss))
-                    break
-
-        # 重新加载保存好的reconstruction net以及最优的train_h
-        for i in range(self.view_num):
-            self.net[i] = torch.load(os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
-        train_h = min_c_loss_train_h.detach().clone()
+        #     if c_loss < min_c_loss:
+        #         stop = 0
+        #         min_c_loss = c_loss
+        #         min_c_loss_train_h = train_h.detach().clone()
+        #         for i in range(self.view_num):
+        #             torch.save(self.net[i], os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
+        #         if epoch % 100 == 0:
+        #             print(
+        #                 'epoch %d: Reconstruction loss = %.3f, classification loss = %.3f.' % (
+        #                     epoch, r_loss.detach().item(), c_loss.detach().item()))
+        #     else:
+        #         stop += 1
+        #         if stop > patience_for_cpm_ref:
+        #             print("CPM train stop at epoch {:}, min classification loss is {:.3f}".format(epoch, min_c_loss))
+        #             break
+        #
+        # # 重新加载保存好的reconstruction net以及最优的train_h
+        # for i in range(self.view_num):
+        #     self.net[i] = torch.load(os.path.join(self.save_path, 'cpm_recon_net_' + str(i) + '.pt'))
+        # train_h = min_c_loss_train_h.detach().clone()
 
         '''
             classifier 训练
