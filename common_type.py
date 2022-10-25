@@ -5,12 +5,12 @@ import pandas as pd
 1. 细胞类型取交集， 可以左连接(可选)
 2. 基因取交集，去掉表达为0的基因(可选)
 '''
-save_path = 'experiment/species/gse_emtab_common_type/human_mouse/data'
+save_path = 'experiment/platform/new_version/84133_81608/data'
 
 # raw_data_save_path= 'e/xperiment/platform/new_version/seq_well_drop_seq/raw_data'
 
 
-ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/human'
+ref_path = 'E:/yuanhuang/kevislin/data/species/GSE84133/raw_human_data'
 
 # query1_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
@@ -19,7 +19,7 @@ ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/human
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/mouse',
+    'E:/yuanhuang/kevislin/data/platform/GSE81608',
     # 'E:/yuanhuang/kevislin/data/platform/GSE85241',
     # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',

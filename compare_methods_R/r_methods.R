@@ -19,11 +19,12 @@ read_label <- function(path) {
 
 read_ref_query_data_label <- function(path, ref_key, query_key) {
 
-    ref_data_path = paste(path, 'ref', paste('data_', ref_key, '.csv', sep=''), sep='/')
-    ref_label_path = paste(path, 'ref', paste('label_', ref_key, '.csv', sep=''), sep='/')
-    query_data_path = paste(path, 'query', paste('data_', query_key, '.csv', sep=''), sep='/')
-    query_label_path = paste(path, 'query', paste('label_', query_key, '.csv', sep=''), sep='/')
-
+    ref_data_path = paste(path, 'query', paste('data_', ref_key, '.csv', sep=''), sep='/')
+    ref_label_path = paste(path, 'query', paste('label_', ref_key, '.csv', sep=''), sep='/')
+    query_data_path = paste(path, 'ref', paste('data_', query_key, '.csv', sep=''), sep='/')
+    query_label_path = paste(path, 'ref', paste('label_', query_key, '.csv', sep=''), sep='/')
+#     print(ref_data_path)
+#     print(query_data_path)
     ref_data = t(read_data(ref_data_path)) # gene x cell
     ref_label = read_label(ref_label_path)
     query_data = t(read_data(query_data_path)) # gene x cell
@@ -85,13 +86,13 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label) {
         data <- NormalizeData(data)
         data <- FindVariableFeatures(data,
                                        selection.method = "vst",
-                                       nfeatures=2000)
+                                       nfeature=2000)
         return(data)})
 
     reference.object <- objs1[[1]];
     query.object <- objs1[[2]]
-#     reference.object <- ScaleData(reference.object, verbose = FALSE)
-#     reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
+    reference.object <- ScaleData(reference.object, verbose = FALSE)
+    reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
 
     reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30)
     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
@@ -148,7 +149,7 @@ chetah_pred <- function(ref_data, query_data, ref_label) {
 
     reference <- SingleCellExperiment(assays = list(counts = ref_data),
                                          colData = ref_ct)
-    assay(reference, "counts") <- apply(assay(reference, "counts"), 2, function(column) log2((column/sum(column) * 100000) + 1))
+#     assay(reference, "counts") <- apply(assay(reference, "counts"), 2, function(column) log2((column/sum(column) * 100000) + 1))
     # aka query
     input <- SingleCellExperiment(assays = list(counts = query_data))
 
@@ -193,7 +194,7 @@ main <- function(path, ref_key, query_key, method){
 }
 final_acc = c()
 
-path = '../experiment/species/gse_emtab_common_type/human_mouse/data'
+path = '../experiment/platform/new_version/84133_81608/data'
 acc = c(
         main(path, '1', '1', 'seurat'),
         main(path, '1', '1', 'singler'),

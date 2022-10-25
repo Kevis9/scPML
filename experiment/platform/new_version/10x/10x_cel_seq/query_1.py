@@ -14,33 +14,32 @@ import wandb
 
 # 数据配置
 data_config = {
-    'root_path': '.', # data.h5 path
+    'root_path': '../../cel_seq/cel_seq_10x', # data.h5 path
     'ref_name': 'cel_seq2',
-    'query_name': 'dropseq',
-    'ref_key': 'ref_1',
-    'query_key': 'query_1',
+    'query_name': 'smart_seq',
+    'ref_key': 'query_1',
+    'query_key': 'ref_1',
     'project': 'platform',
 }
 
 parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
-    'lsd': 256,  # CPM_net latent space dimension
-    'lamb': 1000,  # classfication loss的权重
-    'epoch_cpm_ref': 1000,
+    'lsd': 512,  # CPM_net latent space dimension
+    'lamb': 3000,  # classfication loss的权重
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
-    'nf': 2000,
-    'classifier_name':"GCN",
+    'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
     'epoch_gcn': 1000,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
-    'patience_for_cpm_ref': 50, # cpm train ref 早停patience
-    'patience_for_cpm_query': 50, # query h 早停patience
+    'patience_for_cpm_ref': 300, # cpm train ref 早停patience
+    'patience_for_cpm_query': 200, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
     'mask_rate': 0.3,
     'gamma': 1,
@@ -60,14 +59,7 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
-
-    # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
-    # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
-
-
-
-    # exit()
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
@@ -91,7 +83,7 @@ def main_process():
             lsd=parameter_config['lsd'],
             class_num=len(set(ref_label)),
             view_num=len(ref_sm_arr),
-            save_path=data_config['root_path'],
+            save_path=".",
             label_encoder=enc,
 
         )

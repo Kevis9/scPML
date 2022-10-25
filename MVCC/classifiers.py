@@ -139,19 +139,19 @@ class CNNClassifier(Classifier):
             nn.Conv1d(in_channels=1, out_channels=4, kernel_size=3, stride=1),
             nn.ReLU(),
             # nn.MaxPool1d(2, 2),
-            nn.Conv1d(4, 8, 3, 1),
+            nn.Conv1d(4, 8, 2, 1),
             nn.ReLU(),
-            nn.Conv1d(8, 16, 3, 1),
-            nn.ReLU(),
-            nn.Conv1d(16, 32, 3, 1),
+            nn.Conv1d(8, 16, 2, 1),
+            # nn.ReLU(),
+            # nn.Conv1d(16, 32, 3, 1),
             nn.Flatten()
         )
-        middle_out = 16128
+        middle_out = 8128
 
         self.fcn = nn.Sequential(
-            nn.Linear(middle_out, 256),
+            nn.Linear(middle_out, 128),
             nn.ReLU(),
-            nn.Linear(256, class_num)
+            nn.Linear(128, class_num)
             # nn.Linear(256, class_num),
         )
 

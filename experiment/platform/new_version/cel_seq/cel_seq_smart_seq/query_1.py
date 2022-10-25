@@ -24,10 +24,10 @@ data_config = {
 
 parameter_config = {
     'gcn_middle_out': 2048,  # GCN中间层维数
-    'lsd': 1024,  # CPM_net latent space dimension
-    'lamb': 1000,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
-    'epoch_cpm_query': 50,
+    'lsd': 512,  # CPM_net latent space dimension
+    'lamb': 2000,  # classfication loss的权重
+    'epoch_cpm_ref': 1000,
+    'epoch_cpm_query': 300,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
@@ -44,7 +44,7 @@ parameter_config = {
     'mask_rate': 0.1,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':True,
+    'show_result':False,
 }
 
 

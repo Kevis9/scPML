@@ -31,7 +31,7 @@ parameter_config = {
     'lamb': 3000,  # classfication loss的权重
     'epoch_cpm_ref': 3000,
     'epoch_cpm_query': 500,
-    'exp_mode': 3, # 1: start from scratch,
+    'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':'CNN',

@@ -122,7 +122,7 @@ main<-function(paName, scName,paPath, save_path){
 scName = 'yan'
 paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\new"
 # ref 1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\dropseq_10x\\data\\ref'
+data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\84133_81608\\data\\ref'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
@@ -137,7 +137,7 @@ main('yan', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 # main('de novo pathway', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 
 # query_1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\dropseq_10x\\data\\query'
+data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\new_version\\84133_81608\\data\\query'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置

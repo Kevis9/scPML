@@ -14,27 +14,27 @@ import wandb
 
 # 数据配置
 data_config = {
-    'root_path': '.', # data.h5 path
+    'root_path': '../84133_81608', # data.h5 path
     'ref_name': 'cel_seq2',
     'query_name': 'dropseq',
-    'ref_key': 'ref_1',
-    'query_key': 'query_1',
+    'ref_key': 'query_1',
+    'query_key': 'ref_1',
     'project': 'platform',
 }
 
 parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
-    'lsd': 256,  # CPM_net latent space dimension
-    'lamb': 1000,  # classfication loss的权重
-    'epoch_cpm_ref': 1000,
+    'lsd': 512,  # CPM_net latent space dimension
+    'lamb': 3000,  # classfication loss的权重
+    'epoch_cpm_ref': 400,
     'epoch_cpm_query': 50,
-    'exp_mode': 3, # 1: start from scratch,
+    'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'nf': 2000,
-    'classifier_name':"GCN",
+    'classifier_name':"FC",
     # 不太重要参数
-    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
     'epoch_gcn': 1000,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
@@ -42,10 +42,10 @@ parameter_config = {
     'patience_for_cpm_ref': 50, # cpm train ref 早停patience
     'patience_for_cpm_query': 50, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.3,
+    'mask_rate': 0.01,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':False,
+    'show_result': False,
 }
 
 
@@ -91,7 +91,7 @@ def main_process():
             lsd=parameter_config['lsd'],
             class_num=len(set(ref_label)),
             view_num=len(ref_sm_arr),
-            save_path=data_config['root_path'],
+            save_path='.',
             label_encoder=enc,
 
         )
