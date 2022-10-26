@@ -31,7 +31,7 @@ parameter_config = {
     'lamb': 5000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
-    'exp_mode': 1, # 1: start from scratch,
+    'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':"FC",
@@ -138,7 +138,7 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    # show_result(ret, "result")
+    show_result(ret, "result")
     run.finish()
     return ret
 

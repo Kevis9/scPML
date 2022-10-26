@@ -137,7 +137,7 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    # show_result(ret, "result")
+    show_result(ret, "result")
     run.finish()
     return ret
 

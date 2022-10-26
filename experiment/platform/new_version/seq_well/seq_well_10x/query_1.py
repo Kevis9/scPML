@@ -44,7 +44,7 @@ parameter_config = {
     'mask_rate': 0.1,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':False,
+    'show_result':True,
 }
 
 

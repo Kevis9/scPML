@@ -3,6 +3,7 @@ import torch
 
 sys.path.append('../..')
 import os
+os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
 from MVCC.util import sc_normalization, construct_graph_with_knn,\
@@ -20,33 +21,34 @@ data_config = {
     'ref_name': 'mouse',
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'human',
-    'ref_key': 'ref_1',
-    'query_key': 'query_1',
+    'ref_key': 'query_1',    #注意这里为了方便没有把h5的数据换过来
+    'query_key': 'ref_1',
     'project': 'species',
 }
 
 parameter_config = {
-    'gcn_middle_out': 256,  # GCN中间层维数
-    'lsd': 2048,  # CPM_net latent space dimension
-    'lamb': 3000,  # classfication loss的权重
+    'gcn_middle_out': 1024,  # GCN中间层维数
+    'lsd': 512,  # CPM_net latent space dimension
+    'lamb': 5000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
-    'classifier_name':"GCN",
+    'classifier_name':"FC",
     # 不太重要参数
-    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 500,  # Huang gcn 训练的epoch
+    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+    'epoch_gcn': 800,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
-    'patience_for_classifier': 10,
+    'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
     'patience_for_cpm_query': 200, # query h 早停patience
-    'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.01,
+    'k_neighbor': 5,  # GCN 图构造的时候k_neighbor参数
+    'mask_rate': 0.1,
     'gamma': 1,
     'test_size': 0.2,
+    'show_result':False,
 }
 acc_arr = []
 max_acc = 0
@@ -64,7 +66,8 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)    # ref_norm_data = sc_normalization(ref_data)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
+    # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
@@ -74,8 +77,7 @@ def main_process():
                     i in
                     range(4)]
     # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
-    # query_sm_arr.append(construct_graph_with_knn(query_norm_data))
-
+    # query_sm_arr.append(construct_graph_with_knn(ref_norm_data))
     # ref_sm_arr = [ref_sm_arr[0], ref_sm_arr[2], ref_sm_arr[4]]
     # query_sm_arr = [query_sm_arr[0], query_sm_arr[2], query_sm_arr[4]]
     if parameter_config['exp_mode'] == 2:
@@ -93,6 +95,7 @@ def main_process():
             view_num=len(ref_sm_arr),
             save_path=data_config['root_path'],
             label_encoder=enc,
+
         )
     mvccmodel.fit(ref_norm_data, ref_sm_arr, ref_label,
                   gcn_input_dim=ref_norm_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
@@ -137,7 +140,9 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    show_result(ret, "result")
+    if parameter_config['show_result']:
+        show_result(ret, "result")
+    # show_result(ret, "result")
     run.finish()
     return ret
 

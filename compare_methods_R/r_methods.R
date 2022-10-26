@@ -19,10 +19,10 @@ read_label <- function(path) {
 
 read_ref_query_data_label <- function(path, ref_key, query_key) {
 
-    ref_data_path = paste(path, 'query', paste('data_', ref_key, '.csv', sep=''), sep='/')
-    ref_label_path = paste(path, 'query', paste('label_', ref_key, '.csv', sep=''), sep='/')
-    query_data_path = paste(path, 'ref', paste('data_', query_key, '.csv', sep=''), sep='/')
-    query_label_path = paste(path, 'ref', paste('label_', query_key, '.csv', sep=''), sep='/')
+    ref_data_path = paste(path, 'ref', paste('data_', ref_key, '.csv', sep=''), sep='/')
+    ref_label_path = paste(path, 'ref', paste('label_', ref_key, '.csv', sep=''), sep='/')
+    query_data_path = paste(path, 'query', paste('data_', query_key, '.csv', sep=''), sep='/')
+    query_label_path = paste(path, 'query', paste('label_', query_key, '.csv', sep=''), sep='/')
 #     print(ref_data_path)
 #     print(query_data_path)
     ref_data = t(read_data(ref_data_path)) # gene x cell
@@ -49,7 +49,7 @@ save_prediction <- function(pred, path) {
     write.table(predictions$predicted.id, file=path, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
 }
 
-seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label) {
+seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label, save_path=".") {
     # all input data must be matrix
     # reurn prediction (matrix)
     ref_data = as.data.frame(ref_data)
@@ -94,20 +94,30 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label) {
     reference.object <- ScaleData(reference.object, verbose = FALSE)
     reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
 
-    reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30)
-    predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
+    reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30, reference.reduction = "pca")
 
-    return (as.matrix(predictions$predicted.id))
+    reference.object = RunUMAP(reference.object, dims = 1:30, reduction = "pca", return.model = TRUE)
+#     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
+    query <-  MapQuery(anchorset = reference.anchors, reference = reference.object, query = query.object,
+    refdata = list(celltype = "type"), reference.reduction = "pca", reduction.model = "umap")
+    pred = query$predicted.celltype
+
+    ref_umap_data = reference.object@reductions$umap@cell.embeddings
+    query_umap_data = query@reductions$ref.umap@cell.embeddings
+
+#     write.csv(ref_umap_data, paste(save_path, "ref_embeddings_2d.csv", sep='/'))
+#     write.csv(query_umap_data, paste(save_path, "query_embeddings_2d.csv", sep='/'))
+#     write.csv(ref_label,paste(save_path, "ref_label.csv", sep='/'), row.names=FALSE)
+#     write.csv(pred, paste(save_path, "query_pred.csv", sep='/'), row.names=FALSE)
+    return (as.matrix(pred))
 }
 
 single_r_pred <- function(ref_data, query_data, ref_label) {
     # all input must be matrix
     # Single R can take matrix as input, reference data must be log-normalized
 #     ref_sce = SingleCellExperiment(assays = list(normcounts = as.matrix(ref_data)))
-
 #     ref_data <- as.matrix(log2(SingleCellExperiment::normcounts(ref_sce) + 1))
-
-    # ref_data <- scater::logNormCounts(ref_data)
+#     ref_data <- scater::logNormCounts(ref_data)
     pred <- SingleR(test = query_data, ref = ref_data, labels = ref_label)
     pred <- pred$labels
     return (pred)
@@ -136,7 +146,7 @@ scmap_pred <- function(ref_data, query_data, ref_label) {
 
     scmapCluster_results <- scmapCluster(projection = query_sce,
                                          index_list = list(yan = metadata(ref_sce)$scmap_cluster_index),
-                                         threshold=0)
+                                         threshold=0.5)
     pred <- scmapCluster_results$scmap_cluster_labs
     return (as.matrix(pred))
 
@@ -160,7 +170,7 @@ chetah_pred <- function(ref_data, query_data, ref_label) {
     return (as.matrix(pred))
 }
 
-main <- function(path, ref_key, query_key, method){
+main <- function(path, ref_key, query_key, method, save_path){
 
     # return accuracy
     print(path)
@@ -173,7 +183,7 @@ main <- function(path, ref_key, query_key, method){
 
     print("数据读取完成")
     if(method == 'seurat') {
-        pred = seurat_pca_pred(ref_data, query_data, ref_label, query_label)
+        pred = seurat_pca_pred(ref_data, query_data, ref_label, query_label, save_path)
 
         acc = acc_score(pred, query_label)
     }
@@ -194,13 +204,24 @@ main <- function(path, ref_key, query_key, method){
 }
 final_acc = c()
 
-path = '../experiment/platform/new_version/84133_81608/data'
+path = '../experiment/species_v2/gse/human_mouse/data'
+# save_path = 'result/gse/mouse_human'
 acc = c(
-        main(path, '1', '1', 'seurat'),
-        main(path, '1', '1', 'singler'),
-        main(path, '1', '1', 'scmap'),
-        main(path, '1', '1', 'chetah')
+#         main(path, '1', '1', 'seurat'),
+#         main(path, '1', '1', 'singler'),
+        main(path, '1', '1', 'scmap')
+#         main(path, '1', '1', 'chetah')
 )
-acc = setNames(acc, c('seurat', 'singler', 'scamp', 'chetah'))
+# acc = setNames(acc, c('seurat', 'singler', 'scamp', 'chetah'))
 
 print(acc)
+
+
+path = '../experiment/species_v2/gse_emtab/mouse_human/data'
+# save_path = 'result/gse/mouse_human'
+acc = c(
+#         main(path, '1', '1', 'seurat'),
+#         main(path, '1', '1', 'singler'),
+        main(path, '1', '1', 'scmap')
+#         main(path, '1', '1', 'chetah')
+)

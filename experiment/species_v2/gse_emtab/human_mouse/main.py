@@ -3,6 +3,7 @@ import torch
 
 sys.path.append('../..')
 import os
+os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
 from MVCC.util import sc_normalization, construct_graph_with_knn,\
@@ -20,15 +21,15 @@ data_config = {
     'ref_name': 'mouse',
     # 'query_name': 'E_MTAB_5061: human',
     'query_name': 'human',
-    'ref_key': 'ref_1',
-    'query_key': 'query_1',
+    'ref_key': 'query_1',
+    'query_key': 'ref_1',
     'project': 'species',
 }
 
 parameter_config = {
     'gcn_middle_out': 256,  # GCN中间层维数
     'lsd': 2048,  # CPM_net latent space dimension
-    'lamb': 3000,  # classfication loss的权重
+    'lamb': 4000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
@@ -137,7 +138,7 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    show_result(ret, "result")
+    # show_result(ret, "result")
     run.finish()
     return ret
 

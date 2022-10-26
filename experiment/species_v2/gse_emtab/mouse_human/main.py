@@ -3,6 +3,7 @@ import torch
 
 sys.path.append('../..')
 import os
+os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
 from MVCC.util import sc_normalization, construct_graph_with_knn,\
@@ -26,17 +27,17 @@ data_config = {
 }
 
 parameter_config = {
-    'gcn_middle_out': 256,  # GCN中间层维数
-    'lsd': 2048,  # CPM_net latent space dimension
-    'lamb': 3000,  # classfication loss的权重
+    'gcn_middle_out': 512,  # GCN中间层维数
+    'lsd': 6000,  # CPM_net latent space dimension
+    'lamb': 5000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
-    'classifier_name':"GCN",
+    'classifier_name':"FC",
     # 不太重要参数
-    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
+    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
     'epoch_gcn': 500,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 10,
@@ -44,7 +45,7 @@ parameter_config = {
     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
     'patience_for_cpm_query': 200, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.01,
+    'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
 }
@@ -64,7 +65,7 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)    # ref_norm_data = sc_normalization(ref_data)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=3000)    # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
