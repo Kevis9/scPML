@@ -146,7 +146,7 @@ scmap_pred <- function(ref_data, query_data, ref_label) {
 
     scmapCluster_results <- scmapCluster(projection = query_sce,
                                          index_list = list(yan = metadata(ref_sce)$scmap_cluster_index),
-                                         threshold=0.5)
+                                         threshold=0)
     pred <- scmapCluster_results$scmap_cluster_labs
     return (as.matrix(pred))
 
@@ -184,7 +184,6 @@ main <- function(path, ref_key, query_key, method, save_path){
     print("数据读取完成")
     if(method == 'seurat') {
         pred = seurat_pca_pred(ref_data, query_data, ref_label, query_label, save_path)
-
         acc = acc_score(pred, query_label)
     }
     if(method == 'singler') {
@@ -199,29 +198,20 @@ main <- function(path, ref_key, query_key, method, save_path){
         pred = chetah_pred(ref_data, query_data, ref_label)
         acc = acc_score(pred, query_label)
     }
-
+    write.csv(pred, paste(method, ".csv", sep=''))
     return (acc)
 }
 final_acc = c()
 
-path = '../experiment/species_v2/gse/human_mouse/data'
-# save_path = 'result/gse/mouse_human'
+
+path = '../experiment/platform/new_version/seq_well/seq_well_10x/data'
+save_path = 'result/gse_emtab/human_mouse'
 acc = c(
-#         main(path, '1', '1', 'seurat'),
+        main(path, '1', '1', 'seurat', save_path)
 #         main(path, '1', '1', 'singler'),
-        main(path, '1', '1', 'scmap')
+#         main(path, '1', '1', 'scmap'),
 #         main(path, '1', '1', 'chetah')
 )
 # acc = setNames(acc, c('seurat', 'singler', 'scamp', 'chetah'))
 
 print(acc)
-
-
-path = '../experiment/species_v2/gse_emtab/mouse_human/data'
-# save_path = 'result/gse/mouse_human'
-acc = c(
-#         main(path, '1', '1', 'seurat'),
-#         main(path, '1', '1', 'singler'),
-        main(path, '1', '1', 'scmap')
-#         main(path, '1', '1', 'chetah')
-)

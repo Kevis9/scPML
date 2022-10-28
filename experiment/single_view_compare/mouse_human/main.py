@@ -3,6 +3,7 @@ import torch
 
 sys.path.append('../..')
 import os
+os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
 from MVCC.util import sc_normalization, construct_graph_with_knn,\
@@ -71,10 +72,10 @@ def main_process():
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(4)]
+                  range(3, 4)]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    range(4)]
+                    range(3, 4)]
     # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
     # query_sm_arr.append(construct_graph_with_knn(query_norm_data))
 
@@ -139,7 +140,7 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    show_result(ret, "result")
+    # show_result(ret, "result")
     run.finish()
     return ret
 

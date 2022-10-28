@@ -28,7 +28,7 @@ parameter_config = {
     'lamb': 5000,  # classfication loss的权重
     'epoch_cpm_ref': 1000,
     'epoch_cpm_query': 50,
-    'exp_mode': 1, # 1: start from scratch,
+    'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':"FC",
@@ -44,7 +44,7 @@ parameter_config = {
     'mask_rate': 0.1,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result': False,
+    'show_result': True,
 }
 
 

@@ -29,8 +29,8 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 3000,
-    'epoch_cpm_query': 600,
+    'epoch_cpm_ref': 500,
+    'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
@@ -64,7 +64,7 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, query_label)
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
 
@@ -138,7 +138,7 @@ def main_process():
         'pred': pred,
         'mvcc_model': mvccmodel
     }
-    # show_result(ret, "result")
+    show_result(ret, "result")
     run.finish()
     return ret
 

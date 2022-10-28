@@ -73,7 +73,7 @@ integrating_pathway <- function(mat_gene, mat_path){
 
 
 
-main<-function(paName, scName,paPath, save_path){
+main<-function(paName, paPath, save_path){
 
 #   demoDatas = c('yan','biase')
 
@@ -119,17 +119,17 @@ main<-function(paName, scName,paPath, save_path){
 
 }
 
-scName = 'yan'
-paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\new"
+# scName = 'biase'
+paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\mouse"
 # ref 1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\species_v2\\gse_emtab\\mouse_human\\data\\ref'
+data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\omic\\kidney\\data\\ref'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-main('KEGG', scName, paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-main('Reactome2', scName, paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-main('Wikipathways', scName, paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-main('yan', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
+main('KEGG', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
+main('Reactome', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
+main('Wikipathways', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
+main('biase', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 # main('pathbank', scName, paPath, paste(data_path, 'sm_1_5.csv', sep='\\'))
 # main('panther', scName, paPath, paste(data_path, 'sm_1_6.csv', sep='\\'))
 # main('inoh', scName, paPath, paste(data_path, 'sm_1_7.csv', sep='\\'))
@@ -137,14 +137,14 @@ main('yan', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 # main('de novo pathway', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 
 # query_1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\species_v2\\gse_emtab\\mouse_human\\data\\query'
+data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\omic\\kidney\\data\\query'
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-main('KEGG', scName, paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-main('Reactome2', scName, paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-main('Wikipathways', scName, paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-main('yan', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
+main('KEGG', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
+main('Reactome', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
+main('Wikipathways', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
+main('biase', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
 # main('pathbank', scName, paPath, paste(data_path, 'sm_1_5.csv', sep='\\'))
 # main('panther', scName, paPath, paste(data_path, 'sm_1_6.csv', sep='\\'))
 # main('inoh', scName, paPath, paste(data_path, 'sm_1_7.csv', sep='\\'))

@@ -73,10 +73,10 @@ def main_process():
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(4)]
+                  range(3, 4)]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    range(4)]
+                    range(3, 4)]
 
     if parameter_config['exp_mode'] == 2:
         # multi ref

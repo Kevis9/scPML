@@ -1,9 +1,11 @@
 import sys
 import torch
 
-sys.path.append('../../../..')
+sys.path.append('../..')
 import os
 os.system("wandb disabled")
+# os.environ["CUDA_VISIBLE_DEVICES"]='1'
+import os.path
 from MVCC.util import sc_normalization, construct_graph_with_knn,\
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
 from MVCC.model import MVCCModel
@@ -14,39 +16,43 @@ import wandb
 
 # 数据配置
 data_config = {
-    'root_path': '.', # data.h5 path
-    'ref_name': 'cel_seq2',
-    'query_name': 'dropseq',
+    # 'root_path': 'F:\\yuanhuang\\kevislin\\data\\species\\task1',
+    'root_path': '.',
+    'ref_name': 'rna',
+    # 'query_name': 'E_MTAB_5061: human',
+    'query_name': 'atac',
     'ref_key': 'ref_1',
     'query_key': 'query_1',
-    'project': 'platform',
+    'project': 'omic',
 }
 
 parameter_config = {
-    'gcn_middle_out': 2048,  # GCN中间层维数
-    'lsd': 512,  # CPM_net latent space dimension
-    'lamb': 100,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
+    'gcn_middle_out': 1024,  # GCN中间层维数
+    'lsd': 1500,  # CPM_net latent space dimension
+    'lamb': 8000,  # classfication loss的权重
+    'epoch_cpm_ref': 1000,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
-    'nf': 3000,
-    'classifier_name':"FC",
+    'classifier_name': "FC",
     # 不太重要参数
     'batch_size_classifier': 256,  # CPM中重构和分类的batch size
     'epoch_gcn': 1000,  # Huang gcn 训练的epoch
-    'epoch_classifier': 500,
-    'patience_for_classifier': 20,
-    'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
-    'patience_for_cpm_ref': 50, # cpm train ref 早停patience
-    'patience_for_cpm_query': 50, # query h 早停patience
+    'epoch_classifier': 2000,
+    'patience_for_classifier': 200,
+    'patience_for_gcn': 600,  # 训练GCN的时候加入一个早停机制
+    'patience_for_cpm_ref': 200, # cpm train ref 早停patience
+    'patience_for_cpm_query': 200, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
     'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result': True,
+    'show_result': False
 }
+acc_arr = []
+max_acc = 0
+cycle = 1
 
 
 def main_process():
@@ -60,16 +66,12 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
-
-    # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
-    # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
-
-
-
-    # exit()
+    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
+    # np.savetxt('ref_norm_data.csv', ref_norm_data, delimiter=',')
+    # np.savetxt('query_norm_data.csv', query_norm_data, delimiter=',')
+    # exit()
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
@@ -77,7 +79,9 @@ def main_process():
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     range(4)]
+    # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
 
+    # query_sm_arr.append(construct_graph_with_knn(ref_norm_data))
     if parameter_config['exp_mode'] == 2:
         # multi ref
         mvccmodel = torch.load('model/mvccmodel_'+data_config['query_key']+".pt")
@@ -144,6 +148,73 @@ def main_process():
     return ret
 
 
-ret = main_process()
-acc = accuracy_score(ret['pred'], ret['query_label'])
-print("pred acc is {:.3f}".format(acc))
+def predict():
+    model = torch.load('model/mvccmodel_' + "query_1" + ".pt")
+    max_acc = 0
+    acc_arr = []
+    query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
+    query_norm_data = sc_normalization(query_data)
+    query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
+                    i in
+                    range(4)]
+
+    query_label = model.label_encoder.transform(query_label)
+    for i in range(cycle):
+        run = wandb.init(project="cell_classify_" + data_config['project'],
+                         entity="kevislin",
+                         config={"config": parameter_config, "data_config": data_config},
+                         tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']],
+                         reinit=True)
+        pred = model.predict(query_norm_data, query_sm_arr,
+                             epoch_cpm_query=parameter_config['epoch_cpm_query'],
+                             k_neighbor=parameter_config['k_neighbor'],
+                             patience_for_cpm_query=parameter_config['patience_for_cpm_query'])
+
+        # pred = model.label_encoder.inverse_transform(pred)
+        # query_label = model.label_encoder.inverse_transform(query_label)
+        acc = accuracy_score(query_label, pred)
+        acc_arr.append(acc)
+        if acc > max_acc:
+            max_acc = acc
+
+        run.finish()
+
+    print("After {:} cycle, mean acc is {:.3f}, max acc is {:.3f}".format(cycle, sum(acc_arr) / len(acc_arr), max_acc))
+    print(acc_arr)
+    return max_acc
+
+
+'''
+    predict
+'''
+# final_acc = []
+# data_config['query_key'] = 'query_1'
+# final_acc.append(predict())
+# print("--------------up-----------------")
+# data_config['query_key'] = 'query_2'
+# final_acc.append(predict())
+# print("--------------up-----------------")
+# data_config['query_key'] = 'query_3'
+# final_acc.append(predict())
+# print("---------------up----------------")
+# data_config['query_key'] = 'query_4'
+# final_acc.append(predict())
+# print("----------------up---------------")
+# data_config['query_key'] = 'query_5'
+# final_acc.append(predict())
+# print(final_acc)
+# exit()
+
+'''
+train
+'''
+for i in range(cycle):
+    ret = main_process()
+    acc = accuracy_score(ret['pred'], ret['query_label'])
+    acc_arr.append(acc)
+    if acc > max_acc:
+        max_acc = acc
+        torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['query_key'] + ".pt")
+
+print("After {:} cycle, mean acc is {:.3f}, max acc is {:.3f}".format(cycle, sum(acc_arr) / len(acc_arr), max_acc))
+print(acc_arr)

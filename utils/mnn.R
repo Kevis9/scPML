@@ -2,8 +2,8 @@
 library(batchelor)
 library(umap)
 
-ref_data = read.csv('../experiment/platform/new_version/cel_seq_drop_seq/ref_data.csv', header=FALSE)
-query_data = read.csv('../experiment/platform/new_version/cel_seq_drop_seq/query_data.csv', header=FALSE)
+ref_data = read.csv('../experiment/omic/kidney/ref_norm_data.csv', header=FALSE)
+query_data = read.csv('../experiment/omic/kidney/query_norm_data.csv', header=FALSE)
 data = rbind(ref_data, query_data)
 labels = c()
 for(i in c(1:dim(ref_data)[1])){

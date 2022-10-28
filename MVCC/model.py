@@ -542,6 +542,10 @@ class MVCCModel(nn.Module):
             for i in range(self.view_num):
                 self.gcn_models.append(torch.load(os.path.join(self.model_path, gcn_model_paths[i])))
 
+            # single view的测试
+            # for i in range(3, 4):
+            #     self.gcn_models.append(torch.load(os.path.join(self.model_path, gcn_model_paths[i])))
+
         '''
             训练自监督GCN, 获取ref views
         '''

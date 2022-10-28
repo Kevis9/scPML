@@ -380,22 +380,23 @@ def show_result(ret, save_path):
     preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
 
     raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-    raw_data_2d = runUMAP(raw_data)
+
+    # raw_data_2d = runUMAP(raw_data)
     h_data_2d = runUMAP(joint_embedding)
 
-    np.save(os.path.join(save_path, 'raw_data_2d.npy'), raw_data_2d)
+    # np.save(os.path.join(save_path, 'raw_data_2d.npy'), raw_data_2d)
     np.save(os.path.join(save_path, 'embeddings_2d.npy'), h_data_2d)
     np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
     np.save(os.path.join(save_path, 'preds.npy'), preds)
     np.save(os.path.join(save_path, 'trues_after_shuffle.npy'), trues_after_shuffle)
 
-    show_cluster(raw_data_2d, raw_trues, 'reference-query raw true label', save_path)
-    show_cluster(h_data_2d, trues_after_shuffle, 'reference-query h true label', save_path)
+    # show_cluster(raw_data_2d, raw_trues, 'reference-query raw true label', save_path)
+    # show_cluster(h_data_2d, trues_after_shuffle, 'reference-query h true label', save_path)
     show_cluster(h_data_2d, preds, 'reference-query h pred label', save_path)
-    show_cluster(raw_data_2d,
-                 ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
-                 "raw batches",
-                 save_path)
+    # show_cluster(raw_data_2d,
+    #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
+    #              "raw batches",
+    #              save_path)
     show_cluster(h_data_2d,
                  ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
                  "h batches",

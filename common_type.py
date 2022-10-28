@@ -5,12 +5,12 @@ import pandas as pd
 1. 细胞类型取交集， 可以左连接(可选)
 2. 基因取交集，去掉表达为0的基因(可选)
 '''
-save_path = 'experiment/species_v2/gse_emtab/mouse_human/data'
+save_path = 'experiment/omic/lung/data'
 
 # raw_data_save_path= 'e/xperiment/platform/new_version/seq_well_drop_seq/raw_data'
 
 
-ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/mouse'
+ref_path = 'E:/yuanhuang/kevislin/data/omics/lung/rna'
 
 # query1_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
 # query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
@@ -19,7 +19,7 @@ ref_path = 'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/mouse
 # query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/human',
+    'E:/yuanhuang/kevislin/data/omics/lung/atac',
     # 'E:/yuanhuang/kevislin/data/platform/GSE85241',
     # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
@@ -94,6 +94,8 @@ query_datas = []
 for path in query_paths:
     query_datas.append(pd.read_csv(os.path.join(path, 'data.csv'), index_col=0))
 # query1_data = pd.read_csv(os.path.join(query1_path, 'data.csv'), index_col=0)
+
+
 
 # For PBMC1 dataset
 if flags['PBMC query']:
