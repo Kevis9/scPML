@@ -4,7 +4,7 @@ import torch
 sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
-from MVCC.util import sc_normalization, construct_graph_with_knn,\
+from MVCC.util import mean_norm, construct_graph_with_knn,\
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
 from MVCC.model import MVCCModel
 import numpy as np
@@ -23,9 +23,9 @@ data_config = {
 }
 
 parameter_config = {
-    'gcn_middle_out': 2048,  # GCN中间层维数
+    'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
-    'lamb': 100,  # classfication loss的权重
+    'lamb': 5000,  # classfication loss的权重
     'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 3, # 1: start from scratch,
@@ -60,8 +60,9 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
-
+    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
+    ref_norm_data = ref_data
+    query_norm_data = query_data
     # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
     # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
 
@@ -73,10 +74,10 @@ def main_process():
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(3, 4)]
+                  range(4)]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    range(3, 4)]
+                    range(4)]
 
     if parameter_config['exp_mode'] == 2:
         # multi ref

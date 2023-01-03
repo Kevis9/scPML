@@ -5,7 +5,7 @@ sys.path.append('../..')
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import sc_normalization, construct_graph_with_knn,\
+from MVCC.util import mean_norm, construct_graph_with_knn,\
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
 from MVCC.model import MVCCModel
 import numpy as np
@@ -147,7 +147,7 @@ def predict():
     max_acc = 0
     acc_arr = []
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
-    query_norm_data = sc_normalization(query_data)
+    query_norm_data = mean_norm(query_data)
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     range(4)]

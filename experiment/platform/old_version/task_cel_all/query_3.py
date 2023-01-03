@@ -5,7 +5,7 @@ sys.path.append('../../..')
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import sc_normalization, construct_graph_with_knn,\
+from MVCC.util import mean_norm, construct_graph_with_knn,\
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
 from MVCC.model import MVCCModel
 import numpy as np

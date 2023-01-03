@@ -1,5 +1,6 @@
 library(conos)
 library(pagoda2)
+library(Seurat)
 
 main <- function(path, ref_key, query_key){
 
@@ -14,30 +15,22 @@ main <- function(path, ref_key, query_key){
     print(dim(data1))
     print(dim(data2))
 
-    label1 = as.data.frame(read.csv(paste(path, 'ref', ref_label, sep='/')))
+    label1 = as.matrix(read.csv(paste(path, 'ref', ref_label, sep='/'))
+    cellannot = data.frame(
+        cell_name = colnames(data1),
+        cell_type = label1[, 1]
+    )
+    cellannot = setNames(cellannot[, 2], cellannot[, 1])
 
-    rownames(label1) = colnames(data1)
-
-    label2 = as.data.frame(read.csv(paste(path, 'query', query_label, sep='/')))
-    rownames(label1) = colnames(data1)
-    rownames(label2) = colnames(data2)
-
-#     rownames(data1) = rownames(data2)
-
-    colnames(label1) = c('cell_type1')
-    colnames(label2) = c('type')
-    label1 = t(label1)
-
-    label1 = setNames(label1, colnames(data1))
+    label2 = read.csv(paste(path, 'query', query_label, sep='/'))
 
     panel <- list(ref=as.matrix(data1), query=as.matrix(data2))
-    panel.preprocessed <- lapply(panel, basicP2proc, n.cores=1, min.cells.per.gene=0, n.odgenes=2e3, get.largevis=FALSE, make.geneknn=FALSE)
-
+    panel.preprocessed <- lapply(panel, basicSeuratProc)
     con <- Conos$new(panel.preprocessed, n.cores=1)
-    con$buildGraph(k=5, k.self=5, k.self.weigh=0.01, ncomps=30, n.odgenes=5e3, space='PCA')
-#     con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
-    con$plotPanel(groups = label1)
+    con$buildGraph(k=30, k.self=5, space='PCA', ncomps=30, n.odgenes=2000, matching.method='mNN', metric='angular', score.component.variance=TRUE, verbose=TRUE)
 
+    #     con$plotPanel(clustering="multilevel", use.local.clusters=TRUE, title.size=6)
+#     con$plotPanel(groups = label1)
 
     pred <- con$propagateLabels(labels = label1, verbose=TRUE)$labels
     pred <- as.matrix(pred)

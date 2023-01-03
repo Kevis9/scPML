@@ -23,7 +23,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
 hue = []
 
-def sc_normalization(data):
+def mean_norm(data):
     '''
     scGCN中的标准化处理，对表达矩阵的每一个表达量做一个平均加权
     :param data: 矩阵 (cells * genes)
@@ -31,7 +31,7 @@ def sc_normalization(data):
     '''
     row_sum = np.sum(data, axis=1)
     mean_transcript = np.mean(row_sum)
-
+    print("细胞平均表达量是 {:.3f}".format(mean_transcript))
     # 防止出现除0的问题
     row_sum[np.where(row_sum == 0)] = 1
 
@@ -68,12 +68,32 @@ def mask_data(data, masked_prob):
     index_pair = np.where(data != 0)
     seed = 1
     np.random.seed(seed)
-    masking_idx = np.random.choice(index_pair[0].shape[0], int(index_pair[0].shape[0] * masked_prob), replace=False)
+    idx = np.random.choice(index_pair[0].shape[0], int(index_pair[0].shape[0] * masked_prob), replace=False)
+    # masking_idx = [idx, idx]
     # to retrieve the position of the masked: data_train[index_pair_train[0][masking_idx], index_pair[1][masking_idx]]
     X = copy.deepcopy(data)
-    X[index_pair[0][masking_idx], index_pair[1][masking_idx]] = 0
+    mask_idx = [index_pair[0][idx], index_pair[1][idx]]
+    X[mask_idx[0], mask_idx[1]] = 0
 
-    return X, index_pair, masking_idx
+    return X, mask_idx
+
+def mask_column(data, masked_prob, cols):
+    tmp_data = data[:, cols]
+    index_pair = np.where(tmp_data != 0)
+    seed = 1
+    random.seed(seed)   #为了复现
+    idx = random.sample(range(index_pair[0].shape[0]), int(index_pair[0].shape[0] * masked_prob))   #无重复采样
+    mask_rows = index_pair[0][idx]
+    # cols 代表原来数据的列下标
+    cols = np.array(cols)
+    # print(index_pair[1][idx])
+    mask_cols = cols[index_pair[1][idx]]
+    mask_idx = [mask_rows, mask_cols]
+    # to retrieve the position of the masked: data_train[index_pair_train[0][masking_idx], index_pair[1][masking_idx]]
+    X = copy.deepcopy(data)
+    # print(index_pair[0])
+    X[mask_idx[0], mask_idx[1]] = 0
+    return X, mask_idx
 
 def construct_graph_with_knn(data, k=2):
     A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
@@ -224,12 +244,16 @@ def sel_feature(data1, data2, label1, nf=3000):
 
     return data1, data2
 
-def pre_process(data1, data2, label1, nf=3000):
-    # Normalization: 减少测序深度的影响
+def mnnCorrect(data1, data2):
+    # 消除Batch effects影响
+    pass
+
+def pre_process(data1, data2, label1, nf=2000):
+    # 先选择合适的feature
     data1, data2 = sel_feature(data1, data2, label1, nf=nf)
     # scaler = StandardScaler()
-    data1 = sc_normalization(data1)
-    data2 = sc_normalization(data2)
+    data1 = mean_norm(data1)
+    data2 = mean_norm(data2)
     # data1 = scaler.fit_transform(data1)
     # data2 = scaler.transform(data2)
     # 再做ScaleData: z_score
@@ -344,6 +368,11 @@ def encode_label(ref_label, query_label):
     return enc.transform(ref_label), enc.transform(query_label), enc
 
 
+def precies_of_cell(cell_type, pred, trues):
+    idx = np.array(np.where(trues == cell_type)).squeeze()
+    acc = (pred[idx] == cell_type).sum() / len(idx)
+    return acc
+
 def show_result(ret, save_path):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -360,47 +389,65 @@ def show_result(ret, save_path):
     # ref_s_score = silhouette_score(ref_h, ret['ref_label'])
     # q_s_score = silhouette_score(query_h, ret['pred'])
 
-    # ari = adjusted_rand_score(ret['query_label'], ret['pred'])
+    ari = adjusted_rand_score(ret['query_label'], ret['pred'])
     # bme = batch_mixing_entropy(ref_h, query_h)
     # bme = sum(bme) / len(bme)
     acc = accuracy_score(ret['query_label'], ret['pred'])
-    # f1 = f1_score(ret['query_label'], ret['pred'], average='macro')
+    f1 = f1_score(ret['query_label'], ret['pred'], average='macro')
+    alpha_precision = precies_of_cell("alpha", ret['pred'], ret['query_label'])
+    beta_precision = precies_of_cell("beta", ret['pred'], ret['query_label'])
+    gamma_precision = precies_of_cell("gamma", ret['pred'], ret['query_label'])
+    delta_precision = precies_of_cell("delta", ret['pred'], ret['query_label'])
+
+    print("alpha precision is {:.3f}".format(alpha_precision))
+    print("beta precision is {:.3f}".format(beta_precision))
+    print("gamma precision is {:.3f}".format(gamma_precision))
+    print("delta precision is {:.3f}".format(delta_precision))
     print("Prediction Accuracy is {:.3f}".format(acc))
-    # exit()
+
+
+    '''
+        2023.1.3 以下代码暂时注释掉，为了multi ref更快显示结果，同时保存模型
+    '''
     # print('f1-score is {:.3f}'.format(f1))
     # print('Prediction ARI is {:.3f}'.format(ari))
-    # print('total silhouette score is {:.3f}'.format(total_s_score))
-    # print('batch mixing score is {:.3f}'.format(bme))
-
-
-    # 这部分和原来的feature对应
-    raw_trues = np.concatenate([ret['ref_raw_label'], ret['query_label']]).reshape(-1)
-    # 这部分和h对应
-    trues_after_shuffle = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
-    preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
-
-    raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
-
+    #
+    # # print('batch mixing score is {:.3f}'.format(bme))
+    #
+    #
+    # # 这部分和原来的feature对应
+    # raw_trues = np.concatenate([ret['ref_raw_label'], ret['query_label']]).reshape(-1)
+    # # 这部分和h对应
+    # trues_after_shuffle = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
+    # preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
+    #
+    # raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
+    #
+    # np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
+    # np.save(os.path.join(save_path, 'preds.npy'), preds)
+    # # exit()
     # raw_data_2d = runUMAP(raw_data)
-    h_data_2d = runUMAP(joint_embedding)
-
+    # h_data_2d = runUMAP(joint_embedding)
+    #
     # np.save(os.path.join(save_path, 'raw_data_2d.npy'), raw_data_2d)
-    np.save(os.path.join(save_path, 'embeddings_2d.npy'), h_data_2d)
-    np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
-    np.save(os.path.join(save_path, 'preds.npy'), preds)
-    np.save(os.path.join(save_path, 'trues_after_shuffle.npy'), trues_after_shuffle)
-
+    # np.save(os.path.join(save_path, 'embeddings_2d.npy'), h_data_2d)
+    # np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
+    # np.save(os.path.join(save_path, 'preds.npy'), preds)
+    # np.save(os.path.join(save_path, 'trues_after_shuffle.npy'), trues_after_shuffle)
+    #
     # show_cluster(raw_data_2d, raw_trues, 'reference-query raw true label', save_path)
     # show_cluster(h_data_2d, trues_after_shuffle, 'reference-query h true label', save_path)
-    show_cluster(h_data_2d, preds, 'reference-query h pred label', save_path)
+    # show_cluster(h_data_2d, preds, 'reference-query h pred label', save_path)
     # show_cluster(raw_data_2d,
     #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
     #              "raw batches",
     #              save_path)
-    show_cluster(h_data_2d,
-                 ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
-                 "h batches",
-                 save_path)
-
+    # show_cluster(h_data_2d,
+    #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
+    #              "h batches",
+    #              save_path)
+    '''
+        ====== 以上 ======
+    '''
     # show_cluster(raw_data_2d[:ret['ref_raw_data'].shape[0],:], ret['ref_raw_label'], "raw reference data", save_path)
     # show_cluster(raw_data_2d[ret['ref_raw_data'].shape[0]:,], ret['query_raw_label'], "raw query data", save_path)

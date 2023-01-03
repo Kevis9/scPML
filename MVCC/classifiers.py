@@ -166,15 +166,9 @@ class FCClassifier(Classifier):
     def __init__(self, input_dim, class_num):
         super(FCClassifier, self).__init__()
         self.fcn = nn.Sequential(
-            nn.Linear(input_dim, 256),
+            nn.Linear(input_dim, 64),
             nn.ReLU(),
-            # nn.Linear(256, 512),
-            # nn.ReLU(),
-            # nn.Linear(512, 256),
-            # nn.ReLU(),
-            # nn.Dropout(0.2),
-            # nn.Linear(64, 32),
-            nn.Linear(256, class_num)
+            nn.Linear(64, class_num)
         )
 
     def forward(self, data):

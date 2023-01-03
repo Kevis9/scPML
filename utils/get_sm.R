@@ -74,21 +74,7 @@ integrating_pathway <- function(mat_gene, mat_path){
 
 
 main<-function(paName, paPath, save_path){
-
-#   demoDatas = c('yan','biase')
-
   original_paName = paName
-  # load pathway
-#   if(paName=='de novo pathway'){
-#     if(scName %in% demoDatas){
-#       paName=paste(scName,'150.gmt',sep='_')
-#       gSet = load_pathway(paPath,paName)}
-#     else{
-#       gSet = create_denovo_pathway(mat_gene)}}
-#   else{
-#     paName=paste(paName,'_',s,'.gmt',sep='')
-#     gSet = load_pathway(paPath,paName)
-#   }
   gSet = load_pathway(paPath, paste(paName,'.gmt',sep=''))
   gSet = subsetGeneSets(gSet, rownames(mat_gene)) #AUCell
 
@@ -99,134 +85,88 @@ main<-function(paName, paPath, save_path){
 
   # 去掉这一步骤，直接拿到 geneset * cell 的表达矩阵
   W=integrating_pathway(mat_gene, mat_path)
-
-#   W = t(mat_path)
-#   print(dim(W))
   print("Save the W (integrated) matrix")
-
-#   if(original_paName=='de novo pathway'){
-#        if(s=='human'){
-#         original_paName='yan'
-#        } else{
-#         original_paName = 'biase'
-#        }
-#   }
-#   filepath = paste(save_path, original_paName, '.csv',sep='')
-
   write.csv(W, save_path)
-  # write.table可能会多出几列，不知道原因
-#   write.table(as.matrix(W), file=save_path, sep=',', row.names=TRUE, col.names=TRUE,quote=FALSE)
-
 }
 
-# scName = 'biase'
-paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\mouse"
-# ref 1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\omic\\kidney\\data\\ref'
+# # GSE84133 mouse
+# paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\mouse"
+# data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\within_dataset\\gse84133_mouse\\data\\ref'
+# mat_name = 'data_1.csv'
+# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
+# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+# paName = c('KEGG', 'Reactome', 'Wikipathways', 'biase')
+# for(i in 1:4) {
+#     main(paName[i], paPath, paste(data_path, paste('sm_1_', i, '.csv',sep=''), sep='\\'))
+# }
+#
+# # query
+# data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\within_dataset\\gse84133_mouse\\data\\query'
+# mat_name = 'data_1.csv'
+# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
+# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+# paName = c('KEGG', 'Reactome', 'Wikipathways', 'biase')
+# for(i in 1:4) {
+#     main(paName[i], paPath, paste(data_path, paste('sm_1_', i, '.csv',sep=''), sep='\\'))
+# }
+#
+# # 接下来循环的跑human部分的
+# paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\new_human"
+# base_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\within_dataset'
+# proj = c('gse84133_human', '10x_v3', 'cel_seq', 'dropseq', 'indrop', 'seq_well', 'smart_seq', 'gse81608', 'gse85241')
+# paName = c('KEGG', 'Reactome', 'Wikipathways', 'yan')
+# for(p in proj) {
+#     # ref
+#     data_path = paste(base_path, p, 'data', 'ref', sep='\\')
+#     mat_name = 'data_1.csv'
+#     mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
+#     mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+#
+#     for(i in 1:4) {
+#         main(paName[i], paPath, paste(data_path, paste('sm_1_', i, '.csv',sep=''), sep='\\'))
+#     }
+#
+#     # query
+#     data_path = paste(base_path, p, 'data', 'query', sep='\\')
+#     mat_name = 'data_1.csv'
+#     mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
+#     mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+#
+#     for(i in 1:4) {
+#         main(paName[i], paPath, paste(data_path, paste('sm_1_', i, '.csv',sep=''), sep='\\'))
+#     }
+#
+# }
+
+
+
+# base_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\species_v3'
+# proj = 'mca_gse84133'
+paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\new_human"
+paName = c('KEGG', 'Reactome', 'Wikipathways', 'yan', 'inoh', 'pathbank')
+
+
+args = commandArgs(trailingOnly = TRUE)
+base_path = args[[1]]
+
+# ref
+data_path = paste(base_path, 'raw_data', 'ref', sep='\\')
+# 多少个ref?
+for(i in 1:2) {
+    mat_name = paste('data_', i, '.csv', sep='')
+    mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
+    mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+    for(j in 1:4) {
+        main(paName[i], paPath, paste(data_path, paste(paste('sm_', i, '_', sep=''), j, '.csv',sep=''), sep='\\'))
+    }
+}
+
+# query
+data_path = paste(base_path, 'raw_data', 'query', sep='\\')
 mat_name = 'data_1.csv'
 mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
 mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-main('KEGG', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-main('Reactome', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-main('Wikipathways', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-main('biase', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-# main('pathbank', scName, paPath, paste(data_path, 'sm_1_5.csv', sep='\\'))
-# main('panther', scName, paPath, paste(data_path, 'sm_1_6.csv', sep='\\'))
-# main('inoh', scName, paPath, paste(data_path, 'sm_1_7.csv', sep='\\'))
 
-# main('de novo pathway', scName, paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-
-# query_1
-data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\omic\\kidney\\data\\query'
-mat_name = 'data_1.csv'
-mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-main('KEGG', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-main('Reactome', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-main('Wikipathways', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-main('biase', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-# main('pathbank', scName, paPath, paste(data_path, 'sm_1_5.csv', sep='\\'))
-# main('panther', scName, paPath, paste(data_path, 'sm_1_6.csv', sep='\\'))
-# main('inoh', scName, paPath, paste(data_path, 'sm_1_7.csv', sep='\\'))
-
-# second
-# ref 1
-# data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\84133_81608\\data\\ref'
-# mat_name = 'data_1.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-#
-# # query_1
-# data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\84133_81608\\data\\query'
-# mat_name = 'data_1.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# print(dim(mat_gene))
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-#
-# #third
-# # ref 1
-# data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\81608_84133\\data\\ref'
-# mat_name = 'data_1.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-#
-# # query_1
-# data_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\platform\\81608_84133\\data\\query'
-# mat_name = 'data_1.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# print(dim(mat_gene))
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_1_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_1_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_1_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_1_4.csv', sep='\\'))
-
-# mat_name = 'data_2.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_2_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_2_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_2_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_2_4.csv', sep='\\'))
-#
-# mat_name = 'data_3.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_3_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_3_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_3_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_3_4.csv', sep='\\'))
-#
-# mat_name = 'data_4.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_4_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_4_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_4_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_4_4.csv', sep='\\'))
-#
-# mat_name = 'data_5.csv'
-# mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-# mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-# main('KEGG', scName,'human', paPath, paste(data_path, 'sm_5_1.csv', sep='\\'))
-# main('Reactome', scName,'human', paPath, paste(data_path, 'sm_5_2.csv', sep='\\'))
-# main('Wikipathways', scName,'human', paPath, paste(data_path, 'sm_5_3.csv', sep='\\'))
-# main('de novo pathway', scName,'human', paPath, paste(data_path, 'sm_5_4.csv', sep='\\'))
-#
-
-
-
-
-
+for(i in 1:4) {
+    main(paName[i], paPath, paste(data_path, paste('sm_1_', i, '.csv',sep=''), sep='\\'))
+}

@@ -4,7 +4,7 @@ sys.path.append('/')
 import os
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import sc_normalization, \
+from MVCC.util import mean_norm, \
     read_data_label_h5, read_similarity_mat_h5, encode_label, show_result
 from MVCC.model import MVCCModel
 import numpy as np
@@ -66,8 +66,8 @@ def main_process():
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
 
-    ref_norm_data = sc_normalization(ref_data)
-    query_norm_data = sc_normalization(query_data)
+    ref_norm_data = mean_norm(ref_data)
+    query_norm_data = mean_norm(query_data)
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
@@ -140,7 +140,7 @@ def predict():
     model = torch.load('model/mvccmodel_' + data_config['query_key'] + ".pt")
     max_acc = 0
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
-    query_norm_data = sc_normalization(query_data)
+    query_norm_data = mean_norm(query_data)
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     range(4)]

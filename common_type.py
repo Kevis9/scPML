@@ -5,40 +5,29 @@ import pandas as pd
 1. 细胞类型取交集， 可以左连接(可选)
 2. 基因取交集，去掉表达为0的基因(可选)
 '''
-save_path = 'experiment/omic/lung/data'
+save_path = 'experiment/species_v3/gsemouse_emtab_leftjoin/raw_data'
 
 # raw_data_save_path= 'e/xperiment/platform/new_version/seq_well_drop_seq/raw_data'
 
-
-ref_path = 'E:/yuanhuang/kevislin/data/omics/lung/rna'
-
-# query1_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
-# query2_path = 'H:/yuanhuang/kevislin/data/platform/InDrop'
-# query3_path = 'H:/yuanhuang/kevislin/data/platform/Seq_Well'
-# query4_path = 'H:/yuanhuang/kevislin/data/platform/Smart_seq2'
-# query5_path = 'H:/yuanhuang/kevislin/data/platform/DropSeq'
+ref_path = 'E:/YuAnHuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/mouse'
 
 query_paths = [
-    'E:/yuanhuang/kevislin/data/omics/lung/atac',
+    'E:/YuAnHuang/kevislin/data/species/EMTAB5061_GSE_singlecellnet/human'
     # 'E:/yuanhuang/kevislin/data/platform/GSE85241',
     # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
-
-
 ]
 flags = {
     'PBMC query': False,
     'PBMC ref' : False,
     'E-MTAB': False, #旧的EM用
-    'E-MTAB query': False,
+    'E-MTAB query': True,
     'get_rid_of_gene':False, #去掉表达量为0的基因
+    'if ref has 2000 genes':False,
 }
-# if flags['get_rid_of_gene']:
+
 ref_save_path = os.path.join(save_path, 'ref')
 query_save_path = os.path.join(save_path, 'query')
-# else:
-#     ref_save_path = os.path.join(raw_data_save_path, 'ref')
-#     query_save_path = os.path.join(raw_data_save_path, 'query')
 
 ref_label = pd.read_csv(os.path.join(ref_path, 'label.csv'))
 query_labels = []
@@ -60,13 +49,11 @@ if flags['E-MTAB']:
 if flags['E-MTAB query']:
     query_labels[0][query_label_key] = query_labels[0][query_label_key].apply(lambda x: x.split()[0])
 
-    # for i in range(len(query_labels)):
-    #     query_labels[i][query_label_key] = query_labels[i][query_label_key].apply(lambda x: x.split()[0])
-
 ref_idx = (~ref_label[ref_label_key].isin(['Unassigned', 'unclear', 'not', 'co-expression', 'unclassified'])).tolist()
 ref_label_list = ref_label.iloc[ref_idx][ref_label_key].tolist()
 # 一对一情况 取交集(可选可不选)
-ref_label_list = list(set(ref_label_list) & set(query_labels[0][query_label_key].tolist()))
+# ref_label_list = list(set(ref_label_list) & set(query_labels[0][query_label_key].tolist()))
+
 query_indices = []
 ref_idx2 = ref_label[ref_label_key].isin(ref_label_list).tolist()
 ref_idx = [ref_idx[i] & ref_idx2[i] for i in range(len(ref_idx))]
@@ -90,6 +77,7 @@ for i, label in enumerate(query_labels):
 # print("query 1 label set :", sorted(list(set(query1_label[query_label_key].tolist()))))
 
 ref_data = pd.read_csv(os.path.join(ref_path, 'data.csv'), index_col=0)
+print("reference data shape {:}".format(ref_data.shape))
 query_datas = []
 for path in query_paths:
     query_datas.append(pd.read_csv(os.path.join(path, 'data.csv'), index_col=0))
@@ -107,9 +95,13 @@ if flags['PBMC ref']:
 
     # query1_data.columns = [x.split("_")[1] for x in query1_data.columns.tolist()]
 
+# 如果reference 是经过preprocess.R处理之后的数据(原来的gene中的-符号全部变成.符号),那么对query做同样的处理
+if flags['if ref has 2000 genes']:
+    for i in range(len(query_datas)):
+        query_datas[i].columns = query_datas[i].columns.map(lambda x: x.replace("-", ".")).tolist()
+
+
 # 基因交集
-# datasets = [query1_data, query2_data, query3_data, query4_data, query5_data]
-# datasets = [query1_data]
 gene_name = set(ref_data.columns.tolist())
 for x in query_datas:
     gene_name = set(x.columns.tolist()) & gene_name
@@ -146,11 +138,8 @@ for i, data in enumerate(query_datas):
 ref_data.to_csv(os.path.join(ref_save_path, 'data_1.csv'))
 for i, data in enumerate(query_datas):
     data.to_csv(os.path.join(query_save_path, 'data_' + str(i + 1) + '.csv'))
-# query1_data.to_csv(os.path.join(query_save_path, 'data_1.csv'))
 
-
+# label
 ref_label.to_csv(os.path.join(ref_save_path, 'label_1.csv'), index=False)
 for i, label in enumerate(query_labels):
     label.to_csv(os.path.join(query_save_path, 'label_' + str(i + 1) + '.csv'), index=False)
-
-# query1_label.to_csv(os.path.join(query_save_path, 'label_1.csv'), index=False)
