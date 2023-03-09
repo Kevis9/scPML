@@ -62,66 +62,74 @@ main <- function(ref_data_path, query_data_path, ref_label_path, ref_save_path, 
 
     # Mnn correct
 #     out = mnnCorrect(norm.ref_data, norm.query_data, cos.norm.in = FALSE, cos.norm.out=FALSE)
-    out = mnnCorrect(norm.ref_data, norm.query_data, sigma=0.3)
+#     out = mnnCorrect(norm.ref_data, norm.query_data)
 
-    new_data = out@assays@data@listData$corrected
+#     out = mnnCorrect(norm.ref_data, norm.query_data, sigma=0.3)
 
-    new.ref_data = t(out@assays@data$corrected[,out$batch==1])
-    new.query_data = t(out@assays@data$corrected[,out$batch==2])
+#     new_data = out@assays@data@listData$corrected
+
+#     new.ref_data = t(out@assays@data$corrected[,out$batch==1])
+#     new.query_data = t(out@assays@data$corrected[,out$batch==2])
+
+    new.ref_data = t(norm.ref_data)
+    new.query_data = t(norm.query_data)
 
 #     write.csv(new.ref_data, file=paste(save_path, 'ref', 'data_1.csv', sep='/'), row.names=TRUE)
 #     write.csv(new.query_data, file=paste(save_path, 'query', 'data_1.csv', sep='/'), row.names=TRUE)
-      write.csv(new.ref_data, file=ref_save_path, row.names=TRUE)
-      write.csv(new.query_data, file=query_save_path, row.names=TRUE)
+    write.csv(new.ref_data, file=ref_save_path, row.names=TRUE)
+    write.csv(new.query_data, file=query_save_path, row.names=TRUE)
 
 }
 
-args = commandArgs(trailingOnly = TRUE)
-base_path = args[[1]]
-ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
-query_data_path = paste(base_path, 'raw_data', 'query', 'data_1.csv', sep='/')
-ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
-
-ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
-query_save_path = paste(base_path, 'data', 'query', 'data_1.csv', sep='/')
-
-print("Path is")
-print(base_path)
-
-main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
-# 从Raw data读取数据，预处理之后放到data目录中
-
-# 多ref
-# for(i in 1:2) {
-# #     base_path = args[[1]]
-#     base_path = 'E:/YuAnHuang/kevislin/Cell_Classification/experiment/multi_ref/MCA_liver'
-#
-#     query_data_name = paste('data_', i, '.csv', sep='')
-#
-#     ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
-#     query_data_path = paste(base_path, 'raw_data', 'ref', query_data_name, sep='/')
-#     ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
-#
-#     ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
-#     query_save_path = paste(base_path, 'data', 'ref', query_data_name, sep='/')
-#
-#     print("Path is")
-#     print(base_path)
-#
-#     main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
-# }
-#
-# # 真的query
-# # base_path = args[[1]]
-#
-# query_data_name = paste('data_', 1, '.csv', sep='')
+# =================== 暂时注释掉=========================
+# args = commandArgs(trailingOnly = TRUE)
+# base_path = args[[1]]
 # ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
-# query_data_path = paste(base_path, 'raw_data', 'query', query_data_name, sep='/')
+# query_data_path = paste(base_path, 'raw_data', 'query', 'data_1.csv', sep='/')
 # ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
 #
 # ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
-# query_save_path = paste(base_path, 'data', 'query', query_data_name, sep='/')
+# query_save_path = paste(base_path, 'data', 'query', 'data_1.csv', sep='/')
+#
+# print("Path is")
+# print(base_path)
+# main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
+# =================== 暂时注释掉： 底线=========================
 
 
+# 从Raw data读取数据，预处理之后放到data目录中
 
 
+# base_path = 'E:/YuAnHuang/kevislin/Cell_Classification/experiment/multi_ref/Haber/'
+args = commandArgs(trailingOnly = TRUE)
+base_path = args[[1]]
+print(base_path)
+# 多ref
+for(i in 2:3) {
+    query_data_name = paste('data_', i, '.csv', sep='')
+    ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
+    query_data_path = paste(base_path, 'raw_data', 'ref', query_data_name, sep='/')
+    ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
+
+    ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
+    query_save_path = paste(base_path, 'data', 'ref', query_data_name, sep='/')
+
+    print("Path is")
+    print(base_path)
+
+    main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
+}
+
+# 真的query
+# base_path = args[[1]]
+
+query_data_name = paste('data_', 1, '.csv', sep='')
+ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
+query_data_path = paste(base_path, 'raw_data', 'query', query_data_name, sep='/')
+ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
+
+ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
+query_save_path = paste(base_path, 'data', 'query', query_data_name, sep='/')
+main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
+
+# 

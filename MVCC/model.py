@@ -9,8 +9,9 @@ import torch
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 import torch.optim as optim
-from MVCC.util import cpm_classify, mask_data, construct_graph, z_score_scale, construct_graph_with_knn, mask_column
-from MVCC.classifiers import FocalLoss, GCNClassifier, FCClassifier, CNNClassifier
+from MVCC.util import cpm_classify, mask_data, construct_graph, z_score_scale, construct_graph_with_knn, mask_column, \
+    mask_cells
+from MVCC.classifiers import FocalLoss, GCNClassifier, FCClassifier, CNNClassifier, FCClassifier2
 from sklearn.decomposition import PCA
 import random
 '''
@@ -75,7 +76,8 @@ class CPMNets(torch.nn.Module):
             self.classifier = CNNClassifier(self.lsd, self.class_num)
         elif classifier_name == "FC":
             self.classifier = FCClassifier(self.lsd, self.class_num)
-
+        elif classifier_name == "FC2":
+            self.classifier = FCClassifier2(self.lsd, self.class_num)
         self.classifier = self.classifier.to(device)
 
     def reconstrution_loss(self, r_x, x):
@@ -213,7 +215,7 @@ class CPMNets(torch.nn.Module):
             for i in range(self.view_num):
                 for param in self.net[i].parameters():
                     param.requires_grad = False
-            for epoch in range(50):
+            for epoch in range(10):
                 r_loss = 0
                 for i in range(self.view_num):
                     r_loss += self.reconstrution_loss(self.net[i](train_h),
@@ -221,6 +223,7 @@ class CPMNets(torch.nn.Module):
                 optimizer_for_train_h.zero_grad()
                 r_loss.backward()
                 optimizer_for_train_h.step()
+
             # 如果是多ref，训练完之后，再次训练h和net，此时降低learning rate
             # for i in range(self.view_num):
             #     for param in self.net[i].parameters():
@@ -238,9 +241,9 @@ class CPMNets(torch.nn.Module):
         min_c_loss_train_h = None
         stop = 0
 
-        if exp_mode == 2:
-            # epochs_cpm_ref = int(epochs_cpm_ref / 10)
-            epochs_cpm_ref = 200
+        # if exp_mode == 2:
+        #     # epochs_cpm_ref = int(epochs_cpm_ref / 10)
+        #     epochs_cpm_ref = 300
 
         for epoch in range(epochs_cpm_ref):
             # 更新net
@@ -270,7 +273,7 @@ class CPMNets(torch.nn.Module):
                                                   train_data[:, self.view_idx[i]])
 
             c_loss = self.class_loss(train_h, train_label)
-            # c_loss = self.fisher_loss(train_h, train_label)
+            # c_loss += self.fisher_loss(train_h, train_label)
             total_loss = r_loss + lamb * c_loss
 
             optimizer_for_train_h.zero_grad()
@@ -317,8 +320,10 @@ class CPMNets(torch.nn.Module):
         self.scaler = sklearn.preprocessing.StandardScaler()
         train_h_numpy = self.scaler.fit_transform(train_h_numpy)
 
-        if exp_mode == 2:
-            epochs_classifier = 10
+        lr = 1e-3
+        # if exp_mode == 2:
+        #     epochs_classifier = 100
+        #     lr = 1e-3
 
         self.classifier.train_classifier(train_h_numpy,
                                          train_label_numpy,
@@ -326,7 +331,8 @@ class CPMNets(torch.nn.Module):
                                          save_path=self.save_path,
                                          test_size=test_size,
                                          batch_size=batch_size_classifier,
-                                         epochs=epochs_classifier
+                                         epochs=epochs_classifier,
+                                         lr=lr
                                          )
 
         self.ref_h = torch.from_numpy(train_h_numpy).float().to(device)
@@ -590,6 +596,9 @@ class MVCCModel(nn.Module):
         print("gcn mask prob is {:.3f}".format(masked_prob))
 
         masked_data, mask_idx = mask_data(data, masked_prob)
+
+        # masked_data, mask_idx = mask_cells(data, masked_prob)
+
         # Multi ref: mask columns
         # seed = 1
         # random.seed(seed)
@@ -599,25 +608,26 @@ class MVCCModel(nn.Module):
             # start from sratch
             for i in range(self.view_num):
                 graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
+                # unmasked_graph_data = construct_graph(data, sm_arr[i], k_neighbor)
+                embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
+                                            mask_idx, i,
+                                            epoch_gcn, patience_for_gcn, self.model_path)
+                # embeddings = z_score_scale(self.gcn_models[i].get_embedding(unmasked_graph_data).detach().cpu().numpy())
+                ref_views.append(embeddings)
+        elif exp_mode == 2:
+            # multi ref traing
+            for i in range(self.view_num):
+                graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
 
                 embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
                                             mask_idx, i,
                                             epoch_gcn, patience_for_gcn, self.model_path)
                 ref_views.append(embeddings)
-        elif exp_mode == 2:
-            # multi ref
-            # for i in range(self.view_num):
-            #     graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
-            #
-            #     embeddings = self.train_gcn(graph_data, self.gcn_models[i], data,
-            #                                 mask_idx, i,
-            #                                 epoch_gcn, patience_for_gcn, self.model_path)
-            #     ref_views.append(embeddings)
 
             # 尝试不train
-            for i in range(self.view_num):
-                graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
-                ref_views.append(z_score_scale(self.gcn_models[i].get_embedding(graph_data).detach().cpu().numpy()))
+            # for i in range(self.view_num):
+            #     graph_data = construct_graph(masked_data, sm_arr[i], k_neighbor)
+            #     ref_views.append(z_score_scale(self.gcn_models[i].get_embedding(graph_data).detach().cpu().numpy()))
 
         elif exp_mode == 3:
             # GCN exist, only to test rest part of experiment (CPM net, classifier)

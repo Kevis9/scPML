@@ -1,6 +1,8 @@
 import sys
 import torch
 
+from MVCC.classifiers import FCClassifier
+
 sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
@@ -64,6 +66,33 @@ def main_process():
     # query_norm_data = sc_normalization(query_data)
     ref_norm_data = ref_data
     query_norm_data = query_data
+
+    # classifier = FCClassifier(2000, len(set(ref_label)))
+    # classifier = classifier.to(device='cuda:0')
+    #
+    # ref_label, query_label, enc = encode_label(ref_label, query_label)
+    #
+    # classifier.train_classifier(ref_norm_data,
+    #                                  ref_label,
+    #                                  100,
+    #                                  save_path='.',
+    #                                  test_size=0.2,
+    #                                  batch_size=128,
+    #                                  epochs=500,
+    #                                  lr=1e-3
+    #                                  )
+    #
+    #
+    # classifier.eval()
+    # with torch.no_grad():
+    #     logits = classifier(torch.from_numpy(query_norm_data).float().to("cuda:0"))
+    #     pred = logits.argmax(dim=1)
+    # pred = pred.cpu().detach().numpy()
+    # print(accuracy_score(pred, query_label))
+    # exit()
+    # evaluate
+
+    # exit()
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
                   range(4)]

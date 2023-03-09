@@ -26,18 +26,18 @@ query_label = query_label.iloc[query_idx, :]
 '''
     将ref分成两部分，按照alpha等不同的细胞分成不同比例的两份数据
 '''
-
 def split_data(data, label, cell_dic):
     ref_1_idx = []
     ref_2_idx = []
     label_np = label.to_numpy().reshape(-1)
-    # print(label_np)
+
     for key in cell_dic.keys():
         idx = np.array(np.where(label_np == key)).squeeze().tolist()
         # print(len(idx), key)
         np.random.shuffle(idx)
-        ref_1_idx += idx[:cell_dic[key]]
-        ref_2_idx += idx[cell_dic[key]:]
+        num = int(cell_dic[key] * len(idx))
+        ref_1_idx += idx[:num]
+        ref_2_idx += idx[num:]
 
     ref_1_data = data.iloc[ref_1_idx, :]
     ref_2_data = data.iloc[ref_2_idx, :]
@@ -49,12 +49,14 @@ def split_data(data, label, cell_dic):
 
 # alpha
 cell_ref = {
-    'alpha': 20,
-    'beta' : 2500,
-    'gamma': 230,
-    'delta': 580,
+    'alpha': 0.5,
+    'beta' : 0.5,
+    'gamma': 0.5,
+    'delta': 0.5,
 }
 dir = 'alpha'
+
+
 ref_1_data, ref_1_label, ref_2_data, ref_2_label = split_data(ref_data, ref_label, cell_ref)
 if not os.path.exists(dir):
     os.makedirs(dir)
@@ -66,6 +68,7 @@ ref_2_label.to_csv(os.path.join(dir, 'ref_2_label.csv'), index=False)
 query_data.to_csv(os.path.join(dir, 'query_data.csv'))
 query_label.to_csv(os.path.join(dir, 'query_label.csv'), index=False)
 
+exit()
 #beta
 cell_ref = {
     'alpha': 2500,

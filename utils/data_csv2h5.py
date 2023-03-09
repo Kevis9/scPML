@@ -10,12 +10,13 @@ import argparse
 
 parser = argparse.ArgumentParser(description='[MVCC]')
 parser.add_argument('--path', type=str, required=False, help='实验工作目录')
+parser.add_argument('--subpath', default='raw_data', type=str, required=False, help='data还是rawdata')
 args = parser.parse_args()
 
 # args.path = r'..\experiment\multi_ref\MCA_liver'
-data_path = os.path.join(args.path, 'data')
-# 暂时改成raw data
-data_path = os.path.join(args.path, 'raw_data')
+data_path = os.path.join(args.path, args.subpath)
+# 暂时改成raw data：有些实验不需要提前做preprocess 主要是不需要做MNN
+# data_path = os.path.join(args.path, 'raw_data')
 ref_path = os.path.join(data_path, 'ref')
 query_path = os.path.join(data_path, 'query')
 

@@ -143,8 +143,10 @@ main<-function(paName, paPath, save_path){
 # base_path = 'E:\\YuAnHuang\\kevislin\\Cell_Classification\\experiment\\species_v3'
 # proj = 'mca_gse84133'
 paPath = "E:\\yuanhuang\\kevislin\\data\\pathway\\new_human"
+mouse_paname = c('KEGG', 'Reactome', 'Wikipathways', 'biase')
 paName = c('KEGG', 'Reactome', 'Wikipathways', 'yan', 'inoh', 'pathbank')
 
+# paName = mouse_paname
 
 args = commandArgs(trailingOnly = TRUE)
 base_path = args[[1]]
@@ -163,10 +165,13 @@ for(i in 1:2) {
 
 # query
 data_path = paste(base_path, 'raw_data', 'query', sep='\\')
-mat_name = 'data_1.csv'
-mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
-
-for(i in 1:4) {
-    main(paName[i], paPath, paste(data_path, paste('sm_1_', i, '.csv',sep=''), sep='\\'))
+# 多少个query
+for(i in 1:1) {
+    mat_name = paste('data_', i, '.csv', sep='')
+    mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
+    mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置
+    for(j in 1:4) {
+        main(paName[i], paPath, paste(data_path, paste(paste('sm_', i, '_', sep=''), j, '.csv',sep=''), sep='\\'))
+    }
 }
+

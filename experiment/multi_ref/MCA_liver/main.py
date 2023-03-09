@@ -16,35 +16,37 @@ import wandb
 data_config = {
     'root_path': '.', # data.h5 path
     'ref_name': 'cel_seq2',
-    'query_name': 'smart_seq',
-    'ref_key': 'ref_1',
+    'query_name': 'dropseq',
+    'ref_key': 'ref_2',
     'query_key': 'query_1',
-    'project': 'MCA_liver',
+    'project': 'MCA liver',
 }
 
 parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
+    'epoch_cpm_ref': 300,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
+    'nf': 2000,
     'classifier_name':"FC",
     # 不太重要参数
-    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
-    'epoch_gcn': 500,  # Huang gcn 训练的epoch
-    'epoch_classifier': 500,
+    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
+    'epoch_gcn': 200,  # Huang gcn 训练的epoch
+    'epoch_classifier': 5,
+
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
-    'patience_for_cpm_ref': 300, # cpm train ref 早停patience
-    'patience_for_cpm_query': 200, # query h 早停patience
+    'patience_for_cpm_ref': 50, # cpm train ref 早停patience
+    'patience_for_cpm_query': 50, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.2,
+    'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':True,
+    'show_result': True,
 }
 
 
@@ -59,11 +61,13 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=2000)
-    # ref_norm_data = sc_normalization(ref_data)
-    # query_norm_data = sc_normalization(query_data)
+    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
     ref_norm_data = ref_data
     query_norm_data = query_data
+    # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
+    # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
+
+
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
@@ -74,6 +78,7 @@ def main_process():
 
     if parameter_config['exp_mode'] == 2:
         # multi ref
+        # mvccmodel = torch.load('model/mvccmodel_'+data_config['query_key']+".pt")
         mvccmodel = torch.load('model/mvccmodel_multi.pt')
         ref_label, query_label = mvccmodel.label_encoder.transform(ref_label), mvccmodel.label_encoder.transform(
             query_label)
@@ -137,32 +142,12 @@ def main_process():
     run.finish()
     return ret
 
-final_acc = []
-for i in range(1, 6):
-    if i == 1:
-        parameter_config['exp_mode'] = 1
-    data_config['ref_key'] = 'ref_' + str(i)
-    parameter_config['exp_mode'] = 2
-    if i == 4:
-        parameter_config['epoch_cpm_ref'] = 100
-    if i == 5:
-        # 和ref_4作比较
-        parameter_config['epoch_cpm_ref'] = 100
-        parameter_config['exp_mode'] = 1
-        data_config['ref_key'] = 'ref_4'
 
-    ret = main_process()
-    acc = accuracy_score(ret['pred'], ret['query_label'])
-    # save model
-    if parameter_config['exp_mode'] == 1:
-        torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['ref_key'] + ".pt")
-        torch.save(ret['mvcc_model'], 'model/mvccmodel_multi.pt')
-    elif parameter_config['exp_mode'] == 2:
-        torch.save(ret['mvcc_model'], 'model/mvccmodel_multi_' + data_config['ref_key'] + ".pt")
-        torch.save(ret['mvcc_model'], 'model/mvccmodel_multi.pt')
-    print("pred acc is {:.3f}".format(acc))
-    if i >= 4:
-        final_acc.append(acc)
+ret = main_process()
+# acc = accuracy_score(ret['pred'], ret['query_label'])
+# print("pred acc is {:.3f}".format(acc))
 
 
-print(final_acc)
+# save model
+torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['ref_key'] + ".pt")
+torch.save(ret['mvcc_model'], 'model/mvccmodel_multi.pt')

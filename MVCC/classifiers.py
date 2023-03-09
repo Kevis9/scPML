@@ -59,10 +59,10 @@ class Classifier(torch.nn.Module):
     def __init__(self):
         super(Classifier, self).__init__()
 
-    def train_classifier(self, data, labels, patience, save_path, test_size, batch_size=128, epochs=300):
+    def train_classifier(self, data, labels, patience, save_path, test_size, batch_size=128, epochs=300, lr=1e-3):
         print("Train  classifier")
 
-        optimizer_for_classifier = optim.Adam(params=self.parameters())
+        optimizer_for_classifier = optim.Adam(params=self.parameters(), lr=lr)
 
         # 确定各类别的比例，用 (1-x) / (1-x).sum() 归一
         alpha = np.unique(labels, return_counts=True)[1]
@@ -175,6 +175,20 @@ class FCClassifier(Classifier):
         x = self.fcn(data)
         return x
 
+class FCClassifier2(Classifier):
+    def __init__(self, input_dim, class_num):
+        super(FCClassifier2, self).__init__()
+        self.fcn = nn.Sequential(
+            nn.Linear(input_dim, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 64),
+            nn.ReLU(),
+            nn.Linear(64, class_num)
+        )
+
+    def forward(self, data):
+        x = self.fcn(data)
+        return x
 
 class GCNClassifier(Classifier):
     def __init__(self, input_dim, output_dim):

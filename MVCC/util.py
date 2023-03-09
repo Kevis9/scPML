@@ -21,7 +21,9 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
+import torch.nn.functional as F
 hue = []
+
 
 def mean_norm(data):
     '''
@@ -35,10 +37,9 @@ def mean_norm(data):
     # 防止出现除0的问题
     row_sum[np.where(row_sum == 0)] = 1
 
-    # scale_factor = 1e4
+    scale_factor = 1e4
     # data_norm = np.log1p((data / row_sum.reshape(-1 ,1))*scale_factor)
     data_norm = (data / row_sum.reshape(-1, 1)) * mean_transcript
-
 
     return data_norm
 
@@ -77,12 +78,35 @@ def mask_data(data, masked_prob):
 
     return X, mask_idx
 
+
+def mask_cells(data, masked_prob):
+    '''
+        对data中每个cell进行随机的mask
+    '''
+    seed = 1
+    random.seed(seed)
+    mask_rows = []
+    mask_cols = []
+    num = int(data.shape[1] * masked_prob)
+    mask_col_idx = random.sample(range(data.shape[1]), num)
+    for i in range(data.shape[0]):
+        mask_rows += [i] * num
+        mask_cols += mask_col_idx
+        # mask_col_idx = random.sample(range(data.shape[1]), num)
+        # mask_cols += mask_col_idx
+    X = copy.deepcopy(data)
+    # print(index_pair[0])
+    X[mask_rows, mask_cols] = 0
+    mask_idx = [mask_rows, mask_cols]
+    return X, mask_idx
+
+
 def mask_column(data, masked_prob, cols):
     tmp_data = data[:, cols]
     index_pair = np.where(tmp_data != 0)
     seed = 1
-    random.seed(seed)   #为了复现
-    idx = random.sample(range(index_pair[0].shape[0]), int(index_pair[0].shape[0] * masked_prob))   #无重复采样
+    random.seed(seed)  # 为了复现
+    idx = random.sample(range(index_pair[0].shape[0]), int(index_pair[0].shape[0] * masked_prob))  # 无重复采样
     mask_rows = index_pair[0][idx]
     # cols 代表原来数据的列下标
     cols = np.array(cols)
@@ -95,8 +119,9 @@ def mask_column(data, masked_prob, cols):
     X[mask_idx[0], mask_idx[1]] = 0
     return X, mask_idx
 
+
 def construct_graph_with_knn(data, k=2):
-    A = kneighbors_graph(data, k, mode='connectivity', include_self=False) # 拿到Similarity矩阵
+    A = kneighbors_graph(data, k, mode='connectivity', include_self=False)  # 拿到Similarity矩阵
     G = nx.from_numpy_matrix(A.todense())
     edges = []
     # 把有向图转为无向图
@@ -110,18 +135,65 @@ def construct_graph_with_knn(data, k=2):
     g_data = geoData(x=feat, edge_index=edges)
     return g_data
 
+
+def check_out_similarity_matrix(sm, labels, k, sm_name):
+    '''
+        检查一下相似矩阵中类型相同的细胞是否存在边
+        给出具体的信息
+    '''
+    sm = construct_adjacent_matrix(sm, k)
+    types = sorted(list(set(labels)))
+    confusion_matrix = []
+    for i in range(len(set(types))):
+        confusion_matrix.append([0 for j in range(len(types))])
+
+    for i, label in enumerate(types):
+        idx = np.where(labels == label)
+        label_sm = sm[idx[0], :]
+        sm_sum = label_sm.sum(axis=0)
+        # print("For {:}({:}), his neighbor situation is".format(label, len(idx[0])))
+        for j, type_x in enumerate(types):
+            type_x_idx = np.where(labels == type_x)
+            # print("{:}: {:} egdes".format(type_x, sum(sm_sum[type_x_idx])))
+            confusion_matrix[i][j] = sum(sm_sum[type_x_idx])
+
+
+    # 绘制类型之间的相似矩阵
+    confusion_mat = np.array(confusion_matrix)
+    # 归一化
+    confusion_mat = confusion_mat / np.sum(confusion_mat, axis=1).reshape(-1, 1)
+    data_df = pd.DataFrame(
+        confusion_mat
+    )
+    data_df.columns = types
+    data_df.index = types
+
+    sns.heatmap(data=data_df, cmap="Blues", cbar=True, xticklabels=True, yticklabels=True)
+    plt.savefig(sm_name, dpi=300, bbox_inches="tight")
+    plt.clf()
+
+
+
+
+
 def get_similarity_matrix(data, k=2):
+    '''
+        利用KNN得到一个邻接矩阵
+    '''
     A = kneighbors_graph(data, k, mode='connectivity', include_self=False)  # 拿到Similarity矩阵
     return A.todense()
 
-
-def construct_graph(data, similarity_mat, k):
+def construct_adjacent_matrix(similarity_mat, k):
     '''
-    :param data: 表达矩阵 (被mask的矩阵)
-    :param similarity_mat: 邻接矩阵 (ndarray)
-    :return: 返回Cell similarity的图结构
+        从权重的相似矩阵得到邻接矩阵
     '''
-
+    if k==0:
+        '''
+            假设自己做自己的邻居
+        '''
+        similarity_mat = np.zeros(shape=similarity_mat.shape)
+        similarity_mat[np.diag_indices_from(similarity_mat)] = 1
+        return similarity_mat
     # 要对similarity_mat取前K个最大的weight作为neighbors
     k_idxs = []
     # 将对角线部分全部设为0, 避免自己做自己的邻居
@@ -135,16 +207,24 @@ def construct_graph(data, similarity_mat, k):
     for i in range(similarity_mat.shape[0]):
         similarity_mat[i, k_idxs[i]] = 1
 
-    similarity_mat = similarity_mat.astype(np.int64)
-    graph = nx.from_numpy_matrix(np.matrix(similarity_mat))
+    adjacent_mat = similarity_mat.astype(np.int64)
+    return adjacent_mat
 
+def construct_graph(data, similarity_mat, k):
+    '''
+    :param data: 表达矩阵 (被mask的矩阵)
+    :param similarity_mat: 邻接矩阵 (ndarray)
+    :return: 返回Cell similarity的图结构
+    '''
+
+    similarity_mat = construct_adjacent_matrix(similarity_mat, k)
+    graph = nx.from_numpy_matrix(np.matrix(similarity_mat))
 
     edges = []
     # 把有向图转为无向图
     for (u, v) in graph.edges():
         edges.append([u, v])
         edges.append([v, u])
-
 
     edges = np.array(edges).T
     edges = torch.tensor(edges, dtype=torch.long)
@@ -163,6 +243,8 @@ def read_data_label_h5(path, key):
 
     label_df = pd.read_hdf(data_path, key + '/label')
     # print(label_df['type'].value_counts())
+
+    print(label_df.iloc[:, 0].value_counts())
 
     label = label_df.to_numpy().reshape(-1)
 
@@ -201,7 +283,6 @@ def read_data_label_h5(path, key):
 
 
 def read_similarity_mat_h5(path, key):
-
     # print("reading graph...")
     data_path = os.path.join(path, 'data.h5')
     mat_df = pd.read_hdf(data_path, key)
@@ -216,6 +297,7 @@ def read_similarity_mat_h5(path, key):
     # print("Finish")
     return similarity_mat.astype(np.float64)
 
+
 def sel_feature(data1, data2, label1, nf=3000):
     # 先去掉表达量为0的基因, 然后再做交集, 这里暂时不打算取HVG
     # sum1 = np.sum(data1, axis=0)
@@ -228,7 +310,7 @@ def sel_feature(data1, data2, label1, nf=3000):
     # print("After gene selction , ref data shape {:}, query data shape {:}".format(data1.shape, data2.shape))
     # return data1, data2
 
-    sel_model = SelectKBest(k=nf)   #default score function is f_classif
+    sel_model = SelectKBest(k=nf)  # default score function is f_classif
 
     sel_model.fit(data1, label1)
     idx = sel_model.get_support(indices=True)
@@ -244,9 +326,11 @@ def sel_feature(data1, data2, label1, nf=3000):
 
     return data1, data2
 
+
 def mnnCorrect(data1, data2):
     # 消除Batch effects影响
     pass
+
 
 def pre_process(data1, data2, label1, nf=2000):
     # 先选择合适的feature
@@ -259,6 +343,7 @@ def pre_process(data1, data2, label1, nf=2000):
     # 再做ScaleData: z_score
     # data1, data2 = z_score_scale(data1), z_score_scale(data2)
     return data1, data2
+
 
 def cpm_classify(lsd1, lsd2, label):
     """In most cases, this method is used to predict the highest accuracy.
@@ -363,15 +448,70 @@ def encode_label(ref_label, query_label):
     :return:
     '''
     enc = LabelEncoder()
-    enc.fit(ref_label)
+
+    enc.fit(np.concatenate([ref_label, query_label]))
 
     return enc.transform(ref_label), enc.transform(query_label), enc
 
 
-def precies_of_cell(cell_type, pred, trues):
+def precision_of_cell(cell_type, pred, trues):
     idx = np.array(np.where(trues == cell_type)).squeeze()
     acc = (pred[idx] == cell_type).sum() / len(idx)
     return acc
+
+
+
+def confusion_plot(pred, true, save_name):
+    print(accuracy_score(pred, true))
+
+    name = list(set(true))
+    name = [x.lower() for x in name]
+    if not "unassigned" in name:
+        name.append("unassigned")
+    name.sort()
+
+    name_idx = {}
+    for i in range(len(name)):
+        name_idx[name[i]] = i
+
+    confusion_mat = []
+    # 行是true，只考虑true的部分
+    for i in range(len(set(true))):
+        confusion_mat.append([0 for j in range(len(name))])
+
+    pred = list(pred)
+    true = list(true)
+
+    pred = [x.lower() for x in pred]
+    true = [x.lower() for x in true]
+
+    for i in range(len(true)):
+        row = name_idx[true[i]]
+        col = name_idx[pred[i]]
+        confusion_mat[row][col] += 1
+
+    ## 构造DataFrame
+    confusion_mat = np.array(confusion_mat)
+    # 归一化
+    confusion_mat = confusion_mat / np.sum(confusion_mat, axis=1).reshape(-1, 1)
+    data_df = pd.DataFrame(
+        confusion_mat
+    )
+    data_df.columns = name
+    true_name = list(set(true))
+    true_name.sort()
+    data_df.index = true_name
+
+    # 将数据倒置过来
+    data_df = data_df.reindex(index=data_df.index[::-1])
+
+    print(data_df.index)
+    print(data_df.columns)
+
+    sns.heatmap(data=data_df, cmap="Blues", cbar=False, xticklabels=True, yticklabels=True)
+    plt.savefig(save_name, dpi=600, bbox_inches="tight")
+    # plt.show()
+
 
 def show_result(ret, save_path):
     if not os.path.exists(save_path):
@@ -394,17 +534,28 @@ def show_result(ret, save_path):
     # bme = sum(bme) / len(bme)
     acc = accuracy_score(ret['query_label'], ret['pred'])
     f1 = f1_score(ret['query_label'], ret['pred'], average='macro')
-    alpha_precision = precies_of_cell("alpha", ret['pred'], ret['query_label'])
-    beta_precision = precies_of_cell("beta", ret['pred'], ret['query_label'])
-    gamma_precision = precies_of_cell("gamma", ret['pred'], ret['query_label'])
-    delta_precision = precies_of_cell("delta", ret['pred'], ret['query_label'])
 
-    print("alpha precision is {:.3f}".format(alpha_precision))
-    print("beta precision is {:.3f}".format(beta_precision))
-    print("gamma precision is {:.3f}".format(gamma_precision))
-    print("delta precision is {:.3f}".format(delta_precision))
+    cell_types = set(ret['query_label'])
+    for c_t in cell_types:
+        print("{:} accuracy is {:.3f}".format(c_t, precision_of_cell(c_t, ret['pred'], ret['query_label'])))
+
     print("Prediction Accuracy is {:.3f}".format(acc))
+    # confusion_plot(ret['pred'], ret['query_label'], save_name=os.path.join(save_path, 'confusion_plot.png'))
 
+    '''
+        unknown_cell type的的实验，保存label，preds和prob
+    '''
+    query_trues = pd.DataFrame(data=ret['query_label'], columns=['type'])
+    query_preds = pd.DataFrame(data=ret['pred'], columns=['type'])
+    # query_prob = pd.DataFrame(data=ret['prob'], columns=['prob'])
+
+    query_trues.to_csv(os.path.join(save_path, 'query_labels.csv'), index=False)
+    query_preds.to_csv(os.path.join(save_path, 'query_preds.csv'), index=False)
+    # query_prob.to_csv(os.path.join(save_path, 'query_prob.csv'), index_label=False)
+
+    # np.save(os.path.join(save_path, 'query_trues.npy'), ret['query_label'])
+    # np.save(os.path.join(save_path, 'query_preds.npy'), ret['pred'])
+    # np.save(os.path.join(save_path, 'prob.npy'), ret['prob'])
 
     '''
         2023.1.3 以下代码暂时注释掉，为了multi ref更快显示结果，同时保存模型

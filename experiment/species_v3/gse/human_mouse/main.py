@@ -1,13 +1,15 @@
 import sys
 import torch
 
+from MVCC.classifiers import FCClassifier
+
 sys.path.append('../..')
 import os
 os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, z_score_scale, construct_graph
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -146,6 +148,64 @@ def main_process():
         show_result(ret, "result")
     # show_result(ret, "result")
     run.finish()
+
+    ''' 单纯的FC '''
+    classifier = FCClassifier(2000, len(set(ref_label)))
+    classifier = classifier.to(device='cuda:0')
+    ref_label, query_label, enc = encode_label(ref_label, query_label)
+    classifier.train_classifier(ref_norm_data,
+                                ref_label,
+                                100,
+                                save_path='.',
+                                test_size=0.2,
+                                batch_size=128,
+                                epochs=500,
+                                lr=1e-3
+                                )
+
+    classifier.eval()
+    with torch.no_grad():
+        logits = classifier(torch.from_numpy(query_norm_data).float().to("cuda:0"))
+        pred = logits.argmax(dim=1)
+    pred = pred.cpu().detach().numpy()
+    print("单纯 FC :{:.3f}".format(accuracy_score(pred, query_label)))
+
+    ''' 
+        ===========================================================
+    '''
+
+    '''
+            GCN + FC 
+        '''
+    classifier = FCClassifier(parameter_config['gcn_middle_out'], len(set(ref_label)))
+    classifier = classifier.to(device='cuda:0')
+    ref_label, query_label, enc = encode_label(ref_label, query_label)
+
+    ref_graph_data = construct_graph(ref_norm_data, ref_sm_arr[0], 0)
+
+    ref_norm_data = z_score_scale(mvccmodel.gcn_models[0].get_embedding(ref_graph_data).detach().cpu().numpy())
+    query_graph_data = construct_graph(query_norm_data, query_sm_arr[0], 0)
+    query_norm_data = z_score_scale(mvccmodel.gcn_models[0].get_embedding(query_graph_data).detach().cpu().numpy())
+
+    classifier.train_classifier(ref_norm_data,
+                                ref_label,
+                                100,
+                                save_path='.',
+                                test_size=0.2,
+                                batch_size=128,
+                                epochs=500,
+                                lr=1e-3
+                                )
+
+    classifier.eval()
+    with torch.no_grad():
+        logits = classifier(torch.from_numpy(query_norm_data).float().to("cuda:0"))
+        pred = logits.argmax(dim=1)
+    pred = pred.cpu().detach().numpy()
+    print("GCN + FC :{:.3f}".format(accuracy_score(pred, query_label)))
+
+    ''' ================================================= '''
+
     return ret
 
 

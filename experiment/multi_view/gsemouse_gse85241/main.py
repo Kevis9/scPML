@@ -7,7 +7,7 @@ os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
 from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, check_out_similarity_matrix
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -70,13 +70,20 @@ def main_process():
     # query_norm_data = sc_normalization(query_data)
     # ref_norm_data = ref_data
     # query_norm_data = query_data
-    serise = range(3,4)
+    serise = range(0,4)
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
                   serise]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     serise]
+    for i in range(len(ref_sm_arr)):
+        check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=3, sm_name='ref_'+str(i+1))
+
+    for i in range(len(query_sm_arr)):
+        check_out_similarity_matrix(query_sm_arr[i], query_label, k=3, sm_name='query_' + str(i + 1))
+    exit()
+
     # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
     # query_sm_arr.append(construct_graph_with_knn(query_norm_data))
 

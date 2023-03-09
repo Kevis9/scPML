@@ -17,11 +17,32 @@ set list[8]=indrop
 set list[9]=seq_well
 set list[10]=smart_seq
 
-for /l %%n in (0,1,10) do (
+set list[11]=Cao_2020_stomach
+set list[12]=GSE72056
+set list[13]=GSE98638
+set list[14]=GSE99254
+set list[15]=GSE108989
+set list[16]=MacParland
+
+set list[18]=Guo
+set list[19]=He_Calvarial_Bone
+set list[20]=Enge
+set list[21]=Hu
+set list[22]=Wu_human
+@REM 下面是withindatast的mouse
+set list[23]=GSE115746
+set list[24]=GSM3271044
+set list[25]=Guo_2021
+set list[26]=Loo_E14.5
+@REM 以上
+
+@REM python split_and_process.py
+
+for /l %%n in (13,1,14) do (
 @REM     rm -rf E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\data
 @REM     cp -r E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\raw_data E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\data
-@REM     Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
-    python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]!
+@REM     Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]!
+    Rscript ..\..\utils\get_sm.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]!
+    python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]! --subpath=raw_data
+@REM     python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]! --subpath=data
 )
-
-python main.py

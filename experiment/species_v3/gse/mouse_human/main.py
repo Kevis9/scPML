@@ -1,14 +1,16 @@
 import sys
 import torch
 
+from MVCC.classifiers import FCClassifier
+
 sys.path.append('../..')
 
 import os
 os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, check_out_similarity_matrix,\
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, z_score_scale, construct_graph
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -79,6 +81,14 @@ def main_process():
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
                     range(4)]
+
+    # for i in range(len(ref_sm_arr)):
+    #     check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=3, sm_name='ref_'+str(i+1))
+    #
+    # for i in range(len(query_sm_arr)):
+    #     check_out_similarity_matrix(query_sm_arr[i], query_label, k=3, sm_name='query_' + str(i + 1))
+    # exit()
+
     # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
     # query_sm_arr.append(construct_graph_with_knn(query_norm_data))
 
@@ -146,6 +156,8 @@ def main_process():
     if parameter_config['show_result']:
         show_result(ret, "result")
     run.finish()
+
+
     return ret
 
 
