@@ -5,28 +5,29 @@ from functools import reduce
 1. 细胞类型取交集， 可以左连接(可选)
 2. 基因取交集，去掉表达为0的基因(可选)
 '''
-save_path = 'experiment/multi_ref/PBMC2/raw_data'
+save_path = 'experiment/robustness/85241_5061/raw_data'
 
 # raw_data_save_path= 'e/xperiment/platform/new_version/seq_well_drop_seq/raw_data'
 
 path = 'E:/YuAnHuang/kevislin/data/platform/10X_V2'
 ref_paths = [
-    'E:/YuAnHuang/kevislin/data/platform/Seq_Well',
-    'E:/YuAnHuang/kevislin/data/platform/DropSeq',
-    'E:/YuAnHuang/kevislin/data/platform/10X_V3'
+    # 'E:/YuAnHuang/kevislin/data/platform/Seq_Well',
+    # 'E:/YuAnHuang/kevislin/data/platform/DropSeq',
+    # 'E:/YuAnHuang/kevislin/data/platform/10X_V3'
+    'E:/YuAnHuang/kevislin/data/platform/GSE85241'
 ]
 
 query_paths = [
-    'E:/YuAnHuang/kevislin/data/platform/InDrop'
+    'E:/YuAnHuang/kevislin/data/species/E-MTAB-5061'
     # 'E:/yuanhuang/kevislin/data/platform/GSE85241',
     # 'E:/yuanhuang/kevislin/data/platform/10X_V3/',
     # 'H:/yuanhuang/kevislin/data/platform/Seq_Well',
 ]
 flags = {
-    'PBMC query': True,
-    'PBMC ref' : True,
+    'PBMC query': False,
+    'PBMC ref' : False,
     'E-MTAB': False, #旧的EM用
-    'E-MTAB query': False,
+    'E-MTAB query': True,
     'get_rid_of_gene':False, #去掉表达量为0的基因
     'if ref has 2000 genes':False,
 }

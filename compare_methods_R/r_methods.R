@@ -18,12 +18,22 @@ read_label <- function(path) {
     return (label)
 }
 
-read_ref_query_data_label <- function(path, ref_key, query_key) {
+read_ref_query_data_label <- function(path, ref_key, query_key, reverse=FALSE) {
 
-    ref_data_path = paste(path, 'ref', paste('data_', ref_key, '.csv', sep=''), sep='/')
-    ref_label_path = paste(path, 'ref', paste('label_', ref_key, '.csv', sep=''), sep='/')
-    query_data_path = paste(path, 'query', paste('data_', query_key, '.csv', sep=''), sep='/')
-    query_label_path = paste(path, 'query', paste('label_', query_key, '.csv', sep=''), sep='/')
+    ref_name = 'ref'
+    query_name = 'query'
+    if (reverse) {
+       #交换
+       ref_name = 'query'
+       query_name = 'ref'
+    }
+    ref_data_path = paste(path, ref_name, paste('data_', ref_key, '.csv', sep=''), sep='/')
+    ref_label_path = paste(path, ref_name, paste('label_', ref_key, '.csv', sep=''), sep='/')
+    query_data_path = paste(path, query_name, paste('data_', query_key, '.csv', sep=''), sep='/')
+    query_label_path = paste(path, query_name, paste('label_', query_key, '.csv', sep=''), sep='/')
+
+
+
 #     print(ref_data_path)
 #     print(query_data_path)
     ref_data = t(read_data(ref_data_path)) # gene x cell
@@ -89,7 +99,8 @@ save_prob <- function(prob, proj_name, method_name){
 
 }
 
-seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label, save_path=".") {
+seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label, proj_name) {
+
     # all input data must be matrix
     # reurn prediction (matrix)
     ref_data = as.data.frame(ref_data)
@@ -118,27 +129,50 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label, save_p
         data <- NormalizeData(data)
         data <- FindVariableFeatures(data,
                                        selection.method = "vst",
-                                       nfeature=2000)
+                                       nfeature=500)
         return(data)})
 
     reference.object <- objs1[[1]];
     query.object <- objs1[[2]]
     reference.object <- ScaleData(reference.object, verbose = FALSE)
     reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
-    reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30, reference.reduction = "pca")
-    reference.object = RunUMAP(reference.object, dims = 1:30, reduction = "pca", return.model = TRUE)
+    reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30, reduction='pcaproject', reference.reduction='pca')
+    reference.object = RunUMAP(reference.object, dims = 1:30, return.model = TRUE)
 #     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
     query <-  MapQuery(anchorset = reference.anchors, reference = reference.object, query = query.object,
-    refdata = list(celltype = "type"), reference.reduction = "pca", reduction.model = "umap")
+    refdata = list(celltype = "type"), reduction.model = "umap")
+
     pred = query$predicted.celltype
 
+    prob = pmax(as.matrix(query$predicted.celltype.score))
+    save_prob(prob, proj_name, "seurat_pca")
     ref_umap_data = reference.object@reductions$umap@cell.embeddings
     query_umap_data = query@reductions$ref.umap@cell.embeddings
+    print("proj name")
+    print(proj_name)
+    # 保存Seurat的embeddings
+    save_path = paste("result", proj_name, sep='/')
+    if(!file.exists(save_path)) {
+        dir.create(save_path)
+    }
+    save_path = paste("result", proj_name, 'seurat_pca', sep='/')
+    if(!file.exists(save_path)) {
+        dir.create(save_path)
+    }
+    embeddings = rbind(ref_umap_data, query_umap_data)
+    pred = as.matrix(pred)
+    ref_label = as.matrix(ref_label)
+    colnames(pred) = c('type')
+    colnames(ref_label)=c('type')
 
-#     write.csv(ref_umap_data, paste(save_path, "ref_embeddings_2d.csv", sep='/'))
-#     write.csv(query_umap_data, paste(save_path, "query_embeddings_2d.csv", sep='/'))
-#     write.csv(ref_label,paste(save_path, "ref_label.csv", sep='/'), row.names=FALSE)
-#     write.csv(pred, paste(save_path, "query_pred.csv", sep='/'), row.names=FALSE)
+    all_preds = rbind(as.matrix(ref_label), as.matrix(pred))
+    print("save path" )
+    print(save_path)
+    write.csv(embeddings, paste(save_path, "embeddings_2d.csv", sep='/'), row.names=F)
+    write.csv(all_preds, paste(save_path, "all_preds.csv", sep='/'), row.names=F)
+    write.csv(as.matrix(reference.anchors@anchors), paste(save_path, "anchors.csv", sep='/'), row.names=F)
+    save_pred(pred, proj_name, "seurat_pca")
+
     return (as.matrix(pred))
 }
 
@@ -177,21 +211,37 @@ seurat_cca_pred <- function(ref_data, query_data, ref_label, query_label, proj_n
     reference.object <- ScaleData(reference.object, verbose = FALSE)
     reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
     reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30, reduction = 'cca')
-    reference.object = RunUMAP(reference.object, dims = 1:30, reduction = "pca", return.model = TRUE)
+    reference.object = RunUMAP(reference.object, dims = 1:30, return.model = TRUE)
 #     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
+    # weight.reduction 会自动设置成cca
     query <-  MapQuery(anchorset = reference.anchors, reference = reference.object, query = query.object,
-    refdata = list(celltype = "type"), reference.reduction = "cca", reduction.model = "umap")
-    pred = query$predicted.celltype
+    refdata = list(celltype = "type"), reduction.model = "umap")
 
+    pred = query$predicted.celltype
     prob = pmax(as.matrix(query$predicted.celltype.score))
     save_prob(prob, proj_name, "seurat_cca")
     ref_umap_data = reference.object@reductions$umap@cell.embeddings
     query_umap_data = query@reductions$ref.umap@cell.embeddings
+    # 保存Seurat的embeddings
+    save_path = paste("result", proj_name, sep='/')
+    if(!file.exists(save_path)) {
+        dir.create(save_path)
+    }
+    save_path = paste("result", proj_name, 'seurat_cca', sep='/')
+    if(!file.exists(save_path)) {
+        dir.create(save_path)
+    }
+    embeddings = rbind(ref_umap_data, query_umap_data)
+    pred = as.matrix(pred)
+    ref_label = as.matrix(ref_label)
+    colnames(pred) = c('type')
+    colnames(ref_label)=c('type')
 
-#     write.csv(ref_umap_data, paste(save_path, "seurat_cca_ref_embeddings_2d.csv", sep='_'))
-#     write.csv(query_umap_data, paste(save_path, "seurat_cca_query_embeddings_2d.csv", sep='_'))
-#     write.csv(ref_label,paste(save_path, "seurat_cca_ref_label.csv", sep='_'), row.names=FALSE)
-#     write.csv(pred, paste(save_path, "seurat_cca_query_pred.csv", sep='_'), row.names=FALSE)
+    all_preds = rbind(as.matrix(ref_label), as.matrix(pred))
+
+    write.csv(embeddings, paste(save_path, "embeddings_2d.csv", sep='/'), row.names=F)
+    write.csv(all_preds, paste(save_path, "all_preds.csv", sep='/'), row.names=F)
+    write.csv(as.matrix(reference.anchors@anchors), paste(save_path, "anchors.csv", sep='/'), row.names=F)
     save_pred(pred, proj_name, "seurat_cca")
     return (as.matrix(pred))
 }
@@ -227,6 +277,7 @@ single_r_pred <- function(ref_data, query_data, ref_label, proj_name) {
 
     prob <- as.matrix(apply(as.matrix(pred$scores), 1, max, na.rm=TRUE))
     pred <- pred$labels
+
     save_prob(prob, proj_name, "single_r")
     save_pred(pred, proj_name, "single_r")
     return (pred)
@@ -258,7 +309,7 @@ scmap_pred <- function(ref_data, query_data, ref_label, proj_name) {
 
     scmapCluster_results <- scmapCluster(projection = query_sce,
                                          index_list = list(yan = metadata(ref_sce)$scmap_cluster_index),
-                                         threshold=0)
+                                         threshold=0.5)
 
     prob = scmapCluster_results$scmap_cluster_siml
 
@@ -286,38 +337,33 @@ chetah_pred <- function(ref_data, query_data, ref_label, proj_name) {
 #     assay(reference, "counts") <- apply(assay(reference, "counts"), 2, function(column) log2((column/sum(column) * 1e4) + 1))
     # aka query
     input <- SingleCellExperiment(assays = list(counts = query_data))
+    # 正常，默认版
+    # unknown_cell的检测就用默认版本
     input <- CHETAHclassifier(input = input, ref_cells = reference)
+    # Unknwon Cell type，设置默认的thresh为0.5， 之前的0.1也太低了
+#     input <- CHETAHclassifier(input = input, ref_cells = reference, thresh=0.05)
+
     ## Extract celltypes:
     pred <- input$celltype_CHETAH
     # Node0应该涵盖了所有类型的confidence score
     prob <- as.matrix(apply(input@int_colData$CHETAH$conf_scores$Node0, 1, max, na.rm=TRUE))
 #     prob = pmax(input@int_colData$CHETAH$conf_scores$Node0)
-
     save_prob(prob, proj_name, "chetah")
-
     save_pred(pred, proj_name, "chetah")
     return (as.matrix(pred))
 }
 
-main <- function(path, ref_key, query_key, method, proj_name){
-
-    # return accuracy
-    print(path)
-    data = read_ref_query_data_label(path, ref_key, query_key)
+main <- function(data, method, proj_name){
 
     ref_data = data[[1]]
     query_data = data[[2]]
     ref_label = data[[3]]
     query_label = data[[4]]
 
-    save_labels(query_label, proj_name, "seurat_cca")
-    save_labels(query_label, proj_name, "scmap")
-    save_labels(query_label, proj_name, "chetah")
-    save_labels(query_label, proj_name, "single_r")
 
-    print("数据读取完成")
+    print(proj_name)
     if(method == 'seurat_pca') {
-        pred = seurat_pca_pred(ref_data, query_data, ref_label, query_label, save_path)
+        pred = seurat_pca_pred(ref_data, query_data, ref_label, query_label, proj_name)
         acc = acc_score(pred, query_label)
     }
     if(method == 'seurat_cca') {
@@ -348,7 +394,8 @@ main <- function(path, ref_key, query_key, method, proj_name){
 }
 
 final_acc = list()
-platform_project = c('cel_seq_smart_seq',
+platform_project = c(
+            'cel_seq_smart_seq',
             'cel_seq_10x_v3',
             'seq_well_smart_seq',
             'seq_well_drop_seq',
@@ -358,15 +405,16 @@ platform_project = c('cel_seq_smart_seq',
             'indrop_10x_v3',
             'indrop_smart_seq',
             'drop_seq_smart_seq',
-            'drop_seq_10x_v3',
-            '84133_5061'
+            'drop_seq_10x_v3'
+#             '84133_5061'
             )
 
 species_project = c(
-    'gse/mouse_human',
-    'gse/human_mouse',
-    'gse_emtab/mouse_human',
-    'mouse_combine'
+#     'gse/mouse_human',
+#     'gse/human_mouse',
+#     'gse_emtab/mouse_human',
+#     'mouse_combine'
+    'combine_mouse'
 #     'gsemouse_gse85241'
 )
 
@@ -397,31 +445,84 @@ within_dataset4= c(
 
 unknown_cell_type = c(
 #     'GSE72056_GSE103322'
+    'GSE72056_GSE103322_B_cell',
+    'GSE72056_GSE103322_Endothelial',
+    'GSE72056_GSE103322_Macrophage',
+    'GSE72056_GSE103322_malignant',
+    'GSE72056_GSE103322_T_cell'
+)
+
+unknown_cell_type2 = c(
+    'GSE72056_GSE103322_malignant',
+#     'GSE84133_EMTAB5061_alpha',
+#     'GSE84133_EMTAB5061_beta',
+#     'GSE84133_EMTAB5061_delta',
+#     'GSE84133_EMTAB5061_gamma'
+    'GSE103322_GSE72056_malignant2',
     'GSE118056_GSE117988'
 )
 
-project = unknown_cell_type
 
-path = '../experiment/unknown_cell'
+species_v4_projects = c(
+    'gsemouse_gsehuman',
+    'gsehuman_gsemouse',
+    'mouse_combine',
+    'combine_mouse'
+)
+
+robustness_projs = c(
+    '85241_5061/dropout/0',
+    '85241_5061/dropout/0.05',
+    '85241_5061/dropout/0.1',
+    '85241_5061/dropout/0.15',
+    '85241_5061/dropout/0.2',
+    '85241_5061/gaussian/0.05',
+    '85241_5061/gaussian/0.1',
+    '85241_5061/gaussian/0.15',
+    '85241_5061/gaussian/0.2'
+)
+
+
+project = platform_project
+path = '../experiment/platform_v2'
 save_path = '.' #这里暂时不需要
+
+reverse = TRUE
 
 for(i in 1:length(project)){
 
     data_path = paste(path, project[i], 'raw_data', sep='/')
+    data = read_ref_query_data_label(data_path, '1', '1', reverse=reverse)
+    query_label = data[[4]]
+
+    proj = project[i]
+    # 如果reverse了
+    if (reverse) {
+        proj = paste(proj, '_reverse', sep='')
+    }
+    save_labels(query_label,proj, "seurat_pca")
+    save_labels(query_label, proj, "seurat_cca")
+    save_labels(query_label,proj, "scmap")
+    save_labels(query_label,proj, "chetah")
+    save_labels(query_label, proj, "single_r")
+
+    print("数据读取完成")
+
+
     acc = c(
-        main(data_path, '1', '1', 'seurat_pca', project[i]),
-        main(data_path, '1', '1', 'seurat_cca', project[i]),
-        main(data_path, '1', '1', 'singler', project[i]),
-        main(data_path, '1', '1', 'scmap', project[i]),
-        main(data_path, '1', '1', 'chetah', project[i])
+        main(data, 'seurat_pca', proj)
+#         main(data, 'seurat_cca', proj),
+#         main(data, 'singler', proj),
+#         main(data, 'scmap', proj),
+#         main(data, 'chetah', proj)
     )
     acc = as.matrix(acc)
     dim(acc) = rev(dim(acc))
     print(acc)
-    colnames(acc) = c('seurat_pca', 'seurat_cca','singler', 'scmap', 'chetah')
+#     colnames(acc) = c('seurat_pca','seurat_cca','singler', 'scmap', 'chetah')
     final_acc[[length(final_acc)+1]] = acc
 }
 final_acc = do.call(rbind, final_acc)
 rownames(final_acc) = project
 print(final_acc)
-# write.csv(final_acc, file='result/acc_within_dataset4.csv')
+# write.csv(final_acc, file='result/acc_data_platform_reverse.csv')

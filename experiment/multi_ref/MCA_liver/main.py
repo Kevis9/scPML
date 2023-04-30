@@ -26,7 +26,7 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 300,
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
@@ -35,8 +35,8 @@ parameter_config = {
     'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 200,  # Huang gcn 训练的epoch
-    'epoch_classifier': 5,
+    'epoch_gcn': 500,  # Huang gcn 训练的epoch
+    'epoch_classifier': 100,
 
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
@@ -49,7 +49,10 @@ parameter_config = {
     'show_result': True,
 }
 
-
+# import pickle
+# with open("hyper_parameters", 'wb') as f:
+#     pickle.dump(parameter_config, f)
+# exit()
 def main_process():
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",

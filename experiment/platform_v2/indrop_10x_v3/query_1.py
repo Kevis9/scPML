@@ -26,7 +26,7 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
+    'epoch_cpm_ref': 300,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
@@ -44,11 +44,18 @@ parameter_config = {
     'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':False,
+    'show_result':True,
 }
 
+import pickle
+with open("hyper_parameters", 'wb') as f:
+    pickle.dump(parameter_config, f)
 
 def main_process():
+    # 设置torch的seed
+    seed = 20
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},

@@ -107,18 +107,29 @@ set list[26]=smart_seq_10x_v3
 set list[27]=5061_84133
 set list[28]=84133_combine
 set list[29]=combine_84133
+
+set list[30]=cel_seq_smart_seq
+set list[31]=cel_seq_10x_v3
+set list[32]=seq_well_smart_seq
+set list[33]=seq_well_drop_seq
+set list[34]=seq_well_10x_v3
+set list[35]=smart_seq_10x_v3
+set list[36]=indrop_drop_seq
+set list[37]=indrop_10x_v3
+set list[38]=indrop_smart_seq
+set list[39]=drop_seq_smart_seq
+set list[40]=drop_seq_10x_v3
+
 @REM Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[18]!
 @REM Rscript ..\..\utils\get_sm.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[28]!
-python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[29]!
+@REM python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[29]!
 
-@REM for /l %%n in (20,1,23) do (
-@REM @REM     rm -rf E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\data
-@REM @REM     cp -r E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\raw_data E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\data
-@REM @REM     Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
-@REM @REM     python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
-@REM @REM     Rscript ..\..\utils\get_sm.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
-@REM     python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
-@REM )
+for /l %%n in (39,1,39) do (
+@REM     Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
+    Rscript ..\..\utils\get_sm.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!
+    python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]! --subpath=raw_data
+    python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]! --subpath=data
+)
 
 
 

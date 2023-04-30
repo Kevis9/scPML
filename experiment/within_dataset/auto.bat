@@ -38,11 +38,11 @@ set list[26]=Loo_E14.5
 
 @REM python split_and_process.py
 
-for /l %%n in (13,1,14) do (
+for /l %%n in (14,1,14) do (
 @REM     rm -rf E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\data
 @REM     cp -r E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\raw_data E:\YuAnHuang\kevislin\Cell_Classification\experiment\platform_v2\!list[%%n]!\data
-@REM     Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]!
     Rscript ..\..\utils\get_sm.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]!
+    Rscript ..\..\utils\pre_process.R E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]!
     python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]! --subpath=raw_data
-@REM     python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]! --subpath=data
+    python ..\..\utils\data_csv2h5.py --path=E:\YuAnHuang\kevislin\Cell_Classification\experiment\within_dataset\!list[%%n]! --subpath=data
 )

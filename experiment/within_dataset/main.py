@@ -196,13 +196,13 @@ def main_process():
     '''
 
     '''
-            GCN + FC 
-        '''
+        GCN + FC 
+    '''
     classifier = FCClassifier(parameter_config['gcn_middle_out'], len(set(ref_label)))
     classifier = classifier.to(device='cuda:0')
     ref_label, query_label, enc = encode_label(ref_label, query_label)
 
-    ref_graph_data = construct_graph(ref_norm_data, ref_sm_arr[0], 0)
+    ref_graph_data = construct_graph(ref_norm_data, ref_sm_arr[0], k=0)
 
     ref_norm_data = z_score_scale(mvccmodel.gcn_models[0].get_embedding(ref_graph_data).detach().cpu().numpy())
     query_graph_data = construct_graph(query_norm_data, query_sm_arr[0], 0)

@@ -1,7 +1,8 @@
 import sys
 import torch
 
-sys.path.append('../../../..')
+# 最好是添加绝对路径, 这样才能找到合适的包
+sys.path.append(r'E:\YuAnHuang\kevislin\Cell_Classification')
 import os
 os.system("wandb disabled")
 from MVCC.util import mean_norm, construct_graph_with_knn,\

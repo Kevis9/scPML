@@ -6,8 +6,8 @@ import os
 os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, setup_seed
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -38,13 +38,13 @@ parameter_config = {
     'classifier_name' : "FC",
     # 不太重要参数
     'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 1000,  # Huang gcn 训练的epoch
+    'epoch_gcn': 500,  # Huang gcn 训练的epoch
     'epoch_classifier': 2000,
     'patience_for_classifier': 200,
     'patience_for_gcn': 600,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 200, # cpm train ref 早停patience
     'patience_for_cpm_query': 200, # query h 早停patience
-    'k_neighbor': 2,  # GCN 图构造的时候k_neighbor参数
+    'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
     'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
@@ -56,6 +56,7 @@ cycle = 1
 
 
 def main_process():
+    setup_seed(20)
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},
@@ -110,6 +111,7 @@ def main_process():
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
                   gamma=parameter_config['gamma'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   test_size=parameter_config['test_size'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
                   patience_for_gcn=parameter_config['patience_for_gcn'],

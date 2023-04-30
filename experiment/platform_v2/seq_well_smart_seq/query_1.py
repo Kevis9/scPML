@@ -44,11 +44,19 @@ parameter_config = {
     'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result': True,
+    'show_result': False,
+    'views':[1,2,3]
 }
 
-
+import pickle
+with open("hyper_parameters", 'wb') as f:
+    pickle.dump(parameter_config, f)
+exit()
 def main_process():
+    seed = 20
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},
@@ -59,11 +67,11 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=3000)
+    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=3000)
     # ref_norm_data = sc_normalization(ref_data)
     # query_norm_data = sc_normalization(query_data)
-    # ref_norm_data = ref_data
-    # query_norm_data = query_data
+    ref_norm_data = ref_data
+    query_norm_data = query_data
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
                   range(4)]
@@ -96,6 +104,7 @@ def main_process():
                   patience_for_classifier=parameter_config['patience_for_classifier'],
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   gamma=parameter_config['gamma'],
                   test_size=parameter_config['test_size'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],

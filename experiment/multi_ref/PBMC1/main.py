@@ -26,7 +26,7 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 300,
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
@@ -36,7 +36,7 @@ parameter_config = {
     # 不太重要参数
     'batch_size_classifier': 256,  # CPM中重构和分类的batch size
     'epoch_gcn': 500,  # Huang gcn 训练的epoch
-    'epoch_classifier': 50,
+    'epoch_classifier': 100,
 
 
     'patience_for_classifier': 20,
@@ -49,7 +49,10 @@ parameter_config = {
     'test_size': 0.2,
     'show_result': True,
 }
-
+# import pickle
+# with open("hyper_parameters", 'wb') as f:
+#     pickle.dump(parameter_config, f)
+# exit()
 
 def main_process():
     run = wandb.init(project="cell_classify_" + data_config['project'],
@@ -62,17 +65,8 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
     ref_norm_data = ref_data
     query_norm_data = query_data
-    # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
-    # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
-
-
-
-    # exit()
-    # ref_norm_data = sc_normalization(ref_data)
-    # query_norm_data = sc_normalization(query_data)
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in

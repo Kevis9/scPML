@@ -82,18 +82,18 @@ main <- function(ref_data_path, query_data_path, ref_label_path, ref_save_path, 
 }
 
 # =================== 暂时注释掉=========================
-# args = commandArgs(trailingOnly = TRUE)
-# base_path = args[[1]]
-# ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
-# query_data_path = paste(base_path, 'raw_data', 'query', 'data_1.csv', sep='/')
-# ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
-#
-# ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
-# query_save_path = paste(base_path, 'data', 'query', 'data_1.csv', sep='/')
-#
-# print("Path is")
-# print(base_path)
-# main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
+args = commandArgs(trailingOnly = TRUE)
+base_path = args[[1]]
+ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
+query_data_path = paste(base_path, 'raw_data', 'query', 'data_1.csv', sep='/')
+ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
+
+ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
+query_save_path = paste(base_path, 'data', 'query', 'data_1.csv', sep='/')
+
+print("Path is")
+print(base_path)
+main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
 # =================== 暂时注释掉： 底线=========================
 
 
@@ -101,35 +101,35 @@ main <- function(ref_data_path, query_data_path, ref_label_path, ref_save_path, 
 
 
 # base_path = 'E:/YuAnHuang/kevislin/Cell_Classification/experiment/multi_ref/Haber/'
-args = commandArgs(trailingOnly = TRUE)
-base_path = args[[1]]
-print(base_path)
-# 多ref
-for(i in 2:3) {
-    query_data_name = paste('data_', i, '.csv', sep='')
-    ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
-    query_data_path = paste(base_path, 'raw_data', 'ref', query_data_name, sep='/')
-    ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
-
-    ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
-    query_save_path = paste(base_path, 'data', 'ref', query_data_name, sep='/')
-
-    print("Path is")
-    print(base_path)
-
-    main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
-}
-
-# 真的query
+# args = commandArgs(trailingOnly = TRUE)
 # base_path = args[[1]]
-
-query_data_name = paste('data_', 1, '.csv', sep='')
-ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
-query_data_path = paste(base_path, 'raw_data', 'query', query_data_name, sep='/')
-ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
-
-ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
-query_save_path = paste(base_path, 'data', 'query', query_data_name, sep='/')
-main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
+# print(base_path)
+# # 多ref
+# for(i in 2:3) {
+#     query_data_name = paste('data_', i, '.csv', sep='')
+#     ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
+#     query_data_path = paste(base_path, 'raw_data', 'ref', query_data_name, sep='/')
+#     ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
+#
+#     ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
+#     query_save_path = paste(base_path, 'data', 'ref', query_data_name, sep='/')
+#
+#     print("Path is")
+#     print(base_path)
+#
+#     main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
+# }
+#
+# # 真的query
+# # base_path = args[[1]]
+#
+# query_data_name = paste('data_', 1, '.csv', sep='')
+# ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
+# query_data_path = paste(base_path, 'raw_data', 'query', query_data_name, sep='/')
+# ref_label_path = paste(base_path, 'raw_data', 'ref', 'label_1.csv', sep='/')
+#
+# ref_save_path = paste(base_path, 'data', 'ref', 'data_1.csv',sep='/')
+# query_save_path = paste(base_path, 'data', 'query', query_data_name, sep='/')
+# main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
 
 # 

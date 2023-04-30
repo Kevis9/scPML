@@ -6,8 +6,8 @@ from MVCC.classifiers import FCClassifier
 sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, check_out_similarity_matrix
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -44,7 +44,7 @@ parameter_config = {
     'patience_for_cpm_ref': 50, # cpm train ref 早停patience
     'patience_for_cpm_query': 50, # query h 早停patience
     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.2,
+    'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
     'show_result': True,
@@ -62,9 +62,9 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
-    # ref_norm_data = ref_data
-    # query_norm_data = query_data
+    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
+    ref_norm_data = ref_data
+    query_norm_data = query_data
     # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
     # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
 
@@ -102,6 +102,12 @@ def main_process():
                     i in
                     range(4)]
 
+    # for i in range(len(ref_sm_arr)):
+    #     check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=parameter_config['k_neighbor'], sm_name='ref_'+str(i+1))
+    #
+    # for i in range(len(query_sm_arr)):
+    #     check_out_similarity_matrix(query_sm_arr[i], query_label, k=parameter_config['k_neighbor'], sm_name='query_' + str(i + 1))
+    # exit()
     if parameter_config['exp_mode'] == 2:
         # multi ref
         # mvccmodel = torch.load('model/mvccmodel_'+data_config['query_key']+".pt")
@@ -129,6 +135,7 @@ def main_process():
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
                   gamma=parameter_config['gamma'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   test_size=parameter_config['test_size'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
                   patience_for_gcn=parameter_config['patience_for_gcn'],
@@ -170,10 +177,10 @@ def main_process():
 
 
 ret = main_process()
-# acc = accuracy_score(ret['pred'], ret['query_label'])
-# print("pred acc is {:.3f}".format(acc))
+acc = accuracy_score(ret['pred'], ret['query_label'])
+print("pred acc is {:.3f}".format(acc))
 
 
 # save model
-torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['ref_key'] + ".pt")
-torch.save(ret['mvcc_model'], 'model/mvccmodel_multi.pt')
+# torch.save(ret['mvcc_model'], 'model/mvccmodel_' + data_config['ref_key'] + ".pt")
+# torch.save(ret['mvcc_model'], 'model/mvccmodel_multi.pt')

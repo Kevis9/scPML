@@ -10,7 +10,6 @@ import numpy as np
 import os
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-
 def evaluate(val_dataloader, model):
     model.eval()
     with torch.no_grad():
@@ -116,7 +115,7 @@ class Classifier(torch.nn.Module):
                 早停处理 (这里只是为了训练出更好的classifier)
             '''
             val_acc = evaluate(dataloader_val, self)
-            # if early_stop:
+
             if val_max_acc < val_acc:
                 val_max_acc = val_acc
                 stop = 0
@@ -163,12 +162,13 @@ class CNNClassifier(Classifier):
 
 
 class FCClassifier(Classifier):
-    def __init__(self, input_dim, class_num):
+    def __init__(self, input_dim, class_num, hidden_unit):
         super(FCClassifier, self).__init__()
         self.fcn = nn.Sequential(
-            nn.Linear(input_dim, 64),
+            nn.Linear(input_dim, hidden_unit),
             nn.ReLU(),
-            nn.Linear(64, class_num)
+            # nn.Dropout(0.05),
+            nn.Linear(hidden_unit, class_num)
         )
 
     def forward(self, data):

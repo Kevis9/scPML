@@ -6,8 +6,8 @@ from MVCC.classifiers import FCClassifier
 sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, setup_seed
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -28,15 +28,15 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 500,
-    'epoch_cpm_query': 300,
+    'epoch_cpm_ref': 300,
+    'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
     'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
-    'epoch_gcn': 500,  # Huang gcn 训练的epoch
+    'epoch_gcn': 300,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
@@ -46,11 +46,16 @@ parameter_config = {
     'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
-    'show_result':True,
+    'show_result':False,
 }
 
+import pickle
+with open("hyper_parameters", 'wb') as f:
+    pickle.dump(parameter_config, f)
 
 def main_process():
+    # 设置torch的seed
+    setup_seed(20)
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},
@@ -67,32 +72,7 @@ def main_process():
     ref_norm_data = ref_data
     query_norm_data = query_data
 
-    # classifier = FCClassifier(2000, len(set(ref_label)))
-    # classifier = classifier.to(device='cuda:0')
-    #
-    # ref_label, query_label, enc = encode_label(ref_label, query_label)
-    #
-    # classifier.train_classifier(ref_norm_data,
-    #                                  ref_label,
-    #                                  100,
-    #                                  save_path='.',
-    #                                  test_size=0.2,
-    #                                  batch_size=128,
-    #                                  epochs=500,
-    #                                  lr=1e-3
-    #                                  )
-    #
-    #
-    # classifier.eval()
-    # with torch.no_grad():
-    #     logits = classifier(torch.from_numpy(query_norm_data).float().to("cuda:0"))
-    #     pred = logits.argmax(dim=1)
-    # pred = pred.cpu().detach().numpy()
-    # print(accuracy_score(pred, query_label))
-    # exit()
-    # evaluate
 
-    # exit()
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
                   range(4)]
@@ -126,6 +106,7 @@ def main_process():
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
                   gamma=parameter_config['gamma'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   test_size=parameter_config['test_size'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
                   patience_for_gcn=parameter_config['patience_for_gcn'],

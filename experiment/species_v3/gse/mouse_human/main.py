@@ -9,8 +9,9 @@ import os
 os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import mean_norm, construct_graph_with_knn, check_out_similarity_matrix,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, z_score_scale, construct_graph
+from MVCC.util import mean_norm, construct_graph_with_knn, check_out_similarity_matrix, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, z_score_scale, construct_graph, \
+    setup_seed
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -33,7 +34,7 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 200,
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
@@ -41,14 +42,14 @@ parameter_config = {
     'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 500,  # Huang gcn 训练的epoch
-    'epoch_classifier': 500,
-    'patience_for_classifier': 10,
+    'epoch_gcn': 800,  # Huang gcn 训练的epoch
+    'epoch_classifier': 100,
+    'patience_for_classifier': 50,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
     'patience_for_cpm_query': 200, # query h 早停patience
-    'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
-    'mask_rate': 0.1,
+    'k_neighbor': 10,  # GCN 图构造的时候k_neighbor参数
+    'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
     'show_result':True,
@@ -57,12 +58,19 @@ acc_arr = []
 max_acc = 0
 cycle = 1
 
+# import pickle
+# with open("hyper_parameters", 'wb') as f:
+#     pickle.dump(parameter_config, f)
+# exit()
 def main_process():
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},
                      tags=[data_config['ref_name'] + '-' + data_config['query_name'], data_config['project']],
                      reinit=True)
+    # 设置torch的seed
+    setup_seed(20)
+
     # 数据准备
     ref_data, ref_label = read_data_label_h5(data_config['root_path'], data_config['ref_key'])
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
@@ -77,16 +85,18 @@ def main_process():
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(4)]
+                  [0, 4]]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    range(4)]
+                    [0, 4]]
 
+    #
     # for i in range(len(ref_sm_arr)):
-    #     check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=3, sm_name='ref_'+str(i+1))
+    #     check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=parameter_config['k_neighbor'], sm_name='ref_'+str(i+1))
+    #
     #
     # for i in range(len(query_sm_arr)):
-    #     check_out_similarity_matrix(query_sm_arr[i], query_label, k=3, sm_name='query_' + str(i + 1))
+    #     check_out_similarity_matrix(query_sm_arr[i], query_label, k=parameter_config['k_neighbor'], sm_name='query_' + str(i + 1))
     # exit()
 
     # ref_sm_arr.append(construct_graph_with_knn(ref_norm_data))
@@ -118,6 +128,7 @@ def main_process():
                   patience_for_classifier=parameter_config['patience_for_classifier'],
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   gamma=parameter_config['gamma'],
                   test_size=parameter_config['test_size'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
@@ -156,6 +167,38 @@ def main_process():
     if parameter_config['show_result']:
         show_result(ret, "result")
     run.finish()
+    #
+    # '''
+    #         GCN + FC
+    #     '''
+    # classifier = FCClassifier(parameter_config['gcn_middle_out'], len(set(ref_label)))
+    # classifier = classifier.to(device='cuda:0')
+    # ref_label, query_label, enc = encode_label(ref_label, query_label)
+    #
+    # ref_graph_data = construct_graph(ref_norm_data, ref_sm_arr[0], k=parameter_config['k_neighbor'])
+    #
+    # ref_norm_data = z_score_scale(mvccmodel.gcn_models[0].get_embedding(ref_graph_data).detach().cpu().numpy())
+    # query_graph_data = construct_graph(query_norm_data, query_sm_arr[0], k=parameter_config['k_neighbor'])
+    # query_norm_data = z_score_scale(mvccmodel.gcn_models[0].get_embedding(query_graph_data).detach().cpu().numpy())
+    #
+    # classifier.train_classifier(ref_norm_data,
+    #                             ref_label,
+    #                             100,
+    #                             save_path='.',
+    #                             test_size=0.2,
+    #                             batch_size=128,
+    #                             epochs=500,
+    #                             lr=1e-3
+    #                             )
+    #
+    # classifier.eval()
+    # with torch.no_grad():
+    #     logits = classifier(torch.from_numpy(query_norm_data).float().to("cuda:0"))
+    #     pred = logits.argmax(dim=1)
+    # pred = pred.cpu().detach().numpy()
+    # print("GCN + FC :{:.3f}".format(accuracy_score(pred, query_label)))
+    #
+    # ''' ================================================= '''
 
 
     return ret

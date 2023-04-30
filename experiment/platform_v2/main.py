@@ -1,3 +1,5 @@
+import random
+
 import pandas as pd
 import sys
 import torch
@@ -5,8 +7,8 @@ import torch
 sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, setup_seed
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -18,10 +20,109 @@ data_config = {
     'root_path': '.', # data.h5 path
     'ref_name': 'cel_seq2',
     'query_name': 'dropseq',
-    'ref_key': 'ref_1',
-    'query_key': 'query_1',
+    'ref_key': 'query_1',
+    'query_key': 'ref_1',
     'project': 'platform',
 }
+# parameter_config = {
+#     'gcn_middle_out': 1024,  # GCN中间层维数
+#     'lsd': 256,  # CPM_net latent space dimension
+#     'lamb': 8000,  # classfication loss的权重
+#     'epoch_cpm_ref': 300,
+#     'epoch_cpm_query': 30,
+#     'exp_mode': 1, # 1: start from scratch,
+#                    # 2: multi ref ,
+#                    # 3: gcn model exists, train cpm model and classifier
+#     'classifier_name':"FC",
+#     # 不太重要参数
+#     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+#     'epoch_gcn': 300,  # Huang gcn 训练的epoch
+#     'epoch_classifier': 100,
+#     'patience_for_classifier': 50,
+#     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
+#     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
+#     'patience_for_cpm_query': 200, # query h 早停patience
+#     'k_neighbor': 8,  # GCN 图构造的时候k_neighbor参数
+#     'mask_rate': 0.3,
+#     'test_size': 0.2,
+#     'show_result': False,
+#     'views': [0, 1, 2, 3]
+# }
+# parameter_config = {
+#     'gcn_middle_out': 1024,  # GCN中间层维数
+#     'lsd': 512,  # CPM_net latent space dimension
+#     'lamb': 1000,  # classfication loss的权重
+#     'epoch_cpm_ref': 500,
+#     'epoch_cpm_query': 50,
+#     'exp_mode': 1, # 1: start from scratch,
+#                    # 2: multi ref ,
+#                    # 3: gcn model exists, train cpm model and classifier
+#     'classifier_name':"FC",
+#     # 不太重要参数
+#     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+#     'epoch_gcn': 300,  # Huang gcn 训练的epoch
+#     'epoch_classifier': 100,
+#     'patience_for_classifier': 50,
+#     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
+#     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
+#     'patience_for_cpm_query': 200, # query h 早停patience
+#     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
+#     'mask_rate': 0.3,
+#     'test_size': 0.2,
+#     'show_result': False,
+#     'views': [0, 1, 2, 3]
+# }
+
+# parameter_config = {
+#     'gcn_middle_out': 1024,  # GCN中间层维数
+#     'lsd': 512,  # CPM_net latent space dimension
+#     'lamb': 5000,  # classfication loss的权重
+#     'epoch_cpm_ref': 500,
+#     'epoch_cpm_query': 50,
+#     'exp_mode': 1, # 1: start from scratch,
+#                    # 2: multi ref ,
+#                    # 3: gcn model exists, train cpm model and classifier
+#     'classifier_name':"FC",
+#     # 不太重要参数
+#     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+#     'epoch_gcn': 300,  # Huang gcn 训练的epoch
+#     'epoch_classifier': 100,
+#     'patience_for_classifier': 50,
+#     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
+#     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
+#     'patience_for_cpm_query': 200, # query h 早停patience
+#     'k_neighbor': 8,  # GCN 图构造的时候k_neighbor参数
+#     'mask_rate': 0.3,
+#     'test_size': 0.2,
+#     'show_result': False,
+#     'views': [0, 1, 2, 3, 4]
+# }
+#
+
+# parameter_config = {
+#     'gcn_middle_out': 1024,  # GCN中间层维数
+#     'lsd':512,  # CPM_net latent space dimension
+#     'lamb': 5000,  # classfication loss的权重
+#     'epoch_cpm_ref': 500,
+#     'epoch_cpm_query': 50,
+#     'exp_mode': 1, # 1: start from scratch,
+#                    # 2: multi ref ,
+#                    # 3: gcn model exists, train cpm model and classifier
+#     'classifier_name':"FC",
+#     # 不太重要参数
+#     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+#     'epoch_gcn': 500,  # Huang gcn 训练的epoch
+#     'epoch_classifier': 100,
+#     'patience_for_classifier': 50,
+#     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
+#     'patience_for_cpm_ref': 300, # cpm train ref 早停patience
+#     'patience_for_cpm_query': 200, # query h 早停patience
+#     'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
+#     'mask_rate': 0.3,
+#     'test_size': 0.2,
+#     'show_result': False,
+#     'views': [0, 1, 2, 3]
+# }
 
 parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
@@ -32,25 +133,27 @@ parameter_config = {
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
                    # 3: gcn model exists, train cpm model and classifier
-    'nf': 3000,
     'classifier_name':"FC",
     # 不太重要参数
-    'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 1000,  # Huang gcn 训练的epoch
-    'epoch_classifier': 500,
-    'patience_for_classifier': 20,
+    'batch_size_classifier': 128,  # CPM中重构和分类的batch size
+    'epoch_gcn': 500,  # Huang gcn 训练的epoch
+    'epoch_classifier': 100,
+    'patience_for_classifier': 50,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
-    'patience_for_cpm_ref': 50, # cpm train ref 早停patience
-    'patience_for_cpm_query': 50, # query h 早停patience
-    'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
+    'patience_for_cpm_ref': 300, # cpm train ref 早停patience
+    'patience_for_cpm_query': 200, # query h 早停patience
+    'k_neighbor': 5,  # GCN 图构造的时候k_neighbor参数
     'mask_rate': 0.3,
-    'gamma': 1,
     'test_size': 0.2,
     'show_result': False,
+    'views': [0, 1,2,3,4]
 }
 
 
-def main_process():
+def main_process(parameter_config):
+    # 设置torch的seed
+    setup_seed(20)
+
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},
@@ -75,10 +178,10 @@ def main_process():
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(4)]
+                  parameter_config['views']]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    range(4)]
+                    parameter_config['views']]
 
     if parameter_config['exp_mode'] == 2:
         # multi ref
@@ -97,22 +200,25 @@ def main_process():
             label_encoder=enc,
 
         )
-    mvccmodel.fit(ref_norm_data, ref_sm_arr, ref_label,
-                  gcn_input_dim=ref_norm_data.shape[1], gcn_middle_out=parameter_config['gcn_middle_out'],
-                  lamb=parameter_config['lamb'], epoch_gcn=parameter_config['epoch_gcn'],
+    mvccmodel.fit(ref_norm_data,
+                  ref_sm_arr,
+                  ref_label,
+                  gcn_input_dim=ref_norm_data.shape[1],
+                  gcn_middle_out=parameter_config['gcn_middle_out'],
+                  lamb=parameter_config['lamb'],
+                  epoch_gcn=parameter_config['epoch_gcn'],
                   epoch_cpm_ref=parameter_config['epoch_cpm_ref'],
                   epoch_classifier=parameter_config['epoch_classifier'],
-                  patience_for_classifier=parameter_config['patience_for_classifier'],
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
-                  gamma=parameter_config['gamma'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   test_size=parameter_config['test_size'],
-                  patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
-                  patience_for_gcn=parameter_config['patience_for_gcn'],
                   exp_mode=parameter_config['exp_mode'],
                   classifier_name=parameter_config['classifier_name']
                   )
-    pred = mvccmodel.predict(query_norm_data, query_sm_arr, parameter_config['epoch_cpm_query'],
+    pred = mvccmodel.predict(query_norm_data,
+                             query_sm_arr,
+                             parameter_config['epoch_cpm_query'],
                              parameter_config['k_neighbor'])
     pred_cpm = mvccmodel.predict_with_cpm()
 
@@ -141,34 +247,48 @@ def main_process():
         'mvcc_model': mvccmodel
     }
     if parameter_config['show_result']:
-        show_result(ret, os.path.join(data_config['root_path'], 'result'))
+        show_result(ret, parameter_config['result_path'])
     run.finish()
     return ret
 
+projects = [
+            # 'cel_seq_smart_seq',
+            'cel_seq_10x_v3',
+            # 'seq_well_smart_seq',
+            # 'seq_well_drop_seq',
+            # 'seq_well_10x_v3',
+            # 'smart_seq_10x_v3',
+            # 'indrop_drop_seq',
+            # 'indrop_10x_v3',
+            # 'indrop_smart_seq',
+            # 'drop_seq_smart_seq',
+            # 'drop_seq_10x_v3'
+            ]
 
-project = ['84133_5061',
-           '84133_81608',
-           '84133_85241',
-           'cel_seq_10x',
-           'cel_seq_drop_seq',
-           'cel_seq_smart_seq',
-           'drop_seq_10x',
-           'indrop_10x',
-           'indrop_drop_seq',
-           'seq_well_10x',
-           'seq_well_drop_seq',
-           'seq_well_smart_seq'
-           ]
+import pickle
 final_acc = []
-for i in range(len(project)):
-    data_config['root_path'] = project[i]
-    ret = main_process()
-    acc = accuracy_score(ret['pred'], ret['query_label'])
+for proj in projects:
+
+    # with open(os.path.join(proj, "hyper_parameters"), 'rb') as f:
+    #     parameter_config = pickle.load(f)
+    #
+    data_config['root_path'] = proj
+    parameter_config['result_path'] = os.path.join(proj, 'result')
+    if not os.path.exists(parameter_config['result_path']):
+        os.makedirs(parameter_config['result_path'])
+
+    parameter_config['exp_mode'] = 1
+    parameter_config['show_result'] = False
+    if 'views' not in parameter_config.keys():
+        parameter_config['views'] = [0,1,2,3]
+
+    ret = main_process(parameter_config)
+    acc = accuracy_score(ret['query_label'], ret['pred'])
     final_acc.append(acc)
 
 print(final_acc)
 final_acc = pd.DataFrame({
-    'project':project,
+    'project':projects,
     'acc':final_acc
 })
-final_acc.to_csv("final_acc.csv")
+# final_acc.to_csv("final_acc_revserse.csv")

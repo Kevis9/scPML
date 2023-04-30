@@ -5,6 +5,7 @@ import numpy as np
 import copy
 import sklearn
 from sklearn.neighbors import kneighbors_graph
+from torch_sparse import SparseTensor
 import torch
 from torch_geometric.data import Data as geoData
 import networkx as nx
@@ -24,6 +25,13 @@ from sklearn.feature_selection import SelectKBest
 import torch.nn.functional as F
 hue = []
 
+def setup_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed(seed)
+    # 这个很重要
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+    torch.use_deterministic_algorithms(True)
 
 def mean_norm(data):
     '''
@@ -70,6 +78,7 @@ def mask_data(data, masked_prob):
     seed = 1
     np.random.seed(seed)
     idx = np.random.choice(index_pair[0].shape[0], int(index_pair[0].shape[0] * masked_prob), replace=False)
+
     # masking_idx = [idx, idx]
     # to retrieve the position of the masked: data_train[index_pair_train[0][masking_idx], index_pair[1][masking_idx]]
     X = copy.deepcopy(data)
@@ -141,8 +150,42 @@ def check_out_similarity_matrix(sm, labels, k, sm_name):
         检查一下相似矩阵中类型相同的细胞是否存在边
         给出具体的信息
     '''
-    sm = construct_adjacent_matrix(sm, k)
+    sm = construct_adjacent_matrix_with_MNN(sm, k)
     types = sorted(list(set(labels)))
+
+    '''
+        这里查看CD4 + T cell的边的情况
+    '''
+    # cd4_idx = np.where(labels=='CD4+ T cell')[0]
+    # total_edges = sm[cd4_idx, :].sum()
+    # print("CD4+ T cell总共有 {:} 边".format(total_edges//2))
+    # for item in types:
+    #     idx = np.where(labels == item)[0]
+        # print(sm[cd4_idx, idx].sum())
+        # print("和 {:} 有 {:}边".format(item, sm[cd4_idx][:, idx].sum()//2))
+
+    '''
+        这里换一种评价的方式：
+            delta = max(0, (E1- E2) / n(n-1))
+            E1:代表内部边数目
+            E2:代表和其他类别相连的总边数
+            n代表节点数目
+    '''
+    # for cell_type in types:
+    #     if not cell_type == 'schwann':
+    #         continue
+    #     idx = np.where(labels == cell_type)[0]
+    #     # 这个type每个节点对其他节点边的和
+    #     row_sum = sm[idx, :].sum(axis=0)
+    #     # 这个type节点之间的边数
+    #     E1 = row_sum[idx].sum()
+    #     E2 = row_sum.sum() - E1
+    #     n = len(idx)
+    #     factor = 0.3
+    #     delta = max(0, (E1- factor * E2)/(n*(n-1)))
+    #     print("{:}, 富集系数为{:.3f}".format(cell_type, delta))
+    #
+    # return None
     confusion_matrix = []
     for i in range(len(set(types))):
         confusion_matrix.append([0 for j in range(len(types))])
@@ -157,7 +200,8 @@ def check_out_similarity_matrix(sm, labels, k, sm_name):
             # print("{:}: {:} egdes".format(type_x, sum(sm_sum[type_x_idx])))
             confusion_matrix[i][j] = sum(sm_sum[type_x_idx])
 
-
+    # 检查下CD4+ 和 CD8+ 的关系(seq-well - 10x_v3)
+    # print((confusion_matrix[2][2] + confusion_matrix[3][3] )/ (confusion_matrix[2][3] +confusion_matrix[3][2]) )
     # 绘制类型之间的相似矩阵
     confusion_mat = np.array(confusion_matrix)
     # 归一化
@@ -189,11 +233,12 @@ def construct_adjacent_matrix(similarity_mat, k):
     '''
     if k==0:
         '''
-            假设自己做自己的邻居
+            假设k=0的时候，自己做自己的邻居，GCN退化成一个全连接
         '''
         similarity_mat = np.zeros(shape=similarity_mat.shape)
         similarity_mat[np.diag_indices_from(similarity_mat)] = 1
         return similarity_mat
+
     # 要对similarity_mat取前K个最大的weight作为neighbors
     k_idxs = []
     # 将对角线部分全部设为0, 避免自己做自己的邻居
@@ -210,15 +255,39 @@ def construct_adjacent_matrix(similarity_mat, k):
     adjacent_mat = similarity_mat.astype(np.int64)
     return adjacent_mat
 
-def construct_graph(data, similarity_mat, k):
+def construct_adjacent_matrix_with_MNN(similarity_mat, k):
+    '''
+        利用MNN来构图，相比之前，MNN可以有效减少不必要的边
+    '''
+    # 要对similarity_mat取前K个最大的weight作为neighbors
+    k_idxs = []
+    # 将对角线部分全部设为0, 避免自己做自己的邻居
+    similarity_mat[np.diag_indices_from(similarity_mat)] = 0
+    for i in range(similarity_mat.shape[0]):
+        top_k_idx = similarity_mat[i].argsort()[::-1][0:k]
+        k_idxs.append(top_k_idx)
+    adjacent_mat = np.zeros(shape=similarity_mat.shape)
+    for i in range(similarity_mat.shape[0]):
+        adjacent_mat[i, k_idxs[i]] = 1
+
+    # 利用MNN的思想，两个节点之间如果有边的话，那么两个节点的邻居都要包含彼此
+    adjacent_mat = np.logical_and(adjacent_mat, adjacent_mat.T)
+    adjacent_mat = adjacent_mat.astype(np.int64)
+    # print(np.sum(adjacent_mat, axis=1))
+    # print(max(np.sum(adjacent_mat, axis=1)))
+    return adjacent_mat
+
+def construct_graph(data, sm_mat, k):
     '''
     :param data: 表达矩阵 (被mask的矩阵)
-    :param similarity_mat: 邻接矩阵 (ndarray)
+    :param sm_mat: 邻接矩阵 (ndarray)
     :return: 返回Cell similarity的图结构
     '''
 
-    similarity_mat = construct_adjacent_matrix(similarity_mat, k)
-    graph = nx.from_numpy_matrix(np.matrix(similarity_mat))
+    sm_mat = construct_adjacent_matrix_with_MNN(sm_mat, k)
+    # sm_mat = construct_adjacent_matrix(sm_mat, k)
+
+    graph = nx.from_numpy_matrix(np.matrix(sm_mat))
 
     edges = []
     # 把有向图转为无向图
@@ -227,11 +296,19 @@ def construct_graph(data, similarity_mat, k):
         edges.append([v, u])
 
     edges = np.array(edges).T
+
     edges = torch.tensor(edges, dtype=torch.long)
+
+    sm_mat = torch.tensor(sm_mat, dtype=torch.float)
+    adj = SparseTensor.from_dense(sm_mat)
     feat = torch.tensor(data, dtype=torch.float)
+
     # 将节点信息和边的信息放入特定类中
     g_data = geoData(x=feat, edge_index=edges)
-    return g_data
+
+
+    # return g_data
+    return (feat, adj.t())
 
 
 def read_data_label_h5(path, key):
@@ -326,10 +403,6 @@ def sel_feature(data1, data2, label1, nf=3000):
 
     return data1, data2
 
-
-def mnnCorrect(data1, data2):
-    # 消除Batch effects影响
-    pass
 
 
 def pre_process(data1, data2, label1, nf=2000):
@@ -466,8 +539,8 @@ def confusion_plot(pred, true, save_name):
 
     name = list(set(true))
     name = [x.lower() for x in name]
-    if not "unassigned" in name:
-        name.append("unassigned")
+    # if not "unassigned" in name:
+    #     name.append("unassigned")
     name.sort()
 
     name_idx = {}
@@ -475,6 +548,8 @@ def confusion_plot(pred, true, save_name):
         name_idx[name[i]] = i
 
     confusion_mat = []
+    print(set(true))
+    print(set(name))
     # 行是true，只考虑true的部分
     for i in range(len(set(true))):
         confusion_mat.append([0 for j in range(len(name))])
@@ -510,7 +585,35 @@ def confusion_plot(pred, true, save_name):
 
     sns.heatmap(data=data_df, cmap="Blues", cbar=False, xticklabels=True, yticklabels=True)
     plt.savefig(save_name, dpi=600, bbox_inches="tight")
+    plt.clf()
     # plt.show()
+
+
+def precision_with_FPR(trues, pred, prob, FPR=0.05):
+    '''
+        用于检验模型对unknown cell的探测能力，，不管scGCN还是Seurat等，只要给出了confidence score, 都可以调用这个函数
+        prob :query_out.max(dim=1).numpy().reshape(-1)
+        细胞属于这个标签的概率
+    '''
+    unknown_idx = np.where(trues == 'unknown')[0]
+
+    unknown_prob = list(prob[unknown_idx])
+    unknown_prob.sort(reverse=True)
+
+    thresh = unknown_prob[int(len(unknown_prob) * FPR)]
+
+    # 取出prob中标记为known的cell
+    unknown_idx = np.where(prob < thresh)[0]
+    # 把所有小于阈值的标记为unkown
+    pred[unknown_idx] = 'unknown'
+
+    true_known_idx = np.where(trues != 'unknown')[0]
+
+    pred = pred[true_known_idx]
+    trues = trues[true_known_idx]
+    if len(true_known_idx) == 0:
+        return 0
+    return accuracy_score(trues, pred)
 
 
 def show_result(ret, save_path):
@@ -518,9 +621,6 @@ def show_result(ret, save_path):
         os.makedirs(save_path)
 
     joint_embedding = np.concatenate([ret['ref_out'], ret['query_out']], axis=0)
-
-    # embedding_h_pca = runPCA(embedding_h)
-
     ref_h = joint_embedding[:ret['ref_out'].shape[0], :]
     query_h = joint_embedding[ret['ref_out'].shape[0]:, :]
 
@@ -529,66 +629,90 @@ def show_result(ret, save_path):
     # ref_s_score = silhouette_score(ref_h, ret['ref_label'])
     # q_s_score = silhouette_score(query_h, ret['pred'])
 
-    ari = adjusted_rand_score(ret['query_label'], ret['pred'])
+    # ari = adjusted_rand_score(ret['query_label'], ret['pred'])
     # bme = batch_mixing_entropy(ref_h, query_h)
     # bme = sum(bme) / len(bme)
     acc = accuracy_score(ret['query_label'], ret['pred'])
-    f1 = f1_score(ret['query_label'], ret['pred'], average='macro')
+    print("pred acc is {:.3f}".format(acc))
+    # f1 = f1_score(ret['query_label'], ret['pred'], average='macro')
 
+    '''
+        打印每种细胞类型的acc
+    '''
     cell_types = set(ret['query_label'])
     for c_t in cell_types:
         print("{:} accuracy is {:.3f}".format(c_t, precision_of_cell(c_t, ret['pred'], ret['query_label'])))
 
     print("Prediction Accuracy is {:.3f}".format(acc))
-    # confusion_plot(ret['pred'], ret['query_label'], save_name=os.path.join(save_path, 'confusion_plot.png'))
+    confusion_plot(ret['pred'], ret['query_label'], save_name=os.path.join(save_path, 'pred_confusion_plot.png'))
 
+    return None
     '''
-        unknown_cell type的的实验，保存label，preds和prob
+        unknown_cell type的的实验，保存true label，preds和prob
     '''
-    query_trues = pd.DataFrame(data=ret['query_label'], columns=['type'])
-    query_preds = pd.DataFrame(data=ret['pred'], columns=['type'])
+    # FPR = 0.05
+    # print("FPR {:}, precision is {:.3f}".format(FPR, precision_with_FPR(ret['query_label'].copy(), ret['pred'].copy(), ret['prob'].copy(), FPR)))
+
+    # query_trues = pd.DataFrame(data=ret['query_label'], columns=['type'])
+    # query_preds = pd.DataFrame(data=ret['pred'], columns=['type'])
     # query_prob = pd.DataFrame(data=ret['prob'], columns=['prob'])
-
-    query_trues.to_csv(os.path.join(save_path, 'query_labels.csv'), index=False)
-    query_preds.to_csv(os.path.join(save_path, 'query_preds.csv'), index=False)
+    #
+    # query_trues.to_csv(os.path.join(save_path, 'query_labels.csv'), index=False)
+    # query_preds.to_csv(os.path.join(save_path, 'query_preds.csv'), index=False)
     # query_prob.to_csv(os.path.join(save_path, 'query_prob.csv'), index_label=False)
+    # return
+    '''
+        展示GCN embeddings
+    '''
+    # raw_trues = np.concatenate([ret['ref_raw_label'], ret['query_label']]).reshape(-1)
+    # gcn_joint_embeddings = np.concatenate([ret['ref_gcn_embeddings'], ret['query_gcn_embeddings']], axis=0)
+    # gcn_joint_embeddings_2d = runUMAP(gcn_joint_embeddings)
 
-    # np.save(os.path.join(save_path, 'query_trues.npy'), ret['query_label'])
-    # np.save(os.path.join(save_path, 'query_preds.npy'), ret['pred'])
-    # np.save(os.path.join(save_path, 'prob.npy'), ret['prob'])
+    # joint_norm_data = np.concatenate([ret['ref_norm_data'], ret['query_norm_data']], axis=0)
+    # joint_norm_data_2d = runUMAP(joint_norm_data)
+    # show_cluster(joint_norm_data_2d,
+    #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
+    #              "norm_data_ref_query",
+    #              save_path)
+    # show_cluster(joint_norm_data_2d,
+    #              raw_trues,
+    #              "norm_data_with_labels",
+    #              save_path)
+
+    # show_cluster(gcn_joint_embeddings_2d,
+    #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
+    #              "gcn_embeddings_ref_query",
+    #              save_path)
+    # show_cluster(gcn_joint_embeddings_2d,
+    #              raw_trues,
+    #              "gcn_embeddings_with_labels",
+    #              save_path)
+    # gcn_joint_embeddings_2d = pd.DataFrame(data=gcn_joint_embeddings_2d, columns=['x', 'y'])
+    # gcn_label = pd.DataFrame(data=["SeqWell" for i in range(ref_h.shape[0])] + ["10X_V3" for i in range(query_h.shape[0])], columns=['type'])
+    # gcn_joint_embeddings_2d.to_csv('gcn_2d.csv', index=False)
+    # gcn_label.to_csv('gcn_label.csv', index=False)
 
     '''
         2023.1.3 以下代码暂时注释掉，为了multi ref更快显示结果，同时保存模型
     '''
     # print('f1-score is {:.3f}'.format(f1))
     # print('Prediction ARI is {:.3f}'.format(ari))
-    #
-    # # print('batch mixing score is {:.3f}'.format(bme))
-    #
-    #
-    # # 这部分和原来的feature对应
+    # print('batch mixing score is {:.3f}'.format(bme))
+
+
+    # 这部分和原来的feature对应
     # raw_trues = np.concatenate([ret['ref_raw_label'], ret['query_label']]).reshape(-1)
     # # 这部分和h对应
     # trues_after_shuffle = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
-    # preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
-    #
+    # all_preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
     # raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)
     #
-    # np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
-    # np.save(os.path.join(save_path, 'preds.npy'), preds)
-    # # exit()
     # raw_data_2d = runUMAP(raw_data)
     # h_data_2d = runUMAP(joint_embedding)
     #
-    # np.save(os.path.join(save_path, 'raw_data_2d.npy'), raw_data_2d)
-    # np.save(os.path.join(save_path, 'embeddings_2d.npy'), h_data_2d)
-    # np.save(os.path.join(save_path, 'raw_trues.npy'), raw_trues)
-    # np.save(os.path.join(save_path, 'preds.npy'), preds)
-    # np.save(os.path.join(save_path, 'trues_after_shuffle.npy'), trues_after_shuffle)
-    #
     # show_cluster(raw_data_2d, raw_trues, 'reference-query raw true label', save_path)
     # show_cluster(h_data_2d, trues_after_shuffle, 'reference-query h true label', save_path)
-    # show_cluster(h_data_2d, preds, 'reference-query h pred label', save_path)
+    # show_cluster(h_data_2d, all_preds, 'reference-query h pred label', save_path)
     # show_cluster(raw_data_2d,
     #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
     #              "raw batches",
@@ -597,6 +721,23 @@ def show_result(ret, save_path):
     #              ["reference" for i in range(ref_h.shape[0])] + ["query" for i in range(query_h.shape[0])],
     #              "h batches",
     #              save_path)
+    # #
+    query_preds = pd.DataFrame(data=ret['pred'], columns=['type'])
+    query_labels = pd.DataFrame(data=ret['query_label'], columns=['type'])
+    # all_preds = pd.DataFrame(data=all_preds, columns=['type'])
+    # embeddings_2d = pd.DataFrame(data=h_data_2d, columns=['x', 'y'])
+    # raw_labels = pd.DataFrame(data=raw_trues, columns=['type'])
+    # raw_data_2d = pd.DataFrame(data=raw_data_2d, columns=['x', 'y'])
+    #
+    #
+    #
+    query_preds.to_csv(os.path.join(save_path, 'query_preds.csv'), index=False)
+    query_labels.to_csv(os.path.join(save_path, 'query_labels.csv'), index=False)
+    # all_preds.to_csv(os.path.join(save_path, 'all_preds.csv'), index=False)
+    # raw_labels.to_csv(os.path.join(save_path, 'raw_labels.csv'), index=False)
+    # embeddings_2d.to_csv(os.path.join(save_path, 'embeddings_2d.csv'), index=False)
+    # raw_data_2d.to_csv(os.path.join(save_path, 'raw_data_2d.csv'), index=False)
+
     '''
         ====== 以上 ======
     '''

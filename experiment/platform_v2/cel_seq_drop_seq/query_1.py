@@ -26,7 +26,7 @@ parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
     'lamb': 5000,  # classfication loss的权重
-    'epoch_cpm_ref': 300,
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
@@ -35,7 +35,7 @@ parameter_config = {
     'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 128,  # CPM中重构和分类的batch size
-    'epoch_gcn': 100,  # Huang gcn 训练的epoch
+    'epoch_gcn': 500,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
@@ -60,9 +60,9 @@ def main_process():
     query_data, query_label = read_data_label_h5(data_config['root_path'], data_config['query_key'])
     ref_data = ref_data.astype(np.float64)
     query_data = query_data.astype(np.float64)
-    ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
-    # ref_norm_data = ref_data
-    # query_norm_data = query_data
+    # ref_norm_data, query_norm_data = pre_process(ref_data, query_data, ref_label, nf=parameter_config['nf'])
+    ref_norm_data = ref_data
+    query_norm_data = query_data
 
     # np.savetxt("ref_data.csv", ref_norm_data, delimiter=',')
     # np.savetxt("query_data.csv", query_norm_data, delimiter=',')
@@ -107,6 +107,7 @@ def main_process():
                   mask_rate=parameter_config['mask_rate'],
                   gamma=parameter_config['gamma'],
                   test_size=parameter_config['test_size'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
                   patience_for_gcn=parameter_config['patience_for_gcn'],
                   exp_mode=parameter_config['exp_mode'],

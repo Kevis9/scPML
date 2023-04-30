@@ -6,8 +6,8 @@ import os
 os.system("wandb disabled")
 # os.environ["CUDA_VISIBLE_DEVICES"]='1'
 import os.path
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, setup_seed
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -56,6 +56,8 @@ cycle = 1
 
 
 def main_process():
+    setup_seed(20)
+
     run = wandb.init(project="cell_classify_" + data_config['project'],
                      entity="kevislin",
                      config={"config": parameter_config, "data_config": data_config},
@@ -110,6 +112,7 @@ def main_process():
                   batch_size_classifier=parameter_config['batch_size_classifier'],
                   mask_rate=parameter_config['mask_rate'],
                   gamma=parameter_config['gamma'],
+                  k_neighbor=parameter_config['k_neighbor'],
                   test_size=parameter_config['test_size'],
                   patience_for_cpm_ref=parameter_config['patience_for_cpm_ref'],
                   patience_for_gcn=parameter_config['patience_for_gcn'],

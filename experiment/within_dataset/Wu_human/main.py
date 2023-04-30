@@ -6,8 +6,8 @@ from MVCC.classifiers import FCClassifier
 sys.path.append('../../../..')
 import os
 os.system("wandb disabled")
-from MVCC.util import mean_norm, construct_graph_with_knn,\
-    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process
+from MVCC.util import mean_norm, construct_graph_with_knn, \
+    read_data_label_h5, read_similarity_mat_h5, encode_label, show_result, pre_process, check_out_similarity_matrix
 from MVCC.model import MVCCModel
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -27,8 +27,8 @@ data_config = {
 parameter_config = {
     'gcn_middle_out': 1024,  # GCN中间层维数
     'lsd': 512,  # CPM_net latent space dimension
-    'lamb': 10,  # classfication loss的权重
-    'epoch_cpm_ref': 300,
+    'lamb': 5000,  # classfication loss的权重
+    'epoch_cpm_ref': 500,
     'epoch_cpm_query': 50,
     'exp_mode': 1, # 1: start from scratch,
                    # 2: multi ref ,
@@ -37,13 +37,13 @@ parameter_config = {
     'classifier_name':"FC",
     # 不太重要参数
     'batch_size_classifier': 256,  # CPM中重构和分类的batch size
-    'epoch_gcn': 200,  # Huang gcn 训练的epoch
+    'epoch_gcn': 300,  # Huang gcn 训练的epoch
     'epoch_classifier': 500,
     'patience_for_classifier': 20,
     'patience_for_gcn': 200,  # 训练GCN的时候加入一个早停机制
     'patience_for_cpm_ref': 50, # cpm train ref 早停patience
     'patience_for_cpm_query': 50, # query h 早停patience
-    'k_neighbor': 0,  # GCN 图构造的时候k_neighbor参数
+    'k_neighbor': 3,  # GCN 图构造的时候k_neighbor参数
     'mask_rate': 0.3,
     'gamma': 1,
     'test_size': 0.2,
@@ -76,10 +76,17 @@ def main_process():
 
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  range(1)]
+                  range(4)]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    range(1)]
+                    range(4)]
+
+    for i in range(len(ref_sm_arr)):
+        check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=3, sm_name='ref_'+str(i+1))
+
+    for i in range(len(query_sm_arr)):
+        check_out_similarity_matrix(query_sm_arr[i], query_label, k=3, sm_name='query_' + str(i + 1))
+
 
     if parameter_config['exp_mode'] == 2:
         # multi ref
