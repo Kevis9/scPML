@@ -108,8 +108,6 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label, proj_n
     ref_label = as.data.frame(ref_label)
     query_label = as.data.frame(query_label)
 
-
-
     object1 <- CreateSeuratObject(
             counts=ref_data,
             project = "reference",
@@ -136,7 +134,7 @@ seurat_pca_pred <- function(ref_data, query_data, ref_label, query_label, proj_n
     query.object <- objs1[[2]]
     reference.object <- ScaleData(reference.object, verbose = FALSE)
     reference.object <- RunPCA(reference.object, npcs = 30, verbose = FALSE)
-    reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30, reduction='pcaproject', reference.reduction='pca')
+    reference.anchors <- FindTransferAnchors(reference = reference.object, query = query.object, dims = 1:30,reduction='pcaproject', reference.reduction='pca')
     reference.object = RunUMAP(reference.object, dims = 1:30, return.model = TRUE)
 #     predictions <- TransferData(anchorset = reference.anchors, refdata = as.factor(reference.object$type), dims = 1:30)
     query <-  MapQuery(anchorset = reference.anchors, reference = reference.object, query = query.object,
@@ -395,17 +393,17 @@ main <- function(data, method, proj_name){
 
 final_acc = list()
 platform_project = c(
-            'cel_seq_smart_seq',
-            'cel_seq_10x_v3',
-            'seq_well_smart_seq',
-            'seq_well_drop_seq',
-            'seq_well_10x_v3',
+#             'cel_seq_smart_seq'
+#             'cel_seq_10x_v3',
+#             'seq_well_smart_seq',
+#             'seq_well_drop_seq',
+#             'seq_well_10x_v3',
             'smart_seq_10x_v3',
             'indrop_drop_seq',
             'indrop_10x_v3',
-            'indrop_smart_seq',
-            'drop_seq_smart_seq',
-            'drop_seq_10x_v3'
+#             'indrop_smart_seq',
+            'drop_seq_smart_seq'
+#             'drop_seq_10x_v3'
 #             '84133_5061'
             )
 

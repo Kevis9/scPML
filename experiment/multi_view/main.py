@@ -174,28 +174,28 @@ view_name_3 = ['KRW', 'KRY', 'KRG', 'RWY', 'RWG', 'WYG']
 view_num_4 = [[0,1,2,3], [0,1,2,4], [1,2,3,4]]
 view_name_4 = ['KRWY', 'KRWG', 'RWYG']
 view_num_5 = [[0,1,2,3,4]]
-view_name_5 = ['KRWTG']
+view_name_5 = ['KRWYG']
 view_ranges = view_num_1 + view_num_2 + view_num_3 + view_num_4 + view_num_5
 views_names = view_name_1 + view_name_2 + view_name_3 + view_name_4 + view_name_5
 
 
 projs = [
-    # 'gse/mouse_human',
-    # 'gse/human_mouse',
-    # 'mouse_combine',
-    # 'combine_mouse',
+    'gse/mouse_human',
+    'gse/human_mouse',
+    'mouse_combine',
+    'combine_mouse',
 
-    'cel_seq_smart_seq',
-    'cel_seq_10x_v3',
-    'seq_well_smart_seq',
-    'seq_well_drop_seq',
-    'seq_well_10x_v3',
-    'smart_seq_10x_v3',
-    'indrop_drop_seq',
-    'indrop_10x_v3',
-    'indrop_smart_seq',
-    'drop_seq_smart_seq',
-    'drop_seq_10x_v3'
+    # 'cel_seq_smart_seq',
+    # 'cel_seq_10x_v3',
+    # 'seq_well_smart_seq',
+    # 'seq_well_drop_seq',
+    # 'seq_well_10x_v3',
+    # 'smart_seq_10x_v3',
+    # 'indrop_drop_seq',
+    # 'indrop_10x_v3',
+    # 'indrop_smart_seq',
+    # 'drop_seq_smart_seq',
+    # 'drop_seq_10x_v3'
 ]
 
 paths = [
@@ -235,7 +235,7 @@ for i, proj in enumerate(projs):
         acc = accuracy_score(ret['pred'], ret['query_label'])
         acc_data.loc[proj][views_names[i]] = acc
 
-    acc_data.to_csv('acc_data_platform_v2_reverse.csv')
+    acc_data.to_csv('acc_data_species_reverse.csv')
 
 # ret = main_process()
 # acc = accuracy_score(ret['pred'], ret['query_label'])

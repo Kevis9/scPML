@@ -46,7 +46,7 @@ parameter_config = {
     'mask_rate': 0.3,
     'test_size': 0.2,
     'show_result': True,
-    'views': [0, 1, 2, 3, 4]
+    'view_ranges': [0, 1, 2, 3]
 }
 
 
@@ -75,10 +75,10 @@ def main_process():
     query_norm_data = query_data
     ref_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['ref_key'] + "/sm_" + str(i + 1)) for i
                   in
-                  parameter_config['views']]
+                  parameter_config['view_ranges']]
     query_sm_arr = [read_similarity_mat_h5(data_config['root_path'], data_config['query_key'] + "/sm_" + str(i + 1)) for
                     i in
-                    parameter_config['views']]
+                    parameter_config['view_ranges']]
 
     # for i in range(len(ref_sm_arr)):
     #     check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=parameter_config['k_neighbor'], sm_name='ref_'+str(i+1))

@@ -81,12 +81,12 @@ def main_process():
                     i in
                     parameter_config['views']]
 
-    for i in range(len(ref_sm_arr)):
-        check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=5, sm_name='ref_'+str(i+1))
-
-    for i in range(len(query_sm_arr)):
-        check_out_similarity_matrix(query_sm_arr[i], query_label, k=5, sm_name='query_' + str(i + 1))
-    exit()
+    # for i in range(len(ref_sm_arr)):
+    #     check_out_similarity_matrix(ref_sm_arr[i], ref_label, k=5, sm_name='ref_'+str(i+1))
+    #
+    # for i in range(len(query_sm_arr)):
+    #     check_out_similarity_matrix(query_sm_arr[i], query_label, k=5, sm_name='query_' + str(i + 1))
+    # exit()
 
     if parameter_config['exp_mode'] == 2:
         # multi ref

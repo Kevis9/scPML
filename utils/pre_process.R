@@ -81,7 +81,7 @@ main <- function(ref_data_path, query_data_path, ref_label_path, ref_save_path, 
 
 }
 
-# =================== 暂时注释掉=========================
+
 args = commandArgs(trailingOnly = TRUE)
 base_path = args[[1]]
 ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
@@ -94,7 +94,7 @@ query_save_path = paste(base_path, 'data', 'query', 'data_1.csv', sep='/')
 print("Path is")
 print(base_path)
 main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
-# =================== 暂时注释掉： 底线=========================
+
 
 
 # 从Raw data读取数据，预处理之后放到data目录中
