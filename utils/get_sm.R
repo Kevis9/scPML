@@ -4,9 +4,9 @@ suppressMessages(library(GSEABase)) # getGmt, load pathway information
 suppressMessages(library(AUCell)) # AUCell, pathway scoring method
 suppressMessages(library(Seurat))
 
-# 为GSE84133_RAW设置的load_matrix
+
 load_matrix_for_GSE <- function(path){
-  # check.names 去掉X
+  
   expr_matrix = read.csv(path,check.names=FALSE, row.names=1)
   expr_matrix = as.matrix(expr_matrix)
   return(expr_matrix)
@@ -43,13 +43,12 @@ integrating_pathway <- function(mat_gene, mat_path){
   alpha = 0.5; # hyperparameter, usually (0.3~0.8)
   T = 20; # Number of Iterations, usually (10~20)
 
-  # mat_gene 预处理
+  
 #   mat_gene = standardNormalization(mat_gene)
 #   mat_gene = as.matrix(parDist(as.matrix(mat_gene), method='euclidean', threads=400))
 #   # mat_gene = (dist2(as.matrix(mat_gene),as.matrix(mat_gene)))^(1/2)
 #   mat_gene = affinityMatrix(mat_gene, K, alpha)
 
-  # 尝试对mat path 做一个findvariavle gene的操作, 可关闭
 #   obj <- CreateSeuratObject(counts=mat_path)
 #   obj <- FindVariableFeatures(obj,
 #                                 selection.method = "vst",
@@ -62,26 +61,22 @@ integrating_pathway <- function(mat_gene, mat_path){
   mat_path = affinityMatrix(mat_path, K, alpha)
 
   W = mat_path
-  # 这里把mat_gene和mat_path做一个融合然后返回
-#   W = SNF(list(mat_path, mat_gene), K, T)
-
+  
   return(W)
 
   # return(mat_path)
 }
 
 mat_gene_reduction <- function(mat_gene) {
-    # 传入 gene * cell
-    # 对mat_gene做一个标准Seurat处理
     obj <- CreateSeuratObject(counts=mat_gene)
     obj <- FindVariableFeatures(obj,
                                 selection.method = "vst",
                                 nfeatures = 2000,verbose=F)
     obj <- ScaleData(obj,verbose=FALSE)
     obj <- RunPCA(obj, verbose = FALSE)
-    # 得到经过 HVGs -> PCA之后的cell * gene (mat_gene)
+    
     mat_gene.reduction = obj@reductions$pca@cell.embeddings
-    # 返回 cell * gene
+    #  cell * gene
     return (mat_gene.reduction)
 }
 
@@ -99,14 +94,14 @@ get_cell_similarity_matrix<-function(mat_path){
   alpha = 0.5; # hyperparameter, usually (0.3~0.8)
   T = 20; # Number of Iterations, usually (10~20)
 
-  # 输入是pathway * cell
+  # pathway * cell
   mat_path = t(mat_path)
   mat_path = standardNormalization(mat_path)
   mat_path = as.matrix(parDist(as.matrix(mat_path), method='euclidean'), threads=400) # 并行的方式去加速计算dist 代表细胞间的correlation
   mat_path = affinityMatrix(mat_path, K, alpha)
 
   W = mat_path
-  # 这里把mat_gene和mat_path做一个融合然后返回
+  
 #   W = SNF(list(mat_path, mat_gene), K, T)
 
   return (W)
@@ -121,7 +116,7 @@ get_cell_similarity_matrix_by_genes <- function(mat_gene) {
     alpha = 0.5; # hyperparameter, usually (0.3~0.8)
     T = 20; # Number of Iterations, usually (10~20)
 
-    # mat_gene 预处理
+    
 
     mat_gene.reduction = standardNormalization(mat_gene.reduction)
     mat_gene.reduction = as.matrix(parDist(as.matrix(mat_gene.reduction), method='euclidean', threads=50))
@@ -137,7 +132,7 @@ main <- function(data_path, data_num=1, view_num=4, pathway_name) {
     for(i in 1:data_num) {
       mat_name = paste('data_', i, '.csv', sep='')
       mat_gene = load_matrix_for_GSE(paste(data_path, mat_name, sep='\\'))
-      mat_gene = t(mat_gene) # 对于(cell*genes)格式的数据，先做一次转置变成 gene * cell
+      mat_gene = t(mat_gene) 
 
       for(j in 1:view_num) {
           save_path_W = paste(data_path, paste(paste('sm_', i, '_', sep=''), j, '.csv',sep=''), sep='\\')
@@ -152,7 +147,7 @@ main <- function(data_path, data_num=1, view_num=4, pathway_name) {
 #           write.csv(mat_path, save_path_mat_path)
       }
 
-      # 按照gene feature来获取特征
+      
       mat_sm_gene = get_cell_similarity_matrix_by_genes(mat_gene)
       write.csv(mat_sm_gene, paste(data_path, paste('sm_', i, '_', view_num+1, '_.csv', sep=''), sep='/'))
     }

@@ -41,8 +41,7 @@ class FocalLoss(nn.Module):
         else:
             self.alpha = alpha
 
-    def forward(self, logits, gt):
-        # 先做一个softmax归一化， 然后计算log，这样得到了 log(p)
+    def forward(self, logits, gt):        
         preds_logsoft = F.log_softmax(logits, dim=1)
         preds_softmax = torch.exp(preds_logsoft)  # 这里对上面的log做一次exp，得到只计算softmax的数值
 
@@ -62,8 +61,7 @@ class Classifier(torch.nn.Module):
         print("Train  classifier")
 
         optimizer_for_classifier = optim.Adam(params=self.parameters(), lr=lr)
-
-        # 确定各类别的比例，用 (1-x) / (1-x).sum() 归一
+        
         alpha = np.unique(labels, return_counts=True)[1]
         alpha = alpha / alpha.sum()
         alpha = (1 - alpha) / (1 - alpha).sum()
@@ -85,7 +83,7 @@ class Classifier(torch.nn.Module):
         dataset_val = TensorDataset(val_x, val_y)
         dataloader_val = DataLoader(dataset_val, shuffle=False, batch_size=batch_size)
 
-        # 更新classifier
+        # update classifier
         val_max_acc = 0
         stop = 0
         for epoch in range(epochs):
@@ -112,7 +110,7 @@ class Classifier(torch.nn.Module):
             trues = torch.concat(train_true_label)
             train_acc = (preds == trues).sum() / trues.shape[0]
             '''
-                早停处理 (这里只是为了训练出更好的classifier)
+                early stopping
             '''
             val_acc = evaluate(dataloader_val, self)
 

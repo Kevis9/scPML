@@ -27,15 +27,13 @@ select_feature <- function(data,label,nf=2000){
 
 normalize_data <- function(data) {
 #     data <- as.matrix(Seurat:::NormalizeData.default(data,verbose=F))
-    data = t(data) # 先转置，变成cell * gene
+    data = t(data) # transpose to cell * gene
     row_sum = apply(data, 1, sum)
     mean_t = mean(row_sum)
-#     细胞表达量为0的地方不用管，设置为1，表示不影响
+
     row_sum[row_sum==0] = 1
-#
-#     row_sum是vector，会自动广播
     data = data/row_sum * mean_t
-#     再次转置回来，变成 gene * cell
+    # gene * cell
     data = t(data)
     return (data)
 
@@ -97,14 +95,14 @@ main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_p
 
 
 
-# 从Raw data读取数据，预处理之后放到data目录中
+
 
 
 # base_path = 'E:/YuAnHuang/kevislin/Cell_Classification/experiment/multi_ref/Haber/'
 # args = commandArgs(trailingOnly = TRUE)
 # base_path = args[[1]]
 # print(base_path)
-# # 多ref
+# # multi ref
 # for(i in 2:3) {
 #     query_data_name = paste('data_', i, '.csv', sep='')
 #     ref_data_path = paste(base_path, 'raw_data' ,'ref', 'data_1.csv', sep='/')
@@ -120,7 +118,7 @@ main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_p
 #     main(ref_data_path, query_data_path, ref_label_path, ref_save_path, query_save_path)
 # }
 #
-# # 真的query
+# # query
 # # base_path = args[[1]]
 #
 # query_data_name = paste('data_', 1, '.csv', sep='')
