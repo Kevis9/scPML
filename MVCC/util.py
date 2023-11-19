@@ -119,7 +119,7 @@ def mask_column(data, masked_prob, cols):
 
 
 def construct_graph_with_knn(data, k=2):
-    A = kneighbors_graph(data, k, mode='connectivity', include_self=False)  # 拿到Similarity矩阵
+    A = kneighbors_graph(data, k, mode='connectivity', include_self=False)  
     G = nx.from_numpy_matrix(A.todense())
     edges = []
     
@@ -235,7 +235,7 @@ def construct_graph(data, sm_mat, k):
     adj = SparseTensor.from_dense(sm_mat)
     feat = torch.tensor(data, dtype=torch.float)
 
-    # 将节点信息和边的信息放入特定类中
+    
     g_data = geoData(x=feat, edge_index=edges)
 
 
@@ -456,7 +456,7 @@ def confusion_plot(pred, true, save_name):
     true_name.sort()
     data_df.index = true_name
 
-    # 将数据倒置过来
+    
     data_df = data_df.reindex(index=data_df.index[::-1])
 
     print(data_df.index)
@@ -476,9 +476,9 @@ def precision_with_FPR(trues, pred, prob, FPR=0.05):
 
     thresh = unknown_prob[int(len(unknown_prob) * FPR)]
 
-    # 取出prob中标记为known的cell
+
     unknown_idx = np.where(prob < thresh)[0]
-    # 把所有小于阈值的标记为unkown
+
     pred[unknown_idx] = 'unknown'
 
     true_known_idx = np.where(trues != 'unknown')[0]
@@ -519,9 +519,9 @@ def show_result(ret, save_path):
     confusion_plot(ret['pred'], ret['query_label'], save_name=os.path.join(save_path, 'pred_confusion_plot.png'))
 
         
-    # 这部分和原来的feature对应
+    
     raw_trues = np.concatenate([ret['ref_raw_label'], ret['query_label']]).reshape(-1)
-    # 这部分和h对应
+    
     trues_after_shuffle = np.concatenate([ret['ref_label'], ret['query_label']]).reshape(-1)
     all_preds = np.concatenate([ret['ref_label'], ret['pred']]).reshape(-1)
     raw_data = np.concatenate([ret['ref_raw_data'], ret['query_raw_data']], axis=0)

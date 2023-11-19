@@ -61,7 +61,12 @@ The `data` directory contains the pre-processed data. More details can be seen i
 The results will be stored in the `result` folder.
 
 
+## Reproducibility
+We provide hyper-parameters for all experiements with a `pickle` file named `hyper_parameters.pkl`. The data is a dict. You can load the file by using pickle. 
+```
+import pickle as pkl
 
+with open('hyper_paramters.pkl', 'rb') as f:
+    params = pkl.load(f)
 
-
-
+```
