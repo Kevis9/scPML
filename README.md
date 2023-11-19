@@ -1,6 +1,8 @@
 # scPML: Pathway-based Multi-view Learning for Cell Type Annotation from Single-cell RNA-seq Data
 A PyTorch implementation of scPML.
 
+[![DOI](https://zenodo.org/badge/446746824.svg)](https://zenodo.org/doi/10.5281/zenodo.10155115)
+
 ## Requirements
 * R >= 4.2.1
 * python >= 3.8.12
